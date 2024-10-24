@@ -26,6 +26,6 @@
 
 ![peri_cell_nots](/imgstore/peri_cell_nots.png)
 
-Однако, для получения сигнала /AE (address enable) один такой инвертор был использован:
+Однако, для получения сигнала /AE (address enable) один такой инвертор был использован (сами разработчики чипа задействовали peripheral cell для основной логики, выше также имеется pullup в ячейке /WE):
 
 ![peri_cell_nots_ae](/imgstore/peri_cell_nots_ae.png)
