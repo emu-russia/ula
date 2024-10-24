@@ -1439,6 +1439,8 @@ module ula_not (  a, x);
 	input wire a;
 	output wire x;
 
+	not (x, a);
+
 endmodule // ula_not
 
 module ula_nor (  a, b, x);
@@ -1446,6 +1448,8 @@ module ula_nor (  a, b, x);
 	input wire a;
 	input wire b;
 	output wire x;
+
+	nor (x, a, b);
 
 endmodule // ula_nor
 
@@ -1455,6 +1459,8 @@ module ula_nor3 (  b, a, c, x);
 	input wire a;
 	input wire c;
 	output wire x;
+
+	nor (x, a, b, c);
 
 endmodule // ula_nor3
 
@@ -1466,6 +1472,8 @@ module ula_nor4 (  a, b, c, d, x);
 	input wire d;
 	output wire x;
 
+	nor (x, a, b, c, d);
+
 endmodule // ula_nor4
 
 module ula_nor5 (  a, b, c, d, e, x);
@@ -1476,6 +1484,8 @@ module ula_nor5 (  a, b, c, d, e, x);
 	input wire d;
 	input wire e;
 	output wire x;
+
+	nor (x, a, b, c, d, e);
 
 endmodule // ula_nor5
 
@@ -1490,6 +1500,8 @@ module ula_nor7 (  a, b, c, d, e, f, g, x);
 	input wire g;
 	output wire x;
 
+	nor (x, a, b, c, d, e, f, g);
+
 endmodule // ula_nor7
 
 module ula_nor6 (  a, b, c, d, e, f, x);
@@ -1501,6 +1513,8 @@ module ula_nor6 (  a, b, c, d, e, f, x);
 	input wire e;
 	input wire f;
 	output wire x;
+
+	nor (x, a, b, c, d, e, f);
 
 endmodule // ula_nor6
 
