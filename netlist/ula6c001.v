@@ -1412,7 +1412,7 @@ module ula (  n_INT, A6, A5, A4, A3, A2, A1, A0, n_WE, n_RD, n_WR, n_CAS, OSC, n
 	ula_SoundDAC g641 (.pad(w651), .from_pad(w513), .to_pad1(w486), .to_pad2(w485) );
 	ula_pad_data_bidir g642 (.pad(w688), .from_pad(w522), .to_pad(w536) );
 	ula_pad_kb_input g643 (.pad(w687), .from_pad(w647) );
-	ula_pad_data_bidir g644 (.pad(w686), .to_pad(w608), .from_pad(w582) );
+	ula_pad_data_bidir g644 (.pad(w686), .from_pad(w608), .to_pad(w582) );
 	ula_pad_kb_input g645 (.pad(w685), .from_pad(w581) );
 	ula_pad_kb_input g646 (.pad(w684), .from_pad(w645) );
 	ula_pad_data_bidir g647 (.pad(w683), .from_pad(w512), .to_pad(w644) );
