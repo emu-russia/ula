@@ -4,6 +4,8 @@ module ULA_Run ();
 
 	reg OSC;
 	wire KB0;
+	wire n_INT;
+	wire n_PHICPU;
 
 	always #25 OSC = ~OSC;
 
@@ -23,7 +25,12 @@ module ULA_Run ();
 		.KB0(KB0),
 		.KB1(1'b0),
 		.KB2(1'b0),
-		.KB3(1'b0) );
+		.KB3(1'b0),
+		.n_INT(n_INT),
+		.n_PHICPU(n_PHICPU) );
+
+	pullup p1 (n_INT);
+	pullup p2 (n_PHICPU);
 
 	initial begin
 

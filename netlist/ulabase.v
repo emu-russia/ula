@@ -190,6 +190,8 @@ module ula_pad_phi_output (  pad, to_pad);
 	output wire pad;
 	input wire to_pad;
 
+	assign pad = to_pad == 1'b0 ? to_pad : 1'bz;
+
 endmodule // ula_pad_phi_output
 
 module ula_pad_data_bidir (  pad, to_pad, from_pad);
