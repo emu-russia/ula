@@ -89,12 +89,16 @@ module ula_pad_we_output (  pad, to_pad);
 	output wire pad;
 	input wire to_pad;
 
+	assign pad = to_pad == 1'b0 ? to_pad : 1'bz;
+
 endmodule // ula_pad_we_output
 
 module ula_pad_rd_input (  pad, from_pad);
 
 	input wire pad;
 	output wire from_pad;
+
+	assign from_pad = pad;
 
 endmodule // ula_pad_rd_input
 
@@ -103,12 +107,16 @@ module ula_pad_wr_input (  pad, from_pad);
 	input wire pad;
 	output wire from_pad;
 
+	assign from_pad = pad;
+
 endmodule // ula_pad_wr_input
 
 module ula_pad_cas_output (  pad, to_pad);
 
 	output wire pad;
 	input wire to_pad;
+
+	assign pad = to_pad == 1'b0 ? to_pad : 1'bz;
 
 endmodule // ula_pad_cas_output
 
@@ -117,6 +125,8 @@ module ula_pad_osc (  pad, from_pad);
 	input wire pad;
 	output wire from_pad;
 
+	assign from_pad = pad;
+
 endmodule // ula_pad_osc
 
 module ula_pad_mreq_input (  pad, from_pad);
@@ -124,12 +134,16 @@ module ula_pad_mreq_input (  pad, from_pad);
 	input wire pad;
 	output wire from_pad;
 
+	assign from_pad = pad;
+
 endmodule // ula_pad_mreq_input
 
 module ula_pad_addr_input (  pad, from_pad);
 
 	input wire pad;
 	output wire from_pad;
+
+	assign from_pad = pad;
 
 endmodule // ula_pad_addr_input
 
@@ -139,6 +153,8 @@ module ula_pad_ras_output (  pad, n_oe, to_pad);
 	input wire n_oe;
 	input wire to_pad;
 
+	assign pad = n_oe == 1'b0 ? to_pad : 1'bz;
+
 endmodule // ula_pad_ras_output
 
 module ula_pad_romcs_output (  pad, to_pad);
@@ -146,12 +162,16 @@ module ula_pad_romcs_output (  pad, to_pad);
 	output wire pad;
 	input wire to_pad;
 
+	assign pad = to_pad == 1'b0 ? to_pad : 1'bz;
+
 endmodule // ula_pad_romcs_output
 
 module ula_pad_ioreq_input (  pad, from_pad);
 
 	input wire pad;
 	output wire from_pad;
+
+	assign from_pad = pad;
 
 endmodule // ula_pad_ioreq_input
 
@@ -168,12 +188,17 @@ module ula_pad_data_bidir (  pad, to_pad, from_pad);
 	input wire to_pad;
 	output wire from_pad;
 
+	assign pad = to_pad == 1'b0 ? to_pad : 1'bz;
+	assign from_pad = pad;
+
 endmodule // ula_pad_data_bidir
 
 module ula_pad_data_input (  from_pad, pad);
 
 	output wire from_pad;
 	input wire pad;
+
+	assign from_pad = pad;
 
 endmodule // ula_pad_data_input
 
@@ -191,6 +216,8 @@ module ula_pad_kb_input (  pad, from_pad);
 	input wire pad;
 	output wire from_pad;
 
+	assign from_pad = pad;
+
 endmodule // ula_pad_kb_input
 
 module ula_pad_kb_bidir (  pad, from_pad, to_pad);
@@ -198,6 +225,9 @@ module ula_pad_kb_bidir (  pad, from_pad, to_pad);
 	inout wire pad;
 	output wire from_pad;
 	input wire to_pad;
+
+	assign from_pad = pad;
+	assign pad = to_pad == 1'b0 ? 1'b0 : 1'bz;
 
 endmodule // ula_pad_kb_bidir
 
@@ -231,6 +261,9 @@ module ula_pad_addr_bidir (  pad, n_oe, from_pad, to_pad);
 	output wire from_pad;
 	input wire to_pad;
 
+	assign pad = n_oe == 1'b0 ? to_pad : 1'bz;
+	assign from_pad = pad;
+
 endmodule // ula_pad_addr_bidir
 
 module ula_pad_addr_output (  pad, n_oe, to_pad);
@@ -239,11 +272,15 @@ module ula_pad_addr_output (  pad, n_oe, to_pad);
 	input wire n_oe;
 	input wire to_pad;
 
+	assign pad = n_oe == 1'b0 ? to_pad : 1'bz;
+
 endmodule // ula_pad_addr_output
 
 module ula_pad_int_output (  pad, to_pad);
 
 	output wire pad;
 	input wire to_pad;
+
+	assign pad = to_pad == 1'b0 ? to_pad : 1'bz;
 
 endmodule // ula_pad_int_output
