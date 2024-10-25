@@ -6,6 +6,7 @@ module ULA_Run ();
 	wire KB0;
 	wire n_INT;
 	wire n_PHICPU;
+	wire [6:0] addr;
 
 	always #25 OSC = ~OSC;
 
@@ -27,7 +28,14 @@ module ULA_Run ();
 		.KB2(1'b0),
 		.KB3(1'b0),
 		.n_INT(n_INT),
-		.n_PHICPU(n_PHICPU) );
+		.n_PHICPU(n_PHICPU),
+		.A0(addr[0]),
+		.A1(addr[1]),
+		.A2(addr[2]),
+		.A3(addr[3]),
+		.A4(addr[4]),
+		.A5(addr[5]),
+		.A6(addr[6]) );
 
 	pullup p1 (n_INT);
 	pullup p2 (n_PHICPU);
