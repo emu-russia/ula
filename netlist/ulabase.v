@@ -13,9 +13,19 @@ module ula_nor (  a, b, x);
 
 	input wire a;
 	input wire b;
-	output wire x;
+	output reg x;
 
-	nor (x, a, b);
+	// To simulate RS flip flops we use behavioral model
+
+	always @ (a or b) begin
+	    if (a == 1'b0 && b == 1'b0) begin
+	        x = 1'b1;
+	    end
+	    else 
+	        x = 1'b0; 
+	end	
+
+	// nor (x, a, b);
 
 endmodule // ula_nor
 
