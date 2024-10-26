@@ -35,3 +35,7 @@
 Однако, для получения сигнала /AE (address enable) один такой инвертор был использован (сами разработчики чипа задействовали peripheral cell для основной логики, выше также имеется pullup в ячейке /WE):
 
 ![peri_cell_nots_ae](/imgstore/peri_cell_nots_ae.png)
+
+## Reference
+
+- Названия сигналов из реверса Chris Smith: http://www.zxdesign.info/schematics.shtml
