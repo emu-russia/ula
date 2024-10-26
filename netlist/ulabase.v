@@ -190,7 +190,10 @@ module ula_pad_phi_output (  pad, to_pad);
 	output wire pad;
 	input wire to_pad;
 
-	assign pad = to_pad == 1'b0 ? to_pad : 1'bz;
+	// Inverting open-collector
+	wire temp;
+	assign temp = ~to_pad;
+	assign pad = temp == 1'b0 ? temp : 1'bz;
 
 endmodule // ula_pad_phi_output
 
