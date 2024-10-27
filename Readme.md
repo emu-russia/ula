@@ -39,3 +39,4 @@
 ## Reference
 
 - Названия сигналов из реверса Chris Smith: http://www.zxdesign.info/schematics.shtml
+- Display for a computer by Richard Francis Altwasser: https://patents.google.com/patent/EP0107687B1
