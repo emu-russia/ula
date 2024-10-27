@@ -24,7 +24,7 @@
 |/RAS |Output Tri-state | Выбор Row для DRAM |
 |/ROMCS |Output | ULA решает что проц лезет в ROM по старшим разрядам адреса |
 |/IOREQ |Input | от проца |
-|/PHICPU |Output Open-collector | Выход CLK на проц OSC ÷ 4 |
+|/PHICPU |:warning: Inverting Output Open-collector | Выход CLK на проц OSC ÷ 4 |
 |D\[7:6\] |Bidir Open-collector| Разряды 6,7 шины данных.  D7 - Input Only|
 |D\[5\] |Input | D5 - Input Only|
 |SOUND |Bidir Analog | MIC/TAPE для кассет и динамика |
