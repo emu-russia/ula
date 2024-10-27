@@ -1,31 +1,117 @@
 [*]
 [*] GTKWave Analyzer v3.3.100 (w)1999-2019 BSI
-[*] Sun Oct 27 15:03:33 2024
+[*] Sun Oct 27 18:28:23 2024
 [*]
 [dumpfile] "C:\Work\ula\icarus\ula_waves.vcd"
-[dumpfile_mtime] "Sun Oct 27 15:00:49 2024"
-[dumpfile_size] 527008
+[dumpfile_mtime] "Sun Oct 27 18:26:37 2024"
+[dumpfile_size] 543321
 [savefile] "C:\Work\ula\icarus\ula.gtkw"
 [timestart] 0
-[size] 1594 694
+[size] 2560 1009
 [pos] -1 -1
-*-10.000000 138 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-12.000000 5380 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] ULA_Run.
 [sst_width] 211
-[signals_width] 94
+[signals_width] 341
 [sst_expanded] 1
-[sst_vpaned_height] 187
+[sst_vpaned_height] 298
+@200
+-Cadence
 @28
 ULA_Run.ula_inst.OSC
-ULA_Run.ula_inst.n_PHICPU
 ULA_Run.nCLK7
-@22
-ULA_Run.A[6:0]
+ULA_Run.ula_inst.n_PHICPU
 @24
 ULA_Run.C[8:0]
 ULA_Run.V[8:0]
+@200
+-Video Signal Features
 @28
-ULA_Run.n_RAS
-ULA_Run.n_CAS
+ULA_Run.nBorder
+ULA_Run.nHSyncPulses
+ULA_Run.C5delay
+ULA_Run.HSync
+ULA_Run.nSync
+ULA_Run.nHBlank
+ULA_Run.Burst
+ULA_Run.Timing
+ULA_Run.VSync
+ULA_Run.nINT
+@200
+-Latch Control
+@28
+ULA_Run.nVidC3
+ULA_Run.nDataLatch
+ULA_Run.SLoad
+ULA_Run.nVidEn
+ULA_Run.nAttrLatch
+ULA_Run.nAOLatch
+@200
+-Video address generator
+@22
+ULA_Run.A[6:0]
+@23
+ULA_Run.D[7:0]
+@28
+ULA_Run.nAE
+@200
+-RAS/CAS/ROMSEL
+@28
+ULA_Run.nRAS
+ULA_Run.nCAS
+ULA_Run.RAM16
+ULA_Run.VidRAS
+ULA_Run.VidCASAC
+ULA_Run.VidCASBD
+ULA_Run.MUXSEL
+ULA_Run.nWE
+ULA_Run.nROMCS
+@200
+-Latches
+@22
+ULA_Run.DataLatch[7:0]
+ULA_Run.AttrLatch[7:0]
+ULA_Run.AOLatch[7:0]
+ULA_Run.Pixel[7:0]
+@200
+-Flash Clock + XNOR + Mux
+@28
+ULA_Run.FlashClock
+ULA_Run.nDataSelect
+ULA_Run.PB0_B
+ULA_Run.PB1_R
+ULA_Run.PB2_G
+ULA_Run.AL6_HL
+ULA_Run.AL7_FL
+@200
+-VideoDAC
+@28
+ULA_Run.RedS
+ULA_Run.RedD
+ULA_Run.nRedDD
+ULA_Run.nGreenS
+ULA_Run.GreenD
+ULA_Run.nGreenDD
+ULA_Run.nBlueS
+ULA_Run.BlueD
+ULA_Run.BlueDD
+ULA_Run.BurstS
+ULA_Run.nBurstDD
+ULA_Run.nBurstS
+ULA_Run.nBLACKS
+ULA_Run.nHL
+@200
+-I/O
+@28
+ULA_Run.nPortRD
+ULA_Run.nPortWR
+ULA_Run.Ear
+ULA_Run.Tape
+ULA_Run.Speaker
+ULA_Run.B0_B
+ULA_Run.B1_R
+ULA_Run.B2_G
+@200
+-
 [pattern_trace] 1
 [pattern_trace] 0

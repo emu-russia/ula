@@ -62,16 +62,72 @@ module ULA_Run ();
 	wire [8:0] C;
 	wire [8:0] V;
 	// Video Signal Features
+	wire nBorder;
+	wire nHSyncPulses;
+	wire C5delay;
+	wire HSync;
+	wire nSync;
+	wire nHBlank;
+	wire Burst;
+	wire nINT;
+	wire Timing;
+	wire VSync;
 	// Latch Control
+	wire nVidC3;
+	wire nDataLatch;
+	wire SLoad;
+	wire nVidEn;
+	wire nAttrLatch;
+	wire nAOLatch;
 	// Video address generator
+	wire nAE;
 	// RAS/CAS
-	// Latches
-	// Pixel Shift Register
-	// Flash Clock + XNOR
-	// Mux
+	wire RAM16;
+	wire VidRAS;
+	wire VidCASAC;
+	wire VidCASBD;
+	wire nCAS;
+	wire MUXSEL;
+	wire nWE;
+	wire nRAS;
+	wire nROMCS;
+	// Latches + Pixel Shift Register
+	wire [7:0] DataLatch;
+	wire [7:0] AttrLatch;
+	wire [7:0] AOLatch;
+	wire [7:0] Pixel;
+	// Flash Clock + XNOR + Mux
+	wire FlashClock;
+	wire nDataSelect;
+	wire PB0_B;
+	wire PB1_R;
+	wire PB2_G;
+	wire AL6_HL;
+	wire AL7_FL;
 	// VideoDAC Setup
+	wire RedS;
+	wire RedD;
+	wire nRedDD;
+	wire nGreenS;
+	wire GreenD;
+	wire nGreenDD;
+	wire nBlueS;
+	wire BlueD;
+	wire BlueDD;
+	wire BurstS;
+	wire nBurstDD;
+	wire nBurstS;	
+	wire nBLACKS;
+	wire nHL;
 	// I/O
-	// Contention Handler	
+	wire nPortRD;
+	wire nPortWR;
+	wire Ear;
+	wire Tape;
+	wire Speaker;
+	wire B0_B;
+	wire B1_R;
+	wire B2_G;
 
 	assign nCLK7 = ula_inst.g54.x;
 
@@ -94,6 +150,104 @@ module ULA_Run ();
 	assign V[6] = ula_inst.g599.x;
 	assign V[7] = ula_inst.g595.x;
 	assign V[8] = ula_inst.g565.x;
+
+	assign nBorder = ula_inst.g614.x;
+	assign nHSyncPulses = ula_inst.g84.x;
+	assign C5delay = ula_inst.g172.x;
+	assign HSync = ula_inst.g105.x;
+	assign nSync = ula_inst.g106.x;
+	assign nHBlank = ula_inst.g131.x;
+	assign Burst = ula_inst.g520.x;
+	assign nINT = ula_inst.g4.x;
+	assign Timing = ula_inst.g151.x;
+	assign VSync = ula_inst.g621.x;
+
+	assign nVidC3 = ula_inst.g50.x;
+	assign nDataLatch = ula_inst.g51.x;
+	assign SLoad = ula_inst.g443.x;
+	assign nVidEn = ula_inst.g467.x;
+	assign nAttrLatch = ula_inst.g47.x;
+	assign nAOLatch = ula_inst.g46.x;
+
+	assign nAE = ula_inst.g615.x;
+
+	assign RAM16 = ula_inst.g389.x;
+	assign VidRAS = ula_inst.g451.x;
+	assign VidCASAC = ula_inst.g477.x;
+	assign VidCASBD = ula_inst.g475.x;
+	assign nCAS = ula_inst.g74.x;
+	assign MUXSEL = ula_inst.g503.x;
+	assign nWE = ula_inst.g87.x;
+	assign nRAS = ula_inst.g390.x;
+	assign nROMCS = ula_inst.g39.x;
+
+	assign DataLatch[0] = ula_inst.g247.x;
+	assign DataLatch[1] = ula_inst.g282.x;
+	assign DataLatch[2] = ula_inst.g315.x;
+	assign DataLatch[3] = ula_inst.g345.x;
+	assign DataLatch[4] = ula_inst.g378.x;
+	assign DataLatch[5] = ula_inst.g348.x;
+	assign DataLatch[6] = ula_inst.g352.x;
+	assign DataLatch[7] = ula_inst.g356.x;
+
+	assign AttrLatch[0] = ula_inst.g222.x;
+	assign AttrLatch[1] = ula_inst.g254.x;
+	assign AttrLatch[2] = ula_inst.g288.x;
+	assign AttrLatch[3] = ula_inst.g321.x;
+	assign AttrLatch[4] = ula_inst.g373.x;
+	assign AttrLatch[5] = ula_inst.g349.x;
+	assign AttrLatch[6] = ula_inst.g353.x;
+	assign AttrLatch[7] = ula_inst.g357.x;
+
+	assign AOLatch[0] = ula_inst.g228.x;
+	assign AOLatch[1] = ula_inst.g273.x;
+	assign AOLatch[2] = ula_inst.g240.x;
+	assign AOLatch[3] = ula_inst.g296.x;
+	assign AOLatch[4] = ula_inst.g262.x;
+	assign AOLatch[5] = ula_inst.g305.x;
+	assign AOLatch[6] = ula_inst.g330.x;
+	assign AOLatch[7] = ula_inst.g304.x;
+
+	assign Pixel[0] = ula_inst.g482.x;
+	assign Pixel[1] = ula_inst.g465.x;
+	assign Pixel[2] = ula_inst.g456.x;
+	assign Pixel[3] = ula_inst.g442.x;
+	assign Pixel[4] = ula_inst.g433.x;
+	assign Pixel[5] = ula_inst.g421.x;
+	assign Pixel[6] = ula_inst.g412.x;
+	assign Pixel[7] = ula_inst.g400.x;
+
+	assign FlashClock = ula_inst.g192.x;
+	assign nDataSelect = ula_inst.g190.x;
+	assign PB0_B = ula_inst.g291.x;
+	assign PB1_R = ula_inst.g325.x;
+	assign PB2_G = ula_inst.g292.x;
+	assign AL6_HL = ula_inst.g309.x;
+	assign AL7_FL = ula_inst.g326.x;
+
+	assign RedS = ula_inst.g1.x;
+	assign RedD = ula_inst.g15.x;
+	assign nRedDD = ula_inst.g173.x;
+	assign nGreenS = ula_inst.g153.x; 
+	assign GreenD = ula_inst.g16.x; 
+	assign nGreenDD = ula_inst.g179.x;
+	assign nBlueS = ula_inst.g625.x;
+	assign BlueD = ula_inst.g20.x; 
+	assign BlueDD = ula_inst.g21.x;
+	assign BurstS = ula_inst.g117.x;
+	assign nBurstDD = ula_inst.g10.x;
+	assign nBurstS = ula_inst.g6.x;	
+	assign nBLACKS = ula_inst.g19.x;
+	assign nHL = ula_inst.g23.x;
+
+	assign nPortRD = ula_inst.g80.x;
+	assign nPortWR = ula_inst.g77.x;
+	assign Ear = ula_inst.g317.a;
+	assign Tape = ula_inst.g323.x;
+	assign Speaker = ula_inst.g371.x;
+	assign B0_B = ula_inst.g224.x;
+	assign B1_R = ula_inst.g256.x;
+	assign B2_G = ula_inst.g290.x;
 
 	// ------------ END Signals for debugging
 
