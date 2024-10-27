@@ -40,6 +40,48 @@ module ULA_Run ();
 	pullup p1 (n_INT);
 	pullup p2 (n_PHICPU);
 
+	// Signals for debugging (by Chris Smith)
+
+	// Cadence
+	wire nCLK7;
+	wire [8:0] C;
+	wire [8:0] V;
+	// Video Signal Features
+	// Latch Control
+	// Video address generator
+	// RAS/CAS
+	// Latches
+	// Pixel Shift Register
+	// Flash Clock + XNOR
+	// Mux
+	// VideoDAC Setup
+	// I/O
+	// Contention Handler	
+
+	assign nCLK7 = ula_inst.g54.x;
+
+	assign C[0] = ula_inst.g454.x;
+	assign C[1] = ula_inst.g472.x;
+	assign C[2] = ula_inst.g524.x;
+	assign C[3] = ula_inst.g509.x;
+	assign C[4] = ula_inst.g521.x;
+	assign C[5] = ula_inst.g519.x;
+	assign C[6] = ula_inst.g103.x;
+	assign C[7] = ula_inst.g112.x;
+	assign C[8] = ula_inst.g129.x;
+
+	assign V[0] = ula_inst.g141.x;
+	assign V[1] = ula_inst.g161.x;
+	assign V[2] = ula_inst.g132.x;
+	assign V[3] = ula_inst.g537.x;
+	assign V[4] = ula_inst.g549.x;
+	assign V[5] = ula_inst.g575.x;
+	assign V[6] = ula_inst.g599.x;
+	assign V[7] = ula_inst.g595.x;
+	assign V[8] = ula_inst.g565.x;
+
+	// ------------ END Signals for debugging
+
 	initial begin
 
 		$display("Check that the ULA is moving.");
