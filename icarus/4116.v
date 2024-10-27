@@ -3,7 +3,7 @@
 module MK4116 (Din, Dout, nWRITE, nRAS, nCAS, A);
 
 	input wire Din;
-	output wire Dout;
+	output reg Dout;
 	input wire nWRITE;
 	input wire nRAS;
 	input wire nCAS;
@@ -12,7 +12,7 @@ module MK4116 (Din, Dout, nWRITE, nRAS, nCAS, A);
 	reg memory [16383:0];
 	reg [6:0] row_latch;
 	reg [6:0] col_latch;
-	wire mem_addr;
+	wire [13:0] mem_addr;
 
 	// Latch Row and Column
 

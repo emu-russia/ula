@@ -1,50 +1,31 @@
 [*]
 [*] GTKWave Analyzer v3.3.100 (w)1999-2019 BSI
-[*] Fri Oct 25 05:54:18 2024
+[*] Sun Oct 27 15:03:33 2024
 [*]
 [dumpfile] "C:\Work\ula\icarus\ula_waves.vcd"
-[dumpfile_mtime] "Fri Oct 25 05:51:57 2024"
-[dumpfile_size] 145981
+[dumpfile_mtime] "Sun Oct 27 15:00:49 2024"
+[dumpfile_size] 527008
 [savefile] "C:\Work\ula\icarus\ula.gtkw"
 [timestart] 0
-[size] 1525 776
+[size] 1594 694
 [pos] -1 -1
-*-9.000000 38 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-10.000000 138 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] ULA_Run.
-[treeopen] ULA_Run.ula_inst.
 [sst_width] 211
-[signals_width] 182
+[signals_width] 94
 [sst_expanded] 1
-[sst_vpaned_height] 216
-@200
--Starting ClkGen
--g52
+[sst_vpaned_height] 187
 @28
-ULA_Run.ula_inst.g52.a
-ULA_Run.ula_inst.g52.x
-@200
--g430
+ULA_Run.ula_inst.OSC
+ULA_Run.ula_inst.n_PHICPU
+ULA_Run.nCLK7
+@22
+ULA_Run.A[6:0]
+@24
+ULA_Run.C[8:0]
+ULA_Run.V[8:0]
 @28
-ULA_Run.ula_inst.g430.a
-ULA_Run.ula_inst.g430.b
-ULA_Run.ula_inst.g430.x
-@200
--g425
-@28
-ULA_Run.ula_inst.g425.a
-ULA_Run.ula_inst.g425.b
-ULA_Run.ula_inst.g425.x
-@200
--g423
-@28
-ULA_Run.ula_inst.g423.a
-ULA_Run.ula_inst.g423.b
-ULA_Run.ula_inst.g423.x
-@200
--g432
-@28
-ULA_Run.ula_inst.g432.a
-ULA_Run.ula_inst.g432.b
-ULA_Run.ula_inst.g432.x
+ULA_Run.n_RAS
+ULA_Run.n_CAS
 [pattern_trace] 1
 [pattern_trace] 0
