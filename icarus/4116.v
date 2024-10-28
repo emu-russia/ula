@@ -47,4 +47,11 @@ module MK4116 (Din, Dout, nWRITE, nRAS, nCAS, A);
 	// TBD: PAGE MODE READ CYCLE
 	// TBD: PAGE MODE WRITE CYCLE
 
+	integer j;
+	initial begin
+		// Pre-fill the memory with some value so we don't run into `xx`
+		for(j = 0; j < 16384; j = j+1) 
+			memory[j] = 0;
+	end
+
 endmodule // MK4116
