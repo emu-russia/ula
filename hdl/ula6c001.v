@@ -47,65 +47,42 @@ module ula (  n_INT, A6, A5, A4, A3, A2, A1, A0, n_WE, n_RD, n_WR, n_CAS, OSC, n
 
 	wire BlueD; 				// Blue`
 	wire RedD; 			// Red`
-	wire w3;
-	wire w4;
-	wire w5;
-	wire w6;
+	wire nBLACKS; 			// w4, /BLACK*
+	wire nHL;  			// w5
+	wire D1_to_pad; 		// w6
 	wire w7;
 	wire w8;
 	wire w9;
 	wire w10;
-	wire w11;
 	wire w13;
 	wire w14;
-	wire w15;
 	wire w18;
 	wire Timing; 			// w19
-	wire w23;
-	wire w29;
-	wire w30;
+	wire nSync; 			// w29
+	wire VSync; 			// w30
 	wire CLKHC6; 			// w34
-	wire w35;
-	wire w36;
-	wire w37;
-	wire w38;
 	wire w39;
-	wire w40;
 	wire w41;
-	wire w42;
 	wire w51;
 	wire w52;
-	wire w53;
-	wire w54;
-	wire w55;
 	wire w56;
-	wire w57;
 	wire w58;
-	wire w60;
-	wire w64;
-	wire w65;
-	wire w66;
+	wire nDataSelect; 				// w66
 	wire w67;
 	wire w68;
-	wire w69;
 	wire w71;
 	wire HCrst; 		// w81
 	wire w88;
 	wire w89;
-	wire w94;
-	wire w96;
 	wire w101;
 	wire w102;
 	wire w116;
 	wire w117;
-	wire w120;
-	wire w123;
-	wire w124;
+	wire nSyncD; 			// w124, /Sync`
 	wire w126;
 	wire nRedDD; 			// /Red``
 	wire w132;
 	wire w134;
-	wire w135;
 	wire w136;
 	wire w137;
 	wire w143;
@@ -114,26 +91,21 @@ module ula (  n_INT, A6, A5, A4, A3, A2, A1, A0, n_WE, n_RD, n_WR, n_CAS, OSC, n
 	wire w146;
 	wire w147;
 	wire w149;
-	wire w153;
-	wire w154;
+	wire GreenS; 				// w154, Green`
 	wire FlashClock; 			// w168
-	wire w172;
 	wire w173;
 	wire w175;
 	wire w176;
 	wire w177;
 	wire w180;
-	wire w181;
 	wire w182;
 	wire w183;
 	wire w184;
-	wire w185;
 	wire w186;
 	wire w188;
 	wire w189;
 	wire w191;
 	wire SerialData; 			// w197
-	wire w212;
 	wire w216;
 	wire w217;
 	wire w219;
@@ -142,20 +114,15 @@ module ula (  n_INT, A6, A5, A4, A3, A2, A1, A0, n_WE, n_RD, n_WR, n_CAS, OSC, n
 	wire nTCLKA; 		// w228
 	wire nTCLKB; 		// w235
 	wire RD; 			// w238
-	wire w239;
 	wire w240;
 	wire w241;
 	wire w243;
 	wire nWR; 			// w244
-	wire w245;
 	wire w246;
 	wire w247;
-	wire w248;
 	wire w258;
 	wire nIOREQ_from_pad; 		// w259
 	wire w260;
-	wire w263;
-	wire w266;
 	wire w273;
 	wire w274;
 	wire w275;
@@ -163,19 +130,13 @@ module ula (  n_INT, A6, A5, A4, A3, A2, A1, A0, n_WE, n_RD, n_WR, n_CAS, OSC, n
 	wire w278;
 	wire w282;
 	wire w283;
-	wire w284;
 	wire w286;
-	wire w288;
 	wire w290;
 	wire w292;
 	wire w294;
-	wire w296;
-	wire w297;
-	wire w298;
 	wire w300;
 	wire w302;
 	wire w303;
-	wire w304;
 	wire w305;
 	wire w307;
 	wire w308;
@@ -185,121 +146,79 @@ module ula (  n_INT, A6, A5, A4, A3, A2, A1, A0, n_WE, n_RD, n_WR, n_CAS, OSC, n
 	wire nMREQ_from_pad; 		//  w314
 	wire w315;
 	wire w316;
-	wire w317;
 	wire WR; 				// w318
 	wire w320;
 	wire w322;
 	wire w323;
-	wire w326;
 	wire w327;
-	wire w328;
-	wire w330;
-	wire w338;
-	wire w340;
+	wire nVidC3; 			// w330
+	wire nAOLatch; 			// w340
 	wire w342;
 	wire w343;
 	wire Border; 		// w348
-	wire w349;
-	wire w350;
 	wire w351;
-	wire w352;
 	wire w357;
 	wire A15_from_pad; 		// w358
-	wire w362;
 	wire w363;
 	wire w364;
-	wire w365;
 	wire w366;
-	wire w367;
-	wire w371;
-	wire w373;
+	wire C0_other; 		// w367
 	wire w374;
 	wire w375;
-	wire w376;
-	wire w377;
-	wire w378;
 	wire w379;
 	wire nCLK7;
-	wire w382;
-	wire w388;
 	wire w389;
 	wire w391;
 	wire w393;
-	wire w396;
 	wire w398;
 	wire w399;
 	wire w400;
 	wire w401;
 	wire w402;
-	wire w403;
 	wire w406;
 	wire A14_from_pad; 		// w407
 	wire w409;
-	wire w410;
 	wire w412;
-	wire w413;
 	wire CPUCLK;
-	wire w416;
-	wire w417;
+	wire D5_from_pad; 		// w416
+	wire D7_from_pad; 			// w417
 	wire nAttrLatch; 			// w418
-	wire w420;
-	wire w421;
-	wire w422;
-	wire w423;
-	wire w427;
-	wire w429;
-	wire w431;
-	wire w432;
-	wire w433;
-	wire w434;
-	wire w438;
-	wire w439;
+	wire nCAS_to_pad; 			// w421
+	wire nVidRAS; 				// w423
+	wire VidRAS; 				// w427
+	wire nRAS_oe; 			// w438
+	wire nRAS_to_pad; 			// w439
 	wire osc_from_pad;
-	wire w447;
-	wire w450;
-	wire w457;
+	wire nDataLatch; 				// w447
 	wire w459;
-	wire w461;
 	wire w462;
 	wire w465;
-	wire w468;
-	wire w469;
-	wire w471;
-	wire w472;
-	wire w474;
 	wire w478;
 	wire w479;
-	wire w481;
 	wire w483;
 	wire w485;
 	wire nTape; 		// w486
-	wire w489;
 	wire w491;
-	wire w492;
 	wire w494;
-	wire w495;
 	wire w496;
 	wire w501;
 	wire w503;
 	wire w506;
 	wire B0_B; 			// w510
-	wire w512;
-	wire w513;
-	wire w515;
-	wire w516;
+	wire D2_from_pad; 				// w512
+	wire Ear_Input; 			// w513
+	wire D6_to_pad; 			// w515
+	wire D6_from_pad; 			// w516
 	wire w517;
 	wire w522;
 	wire w524;
 	wire w532;
 	wire w536;
-	wire w541;
-	wire w542;
 	wire w549;
 	wire w550;
 	wire w554;
 	wire w558;
 	wire w564;
-	wire w567;
 	wire w568;
 	wire w570;
 	wire w573;
@@ -312,33 +231,22 @@ module ula (  n_INT, A6, A5, A4, A3, A2, A1, A0, n_WE, n_RD, n_WR, n_CAS, OSC, n
 	wire w590;
 	wire w593;
 	wire w596;
-	wire w606;
-	wire w607;
 	wire w608;
 	wire w610;
 	wire w617;
 	wire w622;
-	wire w623;
 	wire w624;
-	wire w629;
-	wire w630;
 	wire AL7_FL; 		// w631
 	wire w632;
-	wire w638;
-	wire w639;
-	wire w642;
 	wire w644;
 	wire w645;
 	wire KB4_from_pad; 			// w647
-	wire w657;
 	wire nAE;
 
 	wire [8:0] C; 				// 0=w338, 1=w72, 2=w208, 3=w253, 4=w113, 5=w112, 6=w17, 7=w16, 8=w31
 	wire [8:0] nC; 			// 0=w336, 1=w331, 2=w234, 3=w203, 4=w227, 5=w221, 6=w70, 7=w79, 8=w78
 	wire [8:0] V; 				// 0=w25, 1=w86, 2=w91, 3=w279, 4=w187, 5=w179, 6=w178, 7=w272, 8=w261
 	wire [8:0] nV;  			// 0=w24, 1=w140, 2=w92, 3=w293, 4=w291, 5=w286, 6=w270, 7=w269, 8=w311
-
-	assign n_ROMCS = w657;
 
 	// Instances
 
@@ -401,33 +309,33 @@ module ula (  n_INT, A6, A5, A4, A3, A2, A1, A0, n_WE, n_RD, n_WR, n_CAS, OSC, n
 	// Pads
 
 	ula_pad_data_bidir g651 (.pad(D0), .from_pad(w7), .to_pad(w10) ); 		// 0
-	ula_pad_data_bidir g648 (.pad(D1), .from_pad(w478), .to_pad(w6) );	 	// 1
-	ula_pad_data_bidir g647 (.pad(D2), .from_pad(w512), .to_pad(w644) );		// 2
+	ula_pad_data_bidir g648 (.pad(D1), .from_pad(w478), .to_pad(D1_to_pad) );	 	// 1
+	ula_pad_data_bidir g647 (.pad(D2), .from_pad(D2_from_pad), .to_pad(w644) );		// 2
 	ula_pad_data_bidir g644 (.pad(D3), .from_pad(w608), .to_pad(w582) ); 		// 3
 	ula_pad_data_bidir g642 (.pad(D4), .from_pad(w522), .to_pad(w536) );		// 4
-	ula_pad_data_input g640 (.pad(D5), .from_pad(w416) ); 					// 5  - Read only
-	ula_pad_data_bidir g639 (.pad(D6), .to_pad(w515), .from_pad(w516) ); 		// 6
-	ula_pad_data_bidir g638 (.pad(D7), .from_pad(w417) ); 					// 7  - Read only
+	ula_pad_data_input g640 (.pad(D5), .from_pad(D5_from_pad) ); 					// 5  - Read only
+	ula_pad_data_bidir g639 (.pad(D6), .to_pad(D6_to_pad), .from_pad(D6_from_pad) ); 		// 6
+	ula_pad_data_bidir g638 (.pad(D7), .from_pad(D7_from_pad) ); 					// 7  - Read only
 
 	ula_pad_we_output g626 (.pad(n_WE), .to_pad(w316) );
 	ula_pad_rd_input g627 (.pad(n_RD), .from_pad(nRD) );
 	ula_pad_wr_input g628 (.pad(n_WR), .from_pad(nWR) );
-	ula_pad_cas_output g629 (.pad(n_CAS), .to_pad(w421) );
+	ula_pad_cas_output g629 (.pad(n_CAS), .to_pad(nCAS_to_pad) );
 	ula_pad_osc g630 (.pad(OSC), .from_pad(osc_from_pad) );
 	ula_pad_mreq_input g631 (.pad(n_MREQ), .from_pad(nMREQ_from_pad) );
 	ula_pad_addr_input g632 (.pad(A15), .from_pad(A15_from_pad) );
 	ula_pad_addr_input g633 (.pad(A14), .from_pad(A14_from_pad) );
-	ula_pad_ras_output g634 (.pad(n_RAS), .n_oe(w438), .to_pad(w439) );
-	ula_pad_romcs_output g635 (.pad(w657), .to_pad(w409) );
+	ula_pad_ras_output g634 (.pad(n_RAS), .n_oe(nRAS_oe), .to_pad(nRAS_to_pad) );
+	ula_pad_romcs_output g635 (.pad(n_ROMCS), .to_pad(w409) );
 	ula_pad_ioreq_input g636 (.pad(n_IOREQ), .from_pad(nIOREQ_from_pad) );
 	ula_pad_phi_output g637 (.pad(n_PHICPU), .to_pad(CPUCLK) );
-	ula_SoundDAC g641 (.pad(SOUND), .from_pad(w513), .to_pad1(nTape), .to_pad2(w485) );
+	ula_SoundDAC g641 (.pad(SOUND), .from_pad(Ear_Input), .to_pad1(nTape), .to_pad2(w485) );
 	ula_pad_kb_input g643 (.pad(KB4), .from_pad(KB4_from_pad) );
 	ula_pad_kb_input g645 (.pad(KB3), .from_pad(w581) );
 	ula_pad_kb_input g646 (.pad(KB2), .from_pad(w645) );
 	ula_pad_kb_input g649 (.pad(KB1), .from_pad(w9) );
 	ula_pad_kb_bidir g650 (.pad(KB0), .from_pad(w13), .to_pad(K0_topad) );
-	ula_VideoDAC g652 (.u(Uout), .v(Vout), .ny(n_Yout), .i14(w4), .i13(w5), .i12(w124), .i11(RedD), .i10(w154), .i9(BlueD), .i8(w144), .i7(w136), .i6(w132), .i5(w137), .i4(w145), .i3(w146), .i2(nRedDD), .i1(w147), .i0(w58) );
+	ula_VideoDAC g652 (.u(Uout), .v(Vout), .ny(n_Yout), .i14(nBLACKS), .i13(nHL), .i12(nSyncD), .i11(RedD), .i10(GreenS), .i9(BlueD), .i8(w144), .i7(w136), .i6(w132), .i5(w137), .i4(w145), .i3(w146), .i2(nRedDD), .i1(w147), .i0(w58) );
 	ula_pad_addr_bidir g653 (.pad(A0), .n_oe(nAE), .from_pad(w310), .to_pad(w173) );
 	ula_pad_addr_output g654 (.pad(A1), .n_oe(nAE), .to_pad(w191) );
 	ula_pad_addr_output g655 (.pad(A2), .n_oe(nAE), .to_pad(w327) );
@@ -474,6 +382,7 @@ module hcounter (input wire nCLK7, input wire nTCLKA, output wire [8:0] nC, outp
 	wire w83;
 	wire w84;
 	wire w85;
+	wire w120;
 	wire w121;
 	wire w122;
 	wire w148;
@@ -597,10 +506,18 @@ module hcounter (input wire nCLK7, input wire nTCLKA, output wire [8:0] nC, outp
 endmodule // hcounter
 
 module vcounter (input wire HCrst, input wire CLKHC6, input wire nC5, output wire [8:0] nV, output wire [8:0] V);
+	wire w23;
+	wire w35;
+	wire w36;
+	wire w37;
+	wire w38;
+	wire w40;
 	wire w87;
 	wire w90;
 	wire w93;
+	wire w94;
 	wire w95;
+	wire w96;
 	wire w97;
 	wire w98;
 	wire w138;
@@ -611,23 +528,33 @@ module vcounter (input wire HCrst, input wire CLKHC6, input wire nC5, output wir
 	wire w159;
 	wire w160;
 	wire w174;
+	wire w181;
+	wire w185;
 	wire w192;
 	wire w193;
 	wire w194;
 	wire w262;
+	wire w263;
 	wire w264;
 	wire w265;
+	wire w266;
 	wire w267;
 	wire w268;
 	wire w277;
 	wire w280;
 	wire w281;
+	wire w284;
 	wire w285;
 	wire w287;
+	wire w288;
 	wire w289;
 	wire w295;
+	wire w296;
+	wire w297;
 	wire w301;
+	wire w304;
 	wire w306;
+	wire w326;
 
 	// 0
 	ula_not g9 (.a(HCrst), .x(w23) );
@@ -749,18 +676,22 @@ module tclk (input wire nMREQ, input wire nIOREQ, input wire nRD, input wire nWR
 	ula_nor g528 (.a(nV8), .b(w313), .x(K0) );
 endmodule // tclk
 
-module latch_control (input wire nCLK7, inout wire Border, input wire nC0, input wire nC1, input wire nC2, input wire nC3, input wire C1, output wire nAttrLatch);
+module latch_control (input wire nCLK7, inout wire Border, input wire nC0, input wire nC1, input wire nC2, input wire nC3, input wire C1, output wire nAttrLatch, output wire nDataLatch, output wire nAOLatch, output wire nVidC3, output wire C0_other);
 	wire w339;
+	wire w349;
+	wire w350;
 	wire w387;
+	wire w388;
 	wire w390;
 	wire w392;
 	wire w394;
+	wire w396;
 	wire w397;
 	wire w419;
 
 	ula_not g49 (.a(w260), .x(Border) );
 	ula_nor g422 (.a(nC3), .b(Border), .x(w349) );
-	ula_not g50 (.a(w349), .x(w330) );
+	ula_not g50 (.a(w349), .x(nVidC3) );
 
 	ula_not g55 (.a(nCLK7), .x(w389) );
 	ula_not g56 (.a(w389), .x(w390) );
@@ -770,10 +701,10 @@ module latch_control (input wire nCLK7, inout wire Border, input wire nC0, input
 	ula_not g59 (.a(w393), .x(w394) );
 	ula_nor g449 (.a(w394), .b(nC0), .x(w366) );
 
-	ula_nor4 g427 (.a(C1), .b(nC0), .c(w366), .d(w330), .x(w396) );	
+	ula_nor4 g427 (.a(C1), .b(nC0), .c(w366), .d(nVidC3), .x(w396) );	
 	ula_nor g408 (.a(w396), .b(w396), .x(w397) );
 	ula_nor g409 (.a(w397), .b(w397), .x(w398) );
-	ula_not g51 (.a(w398), .x(w447) );
+	ula_not g51 (.a(w398), .x(nDataLatch) );
 
 	// GD
 	ula_nor g480 (.a(w388), .b(nC3), .x(w387) );
@@ -781,18 +712,19 @@ module latch_control (input wire nCLK7, inout wire Border, input wire nC0, input
 	ula_nor g466 (.a(w350), .b(w388), .x(w351) );
 	ula_nor g467 (.a(w387), .b(w351), .x(w350) );
 
-	ula_not g57 (.a(nC0), .x(w367) );
-	ula_nor4 g443 (.a(C1), .b(nC2), .c(w350), .d(w367), .x(w357) );	
+	ula_not g57 (.a(nC0), .x(C0_other) );
+	ula_nor4 g443 (.a(C1), .b(nC2), .c(w350), .d(C0_other), .x(w357) );	
 	ula_not g339 (.a(w357), .x(w549) );
 
-	ula_nor4 g407 (.a(nC0), .b(w330), .c(nC1), .d(w366), .x(w419) );
+	ula_nor4 g407 (.a(nC0), .b(nVidC3), .c(nC1), .d(w366), .x(w419) );
 	ula_not g47 (.a(w419), .x(nAttrLatch) );
 
 	ula_nor3 g406 (.a(C1), .b(nC0), .c(nC2), .x(w339) );
-	ula_not g46 (.a(w339), .x(w340) );
+	ula_not g46 (.a(w339), .x(nAOLatch) );
 endmodule // latch_control
 
-module data_latch ();
+module data_latch (input wire nDataLatch, input wire D2_from_pad, input wire D6_from_pad, input wire D5_from_pad, input wire D7_from_pad);
+	wire w481;
 	wire w498;
 	wire w499;
 	wire w500;
@@ -810,56 +742,60 @@ module data_latch ();
 	wire w598;
 	wire w599;
 	wire w605;
+	wire w606;
+	wire w607;
 	wire w619;
 	wire w620;
 	wire w621;
 	wire w633;
 
 	// 0
-	ula_nor g219 (.a(w7), .b(w447), .x(w620) );
+	ula_nor g219 (.a(w7), .b(nDataLatch), .x(w620) );
 	ula_nor g220 (.a(w620), .b(w479), .x(w621) );
 	ula_nor g247 (.a(w621), .b(w619), .x(w479) );
-	ula_nor g248 (.a(w620), .b(w447), .x(w619) );
+	ula_nor g248 (.a(w620), .b(nDataLatch), .x(w619) );
 	// 1
-	ula_nor g251 (.a(w478), .b(w447), .x(w533) );
+	ula_nor g251 (.a(w478), .b(nDataLatch), .x(w533) );
 	ula_nor g252 (.a(w533), .b(w532), .x(w583) );
 	ula_nor g282 (.a(w583), .b(w534), .x(w532) );
-	ula_nor g283 (.a(w447), .b(w533), .x(w534) );
+	ula_nor g283 (.a(nDataLatch), .b(w533), .x(w534) );
 	// 2 
-	ula_nor g285 (.a(w512), .b(w447), .x(w599) );
+	ula_nor g285 (.a(D2_from_pad), .b(nDataLatch), .x(w599) );
 	ula_nor g286 (.a(w599), .b(w596), .x(w597) );
 	ula_nor g315 (.a(w597), .b(w598), .x(w596) );
-	ula_nor g316 (.a(w447), .b(w599), .x(w598) );
+	ula_nor g316 (.a(nDataLatch), .b(w599), .x(w598) );
 	// 3 
-	ula_nor g318 (.a(w447), .b(w608), .x(w607) );
+	ula_nor g318 (.a(nDataLatch), .b(w608), .x(w607) );
 	ula_nor g319 (.a(w607), .b(w593), .x(w605) );
 	ula_nor g345 (.a(w606), .b(w605), .x(w593) );
-	ula_nor g346 (.a(w447), .b(w607), .x(w606) );
+	ula_nor g346 (.a(nDataLatch), .b(w607), .x(w606) );
 	// 4
 	ula_nor g375 (.a(w524), .b(w521), .x(w523) );
-	ula_nor g376 (.a(w522), .b(w447), .x(w521) );
-	ula_nor g377 (.a(w521), .b(w447), .x(w481) );
+	ula_nor g376 (.a(w522), .b(nDataLatch), .x(w521) );
+	ula_nor g377 (.a(w521), .b(nDataLatch), .x(w481) );
 	ula_nor g378 (.a(w481), .b(w523), .x(w524) );
 	// 5
-	ula_nor g369 (.a(w498), .b(w447), .x(w499) );
-	ula_nor g370 (.a(w447), .b(w416), .x(w498) );
+	ula_nor g369 (.a(w498), .b(nDataLatch), .x(w499) );
+	ula_nor g370 (.a(nDataLatch), .b(D5_from_pad), .x(w498) );
 	ula_nor g347 (.a(w498), .b(w632), .x(w633) );
 	ula_nor g348 (.a(w499), .b(w633), .x(w632) );
 	// 6
-	ula_nor g365 (.a(w500), .b(w447), .x(w547) );
-	ula_nor g366 (.a(w447), .b(w516), .x(w500) );
+	ula_nor g365 (.a(w500), .b(nDataLatch), .x(w547) );
+	ula_nor g366 (.a(nDataLatch), .b(D6_from_pad), .x(w500) );
 	ula_nor g351 (.a(w500), .b(w501), .x(w548) );
 	ula_nor g352 (.a(w547), .b(w548), .x(w501) );
 	// 7
-	ula_nor g361 (.a(w447), .b(w520), .x(w519) );
-	ula_nor g362 (.a(w447), .b(w417), .x(w520) );
+	ula_nor g361 (.a(nDataLatch), .b(w520), .x(w519) );
+	ula_nor g362 (.a(nDataLatch), .b(D7_from_pad), .x(w520) );
 	ula_nor g355 (.a(w517), .b(w520), .x(w518) );
 	ula_nor g356 (.a(w519), .b(w518), .x(w517) );
 endmodule // data_latch
 
-module attr_latch (output wire AL7_FL, input wire nAttrLatch, input wire B0_B);
+module attr_latch (output wire AL7_FL, input wire nAttrLatch, input wire B0_B, input wire D2_from_pad, input wire D6_from_pad, input wire D5_from_pad, input wire D7_from_pad);
 	wire w482;
+	wire w492;
 	wire w493;
+	wire w495;
 	wire w497;
 	wire w511;
 	wire w525;
@@ -868,6 +804,8 @@ module attr_latch (output wire AL7_FL, input wire nAttrLatch, input wire B0_B);
 	wire w528;
 	wire w539;
 	wire w540;
+	wire w541;
+	wire w542;
 	wire w543;
 	wire w544;
 	wire w545;
@@ -904,7 +842,7 @@ module attr_latch (output wire AL7_FL, input wire nAttrLatch, input wire B0_B);
 	// 2
 	ula_nor g313 (.a(w575), .b(w601), .x(w574) );
 	ula_nor g314 (.a(nAttrLatch), .b(w600), .x(w601) );
-	ula_nor g287 (.a(nAttrLatch), .b(w512), .x(w600) );
+	ula_nor g287 (.a(nAttrLatch), .b(D2_from_pad), .x(w600) );
 	ula_nor g288 (.a(w600), .b(w574), .x(w575) );
 	// 3
 	ula_nor g343 (.a(w491), .b(w604), .x(w603) );
@@ -920,17 +858,17 @@ module attr_latch (output wire AL7_FL, input wire nAttrLatch, input wire B0_B);
 	ula_nor g349 (.a(w495), .b(w496), .x(w494) );
 	ula_nor g350 (.a(w497), .b(w494), .x(w495) );
 	ula_nor g367 (.a(w496), .b(nAttrLatch), .x(w497) );
-	ula_nor g368 (.a(nAttrLatch), .b(w416), .x(w496) );
+	ula_nor g368 (.a(nAttrLatch), .b(D5_from_pad), .x(w496) );
 	// 6
 	ula_nor g353 (.a(w544), .b(w546), .x(w543) );
 	ula_nor g354 (.a(w545), .b(w543), .x(w544) );
 	ula_nor g363 (.a(w546), .b(nAttrLatch), .x(w545) );
-	ula_nor g364 (.a(nAttrLatch), .b(w516), .x(w546) );
+	ula_nor g364 (.a(nAttrLatch), .b(D6_from_pad), .x(w546) );
 	// 7
 	ula_nor g357 (.a(w539), .b(w540), .x(w542) );
 	ula_nor g358 (.a(w541), .b(w542), .x(w540) );
 	ula_nor g359 (.a(nAttrLatch), .b(w539), .x(w541) );
-	ula_nor g360 (.a(w417), .b(nAttrLatch), .x(w539) );
+	ula_nor g360 (.a(D7_from_pad), .b(nAttrLatch), .x(w539) );
 
 
 	// R
@@ -957,7 +895,7 @@ module attr_latch (output wire AL7_FL, input wire nAttrLatch, input wire B0_B);
 
 endmodule // data_latch
 
-module ao_latch (inout wire FL, input wire AL7_FL);
+module ao_latch (input wire nAOLatch, inout wire FL, input wire AL7_FL);
 	wire w502;
 	wire w504;
 	wire w505;
@@ -966,6 +904,7 @@ module ao_latch (inout wire FL, input wire AL7_FL);
 	wire w557;
 	wire w565;
 	wire w566;
+	wire w567;
 	wire w576;
 	wire w577;
 	wire w578;
@@ -973,55 +912,59 @@ module ao_latch (inout wire FL, input wire AL7_FL);
 	wire w587;
 	wire w588;
 	wire w591;
+	wire w623;
 	wire w626;
 	wire w627;
 	wire w628;
+	wire w629;
+	wire w630;
 	wire w648;
 
 	// 0
-	ula_nor g225 (.a(w506), .b(w340), .x(w505) );
-	ula_nor g226 (.a(w340), .b(w505), .x(w504) );
+	ula_nor g225 (.a(w506), .b(nAOLatch), .x(w505) );
+	ula_nor g226 (.a(nAOLatch), .b(w505), .x(w504) );
 	ula_nor g227 (.a(w590), .b(w504), .x(w591) );
 	ula_nor g228 (.a(w505), .b(w591), .x(w590) );
 	// 1
 	ula_nor g273 (.a(w623), .b(w626), .x(w624) );
 	ula_nor g274 (.a(w627), .b(w624), .x(w626) );
-	ula_nor g275 (.a(w340), .b(w623), .x(w627) );
-	ula_nor g276 (.a(w340), .b(w622), .x(w623) );
+	ula_nor g275 (.a(nAOLatch), .b(w623), .x(w627) );
+	ula_nor g276 (.a(nAOLatch), .b(w622), .x(w623) );
 	// 2
 	ula_nor g239 (.a(w586), .b(w589), .x(w588) );
 	ula_nor g240 (.a(w588), .b(w587), .x(w589) );
-	ula_nor g241 (.a(w587), .b(w340), .x(w586) );
-	ula_nor g242 (.a(w340), .b(w585), .x(w587) );
+	ula_nor g241 (.a(w587), .b(nAOLatch), .x(w586) );
+	ula_nor g242 (.a(nAOLatch), .b(w585), .x(w587) );
 	// 3
-	ula_nor g293 (.a(w554), .b(w340), .x(w555) );
-	ula_nor g294 (.a(w340), .b(w555), .x(w556) );
+	ula_nor g293 (.a(w554), .b(nAOLatch), .x(w555) );
+	ula_nor g294 (.a(nAOLatch), .b(w555), .x(w556) );
 	ula_nor g295 (.a(w556), .b(w558), .x(w557) );
 	ula_nor g296 (.a(w555), .b(w557), .x(w558) );
 	// 4
-	ula_nor g259 (.a(w575), .b(w340), .x(w576) );
-	ula_nor g260 (.a(w340), .b(w576), .x(w577) );
+	ula_nor g259 (.a(w575), .b(nAOLatch), .x(w576) );
+	ula_nor g260 (.a(nAOLatch), .b(w576), .x(w577) );
 	ula_nor g261 (.a(w577), .b(w579), .x(w578) );
 	ula_nor g262 (.a(w576), .b(w578), .x(w579) );
 	// 5
 	ula_nor g305 (.a(w565), .b(w566), .x(w564) );
 	ula_nor g306 (.a(w567), .b(w564), .x(w565) );
-	ula_nor g307 (.a(w340), .b(w566), .x(w567) );
-	ula_nor g308 (.a(w340), .b(w568), .x(w566) );
+	ula_nor g307 (.a(nAOLatch), .b(w566), .x(w567) );
+	ula_nor g308 (.a(nAOLatch), .b(w568), .x(w566) );
 	// 6
-	ula_nor g327 (.a(w340), .b(w550), .x(w629) );
-	ula_nor g328 (.a(w629), .b(w340), .x(w630) );
+	ula_nor g327 (.a(nAOLatch), .b(w550), .x(w629) );
+	ula_nor g328 (.a(w629), .b(nAOLatch), .x(w630) );
 	ula_nor g329 (.a(w630), .b(w14), .x(w628) );
 	ula_nor g330 (.a(w629), .b(w628), .x(w14) );
 	// 7
 	ula_nor g303 (.a(FL), .b(w503), .x(w648) );
 	ula_nor g304 (.a(w502), .b(w648), .x(FL) );
-	ula_nor g331 (.a(AL7_FL), .b(w340), .x(w502) );
-	ula_nor g332 (.a(w340), .b(w502), .x(w503) );
+	ula_nor g331 (.a(AL7_FL), .b(nAOLatch), .x(w502) );
+	ula_nor g332 (.a(nAOLatch), .b(w502), .x(w503) );
 endmodule // ao_latch
 
 module pixel_shift_reg (input wire nCLK7, inout wire SerialData);
 	wire w341;
+	wire w352;
 	wire w353;
 	wire w354;
 	wire w355;
@@ -1029,22 +972,36 @@ module pixel_shift_reg (input wire nCLK7, inout wire SerialData);
 	wire w368;
 	wire w369;
 	wire w370;
+	wire w371;
 	wire w372;
+	wire w373;
+	wire w376;
+	wire w377;
+	wire w378;
 	wire w381;
+	wire w382;
+	wire w450;
 	wire w451;
 	wire w452;
 	wire w453;
 	wire w454;
 	wire w455;
 	wire w456;
+	wire w457;
 	wire w458;
 	wire w460;
+	wire w461;
 	wire w463;
 	wire w464;
 	wire w466;
 	wire w467;
+	wire w468;
+	wire w469;
 	wire w470;
+	wire w471;
+	wire w472;
 	wire w473;
+	wire w474;
 	wire w475;
 	wire w529;
 	wire w530;
@@ -1055,7 +1012,10 @@ module pixel_shift_reg (input wire nCLK7, inout wire SerialData);
 	wire w635;
 	wire w636;
 	wire w637;
+	wire w638;
+	wire w639;
 	wire w641;
+	wire w642;
 	wire w649;
 	wire w650;
 
@@ -1137,6 +1097,7 @@ endmodule // pixel_shift_reg
 module flash_clock (input wire nTCLKB, inout wire FlashClock, input wire nV8);
 	wire w32;
 	wire w33;
+	wire w42;
 	wire w43;
 	wire w44;
 	wire w45;
@@ -1146,6 +1107,7 @@ module flash_clock (input wire nTCLKB, inout wire FlashClock, input wire nV8);
 	wire w49;
 	wire w50;
 	wire w59;
+	wire w60;
 	wire w61;
 	wire w62;
 	wire w63;
@@ -1161,6 +1123,7 @@ module flash_clock (input wire nTCLKB, inout wire FlashClock, input wire nV8);
 	wire w169;
 	wire w170;
 	wire w171;
+	wire w172;
 
 	ula_nor g529 (.a(nTCLKB), .b(nV8), .x(w33) );	
 	// 0
@@ -1201,6 +1164,8 @@ module flash_clock (input wire nTCLKB, inout wire FlashClock, input wire nV8);
 endmodule // flash_clock
 
 module flash_xnor (input wire FL, input wire FlashClock, output wire nDataSelect, input wire SerialData);
+	wire w64;
+	wire w65;
 	wire w195;
 	wire w196;
 	wire w199;
@@ -1210,10 +1175,10 @@ module flash_xnor (input wire FL, input wire FlashClock, output wire nDataSelect
 	ula_nor g517 (.a(w195), .b(FlashClock), .x(w196) );	
 	ula_nor g487 (.a(SerialData), .b(w199), .x(w65) );
 	ula_nor g488 (.a(w196), .b(SerialData), .x(w199) );
-	ula_nor g190 (.a(w64), .b(w65), .x(w66) );
+	ula_nor g190 (.a(w64), .b(w65), .x(nDataSelect) );
 endmodule // flash_xnor
 
-module color_mux (input wire nHBlank, output wire Red, output wire Green, output wire Blue);
+module color_mux (input wire nHBlank, output wire Red, output wire Green, output wire Blue, input wire nDataSelect, input wire VSync);
 	wire w480;
 	wire w559;
 	wire w560;
@@ -1227,23 +1192,23 @@ module color_mux (input wire nHBlank, output wire Red, output wire Green, output
 
 	ula_not g27 (.a(w67), .x(w480) );
 
-	ula_not g31 (.a(w66), .x(w559) );
+	ula_not g31 (.a(nDataSelect), .x(w559) );
 	ula_nor g265 (.a(w558), .b(w559), .x(w563) );
-	ula_nor g230 (.a(w589), .b(w66), .x(w592) );
-	ula_nor4 g231 (.a(w30), .b(w592), .c(w480), .d(w563), .x(w51) );
+	ula_nor g230 (.a(w589), .b(nDataSelect), .x(w592) );
+	ula_nor4 g231 (.a(VSync), .b(w592), .c(w480), .d(w563), .x(w51) );
 
-	ula_not g28 (.a(w66), .x(w625) );
-	ula_not g30 (.a(w66), .x(w640) );
+	ula_not g28 (.a(nDataSelect), .x(w625) );
+	ula_not g30 (.a(nDataSelect), .x(w640) );
 	ula_nor g264 (.a(w625), .b(w624), .x(w562) );
 	ula_nor g266 (.a(w564), .b(w640), .x(w560) );
-	ula_nor4 g237 (.a(w480), .b(w560), .c(w561), .d(w30), .x(w56) );
+	ula_nor4 g237 (.a(w480), .b(w560), .c(w561), .d(VSync), .x(w56) );
 	
-	ula_nor g263 (.a(w579), .b(w66), .x(w561) );
-	ula_nor g229 (.a(w66), .b(w590), .x(w643) );
-	ula_nor4 g238 (.a(w480), .b(w643), .c(w562), .d(w30), .x(w18) );
+	ula_nor g263 (.a(w579), .b(nDataSelect), .x(w561) );
+	ula_nor g229 (.a(nDataSelect), .b(w590), .x(w643) );
+	ula_nor4 g238 (.a(w480), .b(w643), .c(w562), .d(VSync), .x(w18) );
 endmodule // color_mux
 
-module video_addr_gen (input wire C1, input wire C2, input wire C4, input wire C5, input wire C6, input wire C7, input wire V0, input wire V1, input wire V2, input wire V3, input wire V4, input wire V5, input wire V6, input wire V7);
+module video_addr_gen (input wire C1, input wire C2, input wire C4, input wire C5, input wire C6, input wire C7, input wire V0, input wire V1, input wire V2, input wire V3, input wire V4, input wire V5, input wire V6, input wire V7, output wire nVidRAS, input wire VidRAS);
 	wire w99;
 	wire w100;
 	wire w114;
@@ -1251,6 +1216,7 @@ module video_addr_gen (input wire C1, input wire C2, input wire C4, input wire C
 	wire w190;
 	wire w210;
 	wire w211;
+	wire w212;
 	wire w213;
 	wire w214;
 	wire w215;
@@ -1259,16 +1225,18 @@ module video_addr_gen (input wire C1, input wire C2, input wire C4, input wire C
 	wire w255;
 	wire w256;
 	wire w257;
+	wire w298;
 	wire w299;
 	wire w319;
 	wire w321;
 	wire w324;
 	wire w325;
+	wire w328;
 	wire w424;
 
-	ula_not g69 (.a(w427), .x(w423) );
+	ula_not g69 (.a(VidRAS), .x(nVidRAS) );
 
-	ula_not g73 (.a(w423), .x(w424) );
+	ula_not g73 (.a(nVidRAS), .x(w424) );
 	ula_not g72 (.a(w424), .x(w102) );
 	ula_not g12 (.a(C1), .x(w101) );
 	ula_nor g556 (.a(w102), .b(C1), .x(w114) );
@@ -1326,18 +1294,31 @@ module video_addr_gen (input wire C1, input wire C2, input wire C4, input wire C
 endmodule // video_addr_gen
 
 module address_enable (input wire nC0, input wire nC1, input wire nC2, input wire C3, input wire Border, output wire nAE);
+	wire w420;
+
 	ula_nor3 g426 (.a(nC0), .b(nC2), .c(nC1), .x(w399) );
 	ula_nor g410 (.a(C3), .b(w399), .x(w363) );	
 	ula_nor g391 (.a(Border), .b(w363), .x(w420) );
 	ula_not g661 (.a(w420), .x(nAE) );	
 endmodule // address_enable
 
-module ras_cas_romcs (input wire A14, input wire A15, input wire nMREQ, input wire nWR, input wire WR, input wire RD, input wire nC0, input wire nC1, input wire C1);
+module ras_cas_romcs (input wire nVidC3, input wire A14, input wire A15, input wire nMREQ, input wire nWR, input wire WR, input wire RD, input wire nC0, input wire nC1, input wire C1, output wire nRAS_to_pad, output wire nRAS_oe, output wire nCAS_to_pad, input wire nVidRAS, output wire VidRAS);
+	wire w239;
 	wire w242;
+	wire w245;
+	wire w248;
+	wire w365;
 	wire w395;
+	wire w403;
 	wire w408;
 	wire w428;
+	wire w422;
+	wire w429;
 	wire w430;
+	wire w431;
+	wire w432;
+	wire w433;
+	wire w434;
 	wire w435;
 	wire w436;
 	wire w437;
@@ -1350,7 +1331,7 @@ module ras_cas_romcs (input wire A14, input wire A15, input wire nMREQ, input wi
 	ula_not g60 (.a(w402), .x(w401) );
 	ula_not g64 (.a(w401), .x(w400) );
 	ula_nor3 g448 (.a(nC0), .b(nC1), .c(w400), .x(w395) );
-	ula_nor g451 (.a(w395), .b(w330), .x(w427) );
+	ula_nor g451 (.a(w395), .b(nVidC3), .x(VidRAS) );
 
 	ula_nor g500 (.a(w242), .b(w242), .x(w241) );
 	ula_nor g502 (.a(w241), .b(w241), .x(w240) );
@@ -1360,18 +1341,18 @@ module ras_cas_romcs (input wire A14, input wire A15, input wire nMREQ, input wi
 
 	ula_nor g526 (.a(w245), .b(nWR), .x(w315) );
 	ula_not g87 (.a(w315), .x(w316) );
-	ula_nor g390 (.a(w427), .b(w242), .x(w439) );
+	ula_nor g390 (.a(VidRAS), .b(w242), .x(nRAS_to_pad) );
 	ula_nor g387 (.a(A15), .b(A14), .x(w408) );
-	ula_nor4 g388 (.a(A15), .b(A14), .c(w260), .d(nMREQ), .x(w438) );
+	ula_nor4 g388 (.a(A15), .b(A14), .c(w260), .d(nMREQ), .x(nRAS_oe) );
 	ula_not g39 (.a(w408), .x(w409) );
 
 	ula_nor g450 (.a(C1), .b(C1), .x(w428) );
 	ula_not g65 (.a(w428), .x(w429) );
 	ula_not g66 (.a(w429), .x(w432) );
-	ula_nor g473 (.a(w423), .b(w423), .x(w431) );
+	ula_nor g473 (.a(nVidRAS), .b(nVidRAS), .x(w431) );
 	ula_nor g474 (.a(w431), .b(w431), .x(w430) );
-	ula_nor3 g475 (.a(w366), .b(w330), .c(w432), .x(w433) );
-	ula_nor4 g477 (.a(C1), .b(w330), .c(w430), .d(w366), .x(w434) );
+	ula_nor3 g475 (.a(w366), .b(nVidC3), .c(w432), .x(w433) );
+	ula_nor4 g477 (.a(C1), .b(nVidC3), .c(w430), .d(w366), .x(w434) );
 
 	// CAS
 	ula_nor g506 (.a(w246), .b(w246), .x(w247) );
@@ -1382,15 +1363,17 @@ module ras_cas_romcs (input wire A14, input wire A15, input wire nMREQ, input wi
 	ula_not g67 (.a(w437), .x(w364) );
 	ula_not g68 (.a(w364), .x(w365) );
 	ula_not g70 (.a(w365), .x(w422) );
-	ula_not g74 (.a(w422), .x(w421) );
+	ula_not g74 (.a(w422), .x(nCAS_to_pad) );
 endmodule // ras_cas_romcs
 
 module video_signal_features (input wire nC3, input wire nC4, input wire nC5, input wire nC6, input wire nC7, input wire nC8, input wire C4, input wire C5, input wire C6, input wire C7, input wire C8, inout wire Timing
-	input wire V0, input wire V1, input wire V2, input wire V8, input wire nV3, input wire nV4, input wire nV6, input wire nV7
+	input wire V0, input wire V1, input wire V2, input wire V8, input wire nV3, input wire nV4, input wire nV6, input wire nV7,
+	output wire nSync, output wire VSync
 	);
 	wire w20;
 	wire w21;
 	wire w22;
+	wire w69;
 	wire w103;
 	wire w104;
 	wire w106;
@@ -1399,6 +1382,7 @@ module video_signal_features (input wire nC3, input wire nC4, input wire nC5, in
 	wire w110;
 	wire w118;
 	wire w119;
+	wire w135;
 	wire w249;
 	wire w250;
 	wire w251;
@@ -1422,21 +1406,21 @@ module video_signal_features (input wire nC3, input wire nC4, input wire nC5, in
 	ula_not g84 (.a(w252), .x(w71) );
 
 	ula_nor4 g105 (.a(nC6), .b(C7), .c(nC8), .d(w71), .x(w118) );
-	ula_nor g106 (.a(w30), .b(w118), .x(w29) );
+	ula_nor g106 (.a(VSync), .b(w118), .x(nSync) );
 
 	ula_nor3 g107 (.a(C7), .b(nC8), .c(nC6), .x(w69) );
 	ula_nor g131 (.a(w69), .b(w68), .x(w67) );
 	ula_nor3 g133 (.a(nC8), .b(nC7), .c(w103), .x(w68) );
 
-	ula_nor g119 (.a(w29), .b(w21), .x(w20) );
-	ula_nor g120 (.a(w29), .b(V0), .x(w21) );
+	ula_nor g119 (.a(nSync), .b(w21), .x(w20) );
+	ula_nor g120 (.a(nSync), .b(V0), .x(w21) );
 	ula_nor g150 (.a(w21), .b(Timing), .x(w22) );
 	ula_nor g151 (.a(w22), .b(w20), .x(Timing) );
 
-	ula_nor6 g621 (.a(nV6), .b(nV7), .c(V2), .d(nV3), .e(nV4), .f(w286), .x(w30) );
+	ula_nor6 g621 (.a(nV6), .b(nV7), .c(V2), .d(nV3), .e(nV4), .f(w286), .x(VSync) );
 
 	ula_nor5 g620 (.a(nC8), .b(nC7), .c(C4), .d(C6), .e(w103), .x(w143) );
-	ula_not g3 (.a(w30), .x(w119) );
+	ula_not g3 (.a(VSync), .x(w119) );
 	ula_nor7 g619 (.a(C6), .b(C7), .c(w119), .d(V1), .e(V2), .f(V0), .g(C8), .x(w116) );
 	ula_not g4 (.a(w116), .x(w117) );
 	ula_not g14 (.a(w143), .x(w134) );
@@ -1446,7 +1430,14 @@ module video_signal_features (input wire nC3, input wire nC4, input wire nC5, in
 	ula_nor g117 (.b(w22), .a(w134), .x(w137) );
 endmodule // video_signal_features
 
-module dac_setup (output wire BlueD, output wire RedD, output wire nRedDD, input wire Timing);
+module dac_setup (output wire BlueD, output wire RedD, output wire nRedDD, input wire Timing, input wire nSync, output wire nBLACKS, output wire nHL, output wire nSyncD, output wire GreenS);
+	wire w3;
+	wire w15;
+	wire w53;
+	wire w54;
+	wire w55;
+	wire w57;
+	wire w123;
 	wire w125;
 	wire w127;
 	wire w128;
@@ -1456,13 +1447,14 @@ module dac_setup (output wire BlueD, output wire RedD, output wire nRedDD, input
 	wire w150;
 	wire w151;
 	wire w152;
+	wire w153;
 
-	ula_not g2 (.a(w29), .x(w123) );
-	ula_not g5 (.a(w123), .x(w124) );
-	ula_not g23 (.a(w14), .x(w5) );
+	ula_not g2 (.a(nSync), .x(w123) );
+	ula_not g5 (.a(w123), .x(nSyncD) );
+	ula_not g23 (.a(w14), .x(nHL) );
 	ula_nor3 g174 (.a(w130), .b(w3), .c(w128), .x(w129) );
 	ula_nor3 g211 (.a(w56), .b(w51), .c(w18), .x(w152) );
-	ula_not g19 (.a(w129), .x(w4) );
+	ula_not g19 (.a(w129), .x(nBLACKS) );
 
 	// R
 	ula_nor g212 (.a(w51), .b(Timing), .x(w53) );
@@ -1483,7 +1475,7 @@ module dac_setup (output wire BlueD, output wire RedD, output wire nRedDD, input
 	ula_nor g153 (.a(w3), .b(w129), .x(w144) );
 	ula_nor g179 (.a(w56), .b(w152), .x(w147) );
 	ula_not g17 (.a(w56), .x(w153) );
-	ula_not g16 (.a(w153), .x(w154) );
+	ula_not g16 (.a(w153), .x(GreenS) );
 
 	// B
 	ula_nor g154 (.a(w149), .b(w18), .x(w151) );
@@ -1497,11 +1489,14 @@ module dac_setup (output wire BlueD, output wire RedD, output wire nRedDD, input
 	ula_not g21 (.a(w57), .x(w58) );
 endmodule // dac_setup
 
-module io (input wire nIOREQ, input wire nWR, input wire nRD, output wire nTape, output wire B0_B, input wire KB4_from_pad);
+module io (input wire nIOREQ, input wire nWR, input wire nRD, output wire nTape, output wire B0_B, input wire KB4_from_pad, input wire D2_from_pad, input Ear_Input, output wire D6_to_pad, output wire D1_to_pad);
+	wire w11;
 	wire w237;
+	wire w317;
 	wire w484;
 	wire w487;
-	wire w488;	
+	wire w488;
+	wire w489;
 	wire w490;
 	wire w507;
 	wire w508;
@@ -1528,13 +1523,13 @@ module io (input wire nIOREQ, input wire nWR, input wire nRD, output wire nTape,
 	ula_nor g250 (.a(w645), .b(nPortRD), .x(w646) );
 	ula_not g26 (.a(w646), .x(w644) );
 	ula_nor g217 (.a(nPortRD), .b(w9), .x(w8) );
-	ula_not g24 (.a(w8), .x(w6) );
+	ula_not g24 (.a(w8), .x(D1_to_pad) );
 	ula_nor g218 (.a(w13), .b(nPortRD), .x(w11) );
 	ula_not g25 (.a(w11), .x(w10) );
 
 	// Ear
-	ula_nor g317 (.a(w513), .b(nPortRD), .x(w514) );
-	ula_not g36 (.a(w514), .x(w515) );
+	ula_nor g317 (.a(Ear_Input), .b(nPortRD), .x(w514) );
+	ula_not g36 (.a(w514), .x(D6_to_pad) );
 
 	// 0
 	ula_nor g243 (.a(w509), .b(B0_B), .x(w508) );
@@ -1551,7 +1546,7 @@ module io (input wire nIOREQ, input wire nWR, input wire nRD, output wire nTape,
 	// 2
 	ula_nor g311 (.a(w570), .b(w573), .x(w572) );
 	ula_nor g312 (.a(nPortWR), .b(w571), .x(w573) );
-	ula_nor g289 (.a(w512), .b(nPortWR), .x(w571) );
+	ula_nor g289 (.a(D2_from_pad), .b(nPortWR), .x(w571) );
 	ula_nor g290 (.a(w572), .b(w571), .x(w570) );
 
 	// 3
@@ -1575,7 +1570,7 @@ module io (input wire nIOREQ, input wire nWR, input wire nRD, output wire nTape,
 	ula_not g80 (.a(w317), .x(nPortRD) );
 endmodule // io
 
-module contention (input wire nMREQ, input wire nIOREQ, input wire Border, input wire A14, input wire A15, input wire C0, input wire C2, input wire C3, output wire CPUCLK);
+module contention (input wire nMREQ, input wire nIOREQ, input wire Border, input wire A14, input wire A15, input wire C0, input wire C2, input wire C3, output wire CPUCLK, input wire C0_other);
 	wire w344;
 	wire w345;
 	wire w346;
@@ -1583,9 +1578,12 @@ module contention (input wire nMREQ, input wire nIOREQ, input wire Border, input
 	wire w359;
 	wire w360;
 	wire w361;
+	wire w362;
 	wire w404;
 	wire w405;
+	wire w410;
 	wire w411;
+	wire w413;
 	wire w414;
 	wire w425;
 	wire w426;
@@ -1608,7 +1606,7 @@ module contention (input wire nMREQ, input wire nIOREQ, input wire Border, input
 	ula_not g42 (.a(w405), .x(w404) );
 	ula_not g43 (.a(w414), .x(w405) );
 	ula_nor4 g383 (.a(w413), .b(w412), .c(w360), .d(w361), .x(w477) );
-	ula_nor3 g384 (.a(w359), .b(w477), .c(w367), .x(w414) );
+	ula_nor3 g384 (.a(w359), .b(w477), .c(C0_other), .x(w414) );
 	ula_nor g385 (.a(w410), .b(w411), .x(w412) );
 	ula_nor g386 (.a(A14), .b(w410), .x(w413) );	
 	ula_nor4 g404 (.a(w426), .b(Border), .c(w404), .d(w347), .x(w362) );
