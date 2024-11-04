@@ -166,7 +166,12 @@ module ula (  n_INT, A6, A5, A4, A3, A2, A1, A0, n_WE, n_RD, n_WR, n_CAS, OSC, n
 		.HCrst(HCrst), 
 		.CLKHC6(CLKHC6) );
 
-	vcounter vcounter_inst ();
+	vcounter vcounter_inst (
+		.HCrst(HCrst), 
+		.CLKHC6(CLKHC6), 
+		.nC5(nC[5]), 
+		.nV(nV), 
+		.V(V) );
 
 	tclk tclk_inst (
 		.nMREQ(nMREQ_from_pad), 
@@ -180,35 +185,237 @@ module ula (  n_INT, A6, A5, A4, A3, A2, A1, A0, n_WE, n_RD, n_WR, n_CAS, OSC, n
 		.K0(K0_topad), 
 		.nV8(nV[8]) );
 
-	latch_control latch_control_inst ();
+	latch_control latch_control_inst (
+		.nCLK7(nCLK7), 
+		.Border(Border), 
+		.nBorder(nBorder), 
+		.nC0(nC[0]), 
+		.nC1(nC[1]), 
+		.nC2(nC[2]), 
+		.nC3(nC[3]), 
+		.C1(C[1]), 
+		.nAttrLatch(nAttrLatch), 
+		.nDataLatch(nDataLatch), 
+		.nAOLatch(nAOLatch), 
+		.nVidC3(nVidC3), 
+		.C0_other(C0_other), 
+		.SLoad(SLoad), 
+		.nSLoad(nSLoad), 
+		.VidEn(VidEn), 
+		.VidCASPulse(VidCASPulse) );
 
-	data_latch data_latch_inst ();
+	data_latch data_latch_inst (
+		.nDataLatch(nDataLatch), 
+		.D2_from_pad(D2_from_pad), 
+		.D6_from_pad(D6_from_pad), 
+		.D5_from_pad(D5_from_pad), 
+		.D7_from_pad(D7_from_pad), 
+		.D0_from_pad(D0_from_pad), 
+		.D4_from_pad(D4_from_pad), 
+		.D1_from_pad(D1_from_pad), 
+		.D3_from_pad(D3_from_pad), 
+		.DL(DL) );
 
-	attr_latch attr_latch_inst ();
+	attr_latch attr_latch_inst (
+		.nAttrLatch(nAttrLatch), 
+		.B0_B(B0_B), 
+		.B1_R(B1_R), 
+		.B2_G(B2_G), 
+		.D2_from_pad(D2_from_pad), 
+		.D6_from_pad(D6_from_pad), 
+		.D5_from_pad(D5_from_pad), 
+		.D7_from_pad(D7_from_pad), 
+		.D0_from_pad(D0_from_pad), 
+		.D3_from_pad(D3_from_pad),
+		.D4_from_pad(D4_from_pad), 
+		.D1_from_pad(D1_from_pad), 
+		.AL(AL), 
+		.VidEn(VidEn), 
+		.PB0_B(PB0_B), 
+		.PB1_R(PB1_R), 
+		.PB2_G(PB2_G) );
 
-	ao_latch ao_latch_inst ();
+	ao_latch ao_latch_inst (
+		.nAOLatch(nAOLatch), 
+		.AL(AL), 
+		.PB0_B(PB0_B), 
+		.PB1_R(PB1_R), 
+		.PB2_G(PB2_G), 
+		.AO(AO) );
 
-	pixel_shift_reg pixel_shift_reg_inst ();
+	pixel_shift_reg pixel_shift_reg_inst (
+		.nCLK7(nCLK7), 
+		.SerialData(SerialData), 
+		.SLoad(SLoad), 
+		.nSLoad(nSLoad), 
+		.DL(DL) );
 
-	flash_clock flash_clock_inst ();
+	flash_clock flash_clock_inst (
+		.nTCLKB(nTCLKB), 
+		.FlashClock(FlashClock), 
+		.nV8(nV[8]) );
 
-	flash_xnor flash_xnor_inst ();
+	flash_xnor flash_xnor_inst (
+		.FL(AO[7]),
+		.FlashClock(FlashClock),
+		.nDataSelect(nDataSelect),
+		.SerialData(SerialData) );
 
-	color_mux color_mux_inst ();
+	color_mux color_mux_inst (
+		.nHBlank(nHBlank),
+		.Red(Red),
+		.Green(Green),
+		.Blue(Blue),
+		.nDataSelect(nDataSelect),
+		.VSync(VSync),
+		.AO(AO) );
 
-	video_addr_gen video_addr_gen_inst ();
+	video_addr_gen video_addr_gen_inst (
+		.C1(C[1]),
+		.C2(C[2]),
+		.C4(C[4]),
+		.C5(C[5]),
+		.C6(C[6]),
+		.C7(C[7]),
+		.V0(V[0]),
+		.V1(V[1]),
+		.V2(V[2]),
+		.V3(V[3]),
+		.V4(V[4]),
+		.V5(V[5]),
+		.V6(V[6]),
+		.V7(V[7]),
+		.nVidRAS(nVidRAS),
+		.VidRAS(VidRAS),
+		.A0_to_pad(A0_to_pad),
+		.A3_to_pad(A3_to_pad),
+		.A2_to_pad(A2_to_pad),
+		.A4_to_pad(A4_to_pad),
+		.A1_to_pad(A1_to_pad),
+		.A5_to_pad(A5_to_pad),
+		.A6_to_pad(A6_to_pad) );
 
-	address_enable address_enable_inst ();
+	address_enable address_enable_inst (
+		.nC0(nC[0]),
+		.nC1(nC[1]),
+		.nC2(nC[2]),
+		.C3(C[3]),
+		.Border(Border),
+		.nAE(nAE) );
 
-	ras_cas_romcs ras_cas_romcs_inst ();
+	ras_cas_romcs ras_cas_romcs_inst (
+		.nVidC3(nVidC3),
+		.A14(A14_from_pad),
+		.A15(A15_from_pad),
+		.nMREQ(nMREQ_from_pad),
+		.nWR(nWR),
+		.WR(WR),
+		.RD(RD),
+		.nC0(nC[0]),
+		.nC1(nC[1]),
+		.C1(C[1]),
+		.nRAS_to_pad(nRAS_to_pad),
+		.nRAS_oe(nRAS_oe),
+		.nCAS_to_pad(nCAS_to_pad),
+		.nVidRAS(nVidRAS),
+		.VidRAS(VidRAS),
+		.nROMCS_to_pad(nROMCS_to_pad),
+		.nWE_to_pad(nWE_to_pad),
+		.nBorder(nBorder),
+		.VidCASPulse(VidCASPulse) );
 
-	video_signal_features video_signal_features_inst ();
+	video_signal_features video_signal_features_inst (
+		.nC3(nC[3]),
+		.nC4(nC[4]),
+		.nC5(nC[5]),
+		.nC6(nC[6]),
+		.nC7(nC[7]),
+		.nC8(nC[8]),
+		.C4(C[4]),
+		.C5(C[5]),
+		.C6(C[6]),
+		.C7(C[7]),
+		.C8(C[8]),
+		.Timing(Timing),
+		.V0(V[0]),
+		.V1(V[1]),
+		.V2(V[2]),
+		.V8(V[8]),
+		.nV3(nV[3]),
+		.nV4(nV[4]),
+		.nV5(nV[5]),
+		.nV6(nV[6]),
+		.nV7(nV[7]),
+		.nSync(nSync),
+		.VSync(VSync),
+		.nHBlank(nHBlank),
+		.nINT_to_pad(nINT_to_pad),
+		.nBurstS(nBurstS),
+		.BurstS(BurstS),
+		.nBorder(nBorder),
+		.nBurstDD(nBurstDD) );
 
-	dac_setup dac_setup_inst ();
+	dac_setup dac_setup_inst (
+		.BlueD(BlueD),
+		.RedD(RedD),
+		.nRedDD(nRedDD),
+		.Timing(Timing),
+		.nSync(nSync),
+		.nBLACKS(nBLACKS),
+		.nHL(nHL),
+		.nSyncD(nSyncD),
+		.GreenD(GreenD),
+		.RedS(RedS),
+		.BlueDD(BlueDD),
+		.nGreenDD(nGreenDD),
+		.nBlueS(nBlueS),
+		.nGreenS(nGreenS),
+		.Red(Red),
+		.HL(AO[6]),
+		.Blue(Blue),
+		.Green(Green) );
 
-	io io_inst ();
+	io io_inst (
+		.nIOREQ(nIOREQ_from_pad),
+		.nWR(nWR),
+		.nRD(nRD),
+		.nTape(nTape), 
+		.B0_B(B0_B),
+		.B1_R(B1_R),
+		.B2_G(B2_G), 
+		.KB4_from_pad(KB4_from_pad),
+		.D2_from_pad(D2_from_pad),
+		.Ear_Input(Ear_Input),
+		.D6_to_pad(D6_to_pad),
+		.D1_to_pad(D1_to_pad),
+		.D0_from_pad(D0_from_pad),
+		.KB1_from_pad(KB1_from_pad),
+		.KB3_from_pad(KB3_from_pad),
+		.D0_to_pad(D0_to_pad),
+		.D3_from_pad(D3_from_pad),
+		.KB0_from_pad(KB0_from_pad),
+		.KB2_from_pad(KB2_from_pad),
+		.nSpeaker(nSpeaker),
+		.D4_from_pad(D4_from_pad),
+		.D1_from_pad(D1_from_pad),
+		.D4_to_pad(D4_to_pad),
+		.D2_to_pad(D2_to_pad),
+		.nIOREQT2(nIOREQT2),
+		.A0_from_pad(A0_from_pad),
+		.D3_to_pad(D3_to_pad) );
 
-	contention contention_inst ();
+	contention contention_inst (
+		.nMREQ(nMREQ_from_pad),
+		.nIOREQ(nIOREQ_from_pad),
+		.Border(Border),
+		.A14(A14_from_pad),
+		.A15(A15_from_pad),
+		.C0(C[0]),
+		.C2(C[2]),
+		.C3(C[3]),
+		.CPUCLK(CPUCLK),
+		.C0_other(C0_other),
+		.nIOREQT2(nIOREQT2) );
 
 	// Pads
 
@@ -1336,9 +1543,9 @@ module ras_cas_romcs (input wire nVidC3, input wire A14, input wire A15, input w
 	ula_not g74 (.a(w422), .x(nCAS_to_pad) );
 endmodule // ras_cas_romcs
 
-module video_signal_features (input wire nC3, input wire nC4, input wire nC5, input wire nC6, input wire nC7, input wire nC8, input wire C4, input wire C5, input wire C6, input wire C7, input wire C8, inout wire Timing
-	input wire V0, input wire V1, input wire V2, input wire V8, input wire nV3, input wire nV4, input wire nV6, input wire nV7,
-	output wire nSync, output wire VSync, output wire nHBlank, output wire nINT_to_pad, output wire nBurstS, output wire BurstS, output wire nBorder, input wire nV5
+module video_signal_features (input wire nC3, input wire nC4, input wire nC5, input wire nC6, input wire nC7, input wire nC8, input wire C4, input wire C5, input wire C6, input wire C7, input wire C8, inout wire Timing,
+	input wire V0, input wire V1, input wire V2, input wire V8, input wire nV3, input wire nV4, input wire nV5, input wire nV6, input wire nV7,
+	output wire nSync, output wire VSync, output wire nHBlank, output wire nINT_to_pad, output wire nBurstS, output wire BurstS, output wire nBorder, output wire nBurstDD
 	);
 	wire w20;
 	wire w21;
