@@ -13,19 +13,9 @@ module ula_nor (  a, b, x);
 
 	input wire a;
 	input wire b;
-	output reg x;
+	output wire x;
 
-	// To simulate RS flip flops we use behavioral model
-
-	always @ (a or b) begin
-	    if (a == 1'b0 && b == 1'b0) begin
-	        x = 1'b1;
-	    end
-	    else 
-	        x = 1'b0; 
-	end	
-
-	// nor (x, a, b);
+	nor (x, a, b);
 
 endmodule // ula_nor
 
@@ -224,6 +214,8 @@ module ula_SoundDAC (  pad, from_pad, to_pad1, to_pad2);
 	input wire to_pad1;
 	input wire to_pad2;
 
+	assign from_pad = 1'b0;
+
 endmodule // ula_SoundDAC
 
 module ula_pad_kb_input (  pad, from_pad);
@@ -266,6 +258,10 @@ module ula_VideoDAC (  u, v, ny, i14, i13, i12, i11, i10, i9, i8, i7, i6, i5, i4
 	input wire i2;
 	input wire i1;
 	input wire i0;
+
+	assign u = 1'b0;
+	assign v = 1'b0;
+	assign ny = 1'b0;
 
 endmodule // ula_VideoDAC
 

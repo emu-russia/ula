@@ -158,6 +158,18 @@ module ula (  n_INT, A6, A5, A4, A3, A2, A1, A0, n_WE, n_RD, n_WR, n_CAS, OSC, n
 		.osc_from_pad(osc_from_pad), 
 		.nCLK7(nCLK7) );
 
+	tclk tclk_inst (
+		.nMREQ(nMREQ_from_pad), 
+		.nIOREQ(nIOREQ_from_pad), 
+		.nRD(nRD), 
+		.nWR(nWR), 
+		.WR(WR), 
+		.RD(RD), 
+		.nTCLKA(nTCLKA), 
+		.nTCLKB(nTCLKB), 
+		.K0(K0_topad), 
+		.nV8(nV[8]) );
+
 	hcounter hcounter_inst (
 		.nCLK7(nCLK7), 
 		.nTCLKA(nTCLKA), 
@@ -172,18 +184,6 @@ module ula (  n_INT, A6, A5, A4, A3, A2, A1, A0, n_WE, n_RD, n_WR, n_CAS, OSC, n
 		.nC5(nC[5]), 
 		.nV(nV), 
 		.V(V) );
-
-	tclk tclk_inst (
-		.nMREQ(nMREQ_from_pad), 
-		.nIOREQ(nIOREQ_from_pad), 
-		.nRD(nRD), 
-		.nWR(nWR), 
-		.WR(WR), 
-		.RD(RD), 
-		.nTCLKA(nTCLKA), 
-		.nTCLKB(nTCLKB), 
-		.K0(K0_topad), 
-		.nV8(nV[8]) );
 
 	latch_control latch_control_inst (
 		.nCLK7(nCLK7), 
@@ -455,8 +455,8 @@ module ula (  n_INT, A6, A5, A4, A3, A2, A1, A0, n_WE, n_RD, n_WR, n_CAS, OSC, n
 	ula_pad_addr_output g658 (.pad(A5), .n_oe(nAE), .to_pad(A5_to_pad) );
 	ula_pad_addr_output g659 (.pad(A6), .n_oe(nAE), .to_pad(A6_to_pad) );
 	ula_pad_int_output g660 (.pad(n_INT), .to_pad(nINT_to_pad) );
-endmodule // ula
 
+endmodule // ula
 
 module clkgen (input wire osc_from_pad, output wire nCLK7);
 	wire w441;
@@ -479,7 +479,7 @@ module clkgen (input wire osc_from_pad, output wire nCLK7);
 	ula_not g54 (.a(w446), .x(nCLK7) );	
 endmodule // clkgen
 
-module hcounter (input wire nCLK7, input wire nTCLKA, output wire [8:0] nC, output wire [8:0] C, inout wire HCrst, inout wire CLKHC6);
+module hcounter (input wire nCLK7, input wire nTCLKA, output wire [8:0] nC, output wire [8:0] C, output wire HCrst, output wire CLKHC6);
 	wire w26;
 	wire w27;
 	wire w28;
@@ -799,7 +799,6 @@ module vcounter (input wire HCrst, input wire CLKHC6, input wire nC5, output wir
 	ula_nor g564 (.a(V[8]), .b(w262), .x(nV[8]) );
 	ula_nor g565 (.a(w194), .b(nV[8]), .x(V[8]) );
 	ula_nor4 g566 (.a(w264), .b(w266), .c(w194), .d(w295), .x(w263) );
-
 endmodule // vcounter
 
 module tclk (input wire nMREQ, input wire nIOREQ, input wire nRD, input wire nWR, inout wire WR, inout wire RD, output wire nTCLKA, inout wire nTCLKB, output wire K0, input wire nV8);
@@ -865,7 +864,7 @@ module latch_control (input wire nCLK7, inout wire Border, input wire nBorder, i
 	ula_not g46 (.a(w339), .x(nAOLatch) );
 endmodule // latch_control
 
-module data_latch (input wire nDataLatch, input wire D2_from_pad, input wire D6_from_pad, input wire D5_from_pad, input wire D7_from_pad, input wire D0_from_pad, input wire D4_from_pad, input wire D1_from_pad, input wire D3_from_pad, output wire [8:0] DL);
+module data_latch (input wire nDataLatch, input wire D2_from_pad, input wire D6_from_pad, input wire D5_from_pad, input wire D7_from_pad, input wire D0_from_pad, input wire D4_from_pad, input wire D1_from_pad, input wire D3_from_pad, output wire [7:0] DL);
 	wire w481;
 	wire w498;
 	wire w499;
@@ -1315,14 +1314,14 @@ module flash_clock (input wire nTCLKB, inout wire FlashClock, input wire nV8);
 	ula_nor g194 (.a(w164), .b(FlashClock), .x(w170) );
 endmodule // flash_clock
 
-module flash_xnor (input wire FL /*AO[7]*/, input wire FlashClock, output wire nDataSelect, input wire SerialData);
+module flash_xnor (input wire FL, input wire FlashClock, output wire nDataSelect, input wire SerialData);
 	wire w64;
 	wire w65;
 	wire w195;
 	wire w196;
 	wire w199;
 
-	ula_not g79 (.a(FL), .x(w195) );
+	ula_not g79 (.a(FL), .x(w195) );  			// AO[7]
 	ula_nor g516 (.a(w199), .b(w196), .x(w64) );
 	ula_nor g517 (.a(w195), .b(FlashClock), .x(w196) );	
 	ula_nor g487 (.a(SerialData), .b(w199), .x(w65) );
@@ -1613,7 +1612,7 @@ module video_signal_features (input wire nC3, input wire nC4, input wire nC5, in
 endmodule // video_signal_features
 
 module dac_setup (output wire BlueD, output wire RedD, output wire nRedDD, input wire Timing, input wire nSync, output wire nBLACKS, output wire nHL, output wire nSyncD, output wire GreenD, output wire RedS, output wire BlueDD, output wire nGreenDD, output wire nBlueS, output wire nGreenS, input wire Red,
-	input wire HL /*AO[6]*/, input wire Blue, input wire Green
+	input wire HL, input wire Blue, input wire Green
 	);
 	wire w3;
 	wire w15;
@@ -1638,7 +1637,7 @@ module dac_setup (output wire BlueD, output wire RedD, output wire nRedDD, input
 
 	ula_not g2 (.a(nSync), .x(w123) );
 	ula_not g5 (.a(w123), .x(nSyncD) );
-	ula_not g23 (.a(HL), .x(nHL) );
+	ula_not g23 (.a(HL), .x(nHL) ); 						// AO[6]
 	ula_nor3 g174 (.a(w130), .b(w3), .c(w128), .x(w129) );
 	ula_nor3 g211 (.a(Green), .b(Red), .c(Blue), .x(w152) );
 	ula_not g19 (.a(w129), .x(nBLACKS) );
