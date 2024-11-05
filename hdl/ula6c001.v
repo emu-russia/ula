@@ -403,11 +403,10 @@ module ula (  n_INT, A6, A5, A4, A3, A2, A1, A0, n_WE, n_RD, n_WR, n_CAS, OSC, n
 		.Border(Border),
 		.A14(A14_from_pad),
 		.A15(A15_from_pad),
-		.C0(C[0]),
+		.C0_other(C0_other),
 		.C2(C[2]),
 		.C3(C[3]),
 		.CPUCLK(CPUCLK),
-		.C0_other(C0_other),
 		.nIOREQT2(nIOREQT2) );
 
 	// Pads
@@ -1273,6 +1272,25 @@ module color_mux (input wire nHBlank, output wire Red, output wire Green, output
 	wire w640;
 	wire w643;
 
+	not (HBlank, nHBlank );
+
+	not (w640, nDataSelect );
+	nor (w560, AO[5], w640 );
+	nor (w561, AO[4], nDataSelect );	
+	nor (Green, HBlank, w560, w561, VSync );
+
+	not (w559, nDataSelect );
+	nor (w563, AO[3], w559 );
+	nor (w592, AO[2], nDataSelect );
+	nor (Red, VSync, w592, HBlank, w563 );
+
+	not (w625, nDataSelect );
+	nor (w562, w625, AO[1] );	
+	nor (w643, nDataSelect, AO[0] );
+	nor (Blue, HBlank, w643, w562, VSync );
+
+
+/*
 	ula_not g27 (.a(nHBlank), .x(HBlank) );
 
 	ula_not g30 (.a(nDataSelect), .x(w640) );
@@ -1289,6 +1307,8 @@ module color_mux (input wire nHBlank, output wire Red, output wire Green, output
 	ula_nor g264 (.a(w625), .b(AO[1]), .x(w562) );	
 	ula_nor g229 (.a(nDataSelect), .b(AO[0]), .x(w643) );
 	ula_nor4 g238 (.a(HBlank), .b(w643), .c(w562), .d(VSync), .x(Blue) );
+*/
+
 endmodule // color_mux
 
 module video_addr_gen (input wire C1, input wire C2, input wire C4, input wire C5, input wire C6, input wire C7, input wire V0, input wire V1, input wire V2, input wire V3, input wire V4, input wire V5, input wire V6, input wire V7, output wire nVidRAS, input wire VidRAS, output wire A0_to_pad,
@@ -1696,7 +1716,7 @@ module io (input wire nIOREQ, input wire nWR, input wire nRD, output wire nTape,
 	ula_not g80 (.a(w317), .x(nPortRD) );
 endmodule // io
 
-module contention (input wire nMREQ, input wire nIOREQ, input wire Border, input wire A14, input wire A15, input wire C0, input wire C2, input wire C3, output wire CPUCLK, input wire C0_other, output wire nIOREQT2);
+module contention (input wire nMREQ, input wire nIOREQ, input wire Border, input wire A14, input wire A15, input wire C2, input wire C3, output wire CPUCLK, input wire C0_other, output wire nIOREQT2);
 	wire w344;
 	wire w345;
 	wire w346;
