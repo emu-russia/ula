@@ -1262,7 +1262,7 @@ module flash_xnor (input wire FL, input wire FlashClock, output wire nDataSelect
 endmodule // flash_xnor
 
 module color_mux (input wire nHBlank, output wire Red, output wire Green, output wire Blue, input wire nDataSelect, input wire VSync, input wire [7:0] AO);
-	wire w480;
+	wire HBlank; 		// w480
 	wire w559;
 	wire w560;
 	wire w561;
@@ -1273,22 +1273,22 @@ module color_mux (input wire nHBlank, output wire Red, output wire Green, output
 	wire w640;
 	wire w643;
 
-	ula_not g27 (.a(nHBlank), .x(w480) );
+	ula_not g27 (.a(nHBlank), .x(HBlank) );
+
+	ula_not g30 (.a(nDataSelect), .x(w640) );
+	ula_nor g266 (.a(AO[5]), .b(w640), .x(w560) );
+	ula_nor g263 (.a(AO[4]), .b(nDataSelect), .x(w561) );	
+	ula_nor4 g237 (.a(HBlank), .b(w560), .c(w561), .d(VSync), .x(Green) );
 
 	ula_not g31 (.a(nDataSelect), .x(w559) );
 	ula_nor g265 (.a(AO[3]), .b(w559), .x(w563) );
 	ula_nor g230 (.a(AO[2]), .b(nDataSelect), .x(w592) );
-	ula_nor4 g231 (.a(VSync), .b(w592), .c(w480), .d(w563), .x(Red) );
+	ula_nor4 g231 (.a(VSync), .b(w592), .c(HBlank), .d(w563), .x(Red) );
 
 	ula_not g28 (.a(nDataSelect), .x(w625) );
-	ula_not g30 (.a(nDataSelect), .x(w640) );
-	ula_nor g264 (.a(w625), .b(AO[1]), .x(w562) );
-	ula_nor g266 (.a(AO[5]), .b(w640), .x(w560) );
-	ula_nor4 g237 (.a(w480), .b(w560), .c(w561), .d(VSync), .x(Green) );
-	
-	ula_nor g263 (.a(AO[4]), .b(nDataSelect), .x(w561) );
+	ula_nor g264 (.a(w625), .b(AO[1]), .x(w562) );	
 	ula_nor g229 (.a(nDataSelect), .b(AO[0]), .x(w643) );
-	ula_nor4 g238 (.a(w480), .b(w643), .c(w562), .d(VSync), .x(Blue) );
+	ula_nor4 g238 (.a(HBlank), .b(w643), .c(w562), .d(VSync), .x(Blue) );
 endmodule // color_mux
 
 module video_addr_gen (input wire C1, input wire C2, input wire C4, input wire C5, input wire C6, input wire C7, input wire V0, input wire V1, input wire V2, input wire V3, input wire V4, input wire V5, input wire V6, input wire V7, output wire nVidRAS, input wire VidRAS, output wire A0_to_pad,
