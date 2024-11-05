@@ -1618,8 +1618,8 @@ module io (input wire nIOREQ, input wire nWR, input wire nRD, output wire nTape,
 	wire w237;
 	wire w317;
 	wire w483;
-	wire w484;
-	wire w487;
+	wire Speaker; 		// w484
+	wire Tape; 		// w487
 	wire w488;
 	wire w489;
 	wire w490;
@@ -1676,18 +1676,18 @@ module io (input wire nIOREQ, input wire nWR, input wire nRD, output wire nTape,
 	ula_nor g290 (.a(w572), .b(w571), .x(B2_G) );
 
 	// 3
-	ula_nor g323 (.a(w489), .b(w488), .x(w487) );
+	ula_nor g323 (.a(w489), .b(w488), .x(Tape) );
 	ula_nor g322 (.a(D3_from_pad), .b(nPortWR), .x(w488) );	
-	ula_nor g341 (.a(w490), .b(w487), .x(w489) );
+	ula_nor g341 (.a(w490), .b(Tape), .x(w489) );
 	ula_nor g342 (.a(nPortWR), .b(w488), .x(w490) );
-	ula_not g37 (.a(w487), .x(nTape) );	
+	ula_not g37 (.a(Tape), .x(nTape) );	
 
 	// 4
 	ula_nor g381 (.a(w538), .b(nPortWR), .x(w483) );
-	ula_nor g382 (.a(w483), .b(w484), .x(w537) );
-	ula_nor g371 (.a(w538), .b(w537), .x(w484) );
+	ula_nor g382 (.a(w483), .b(Speaker), .x(w537) );
+	ula_nor g371 (.a(w538), .b(w537), .x(Speaker) );
 	ula_nor g372 (.a(nPortWR), .b(D4_from_pad), .x(w538) );
-	ula_not g38 (.a(w484), .x(nSpeaker) );	
+	ula_not g38 (.a(Speaker), .x(nSpeaker) );	
 
 	ula_nor4 g622 (.a(nIOREQ), .b(A0_from_pad), .c(nWR), .d(nIOREQT2), .x(w237) );	
 	ula_not g77 (.a(w237), .x(nPortWR) );
