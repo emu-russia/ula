@@ -256,12 +256,12 @@ module ula (  n_INT, A6, A5, A4, A3, A2, A1, A0, n_WE, n_RD, n_WR, n_CAS, OSC, n
 
 	color_mux color_mux_inst (
 		.nHBlank(nHBlank),
+		.VSync(VSync),
+		.nDataSelect(nDataSelect),
+		.AO(AO),
 		.Red(Red),
 		.Green(Green),
-		.Blue(Blue),
-		.nDataSelect(nDataSelect),
-		.VSync(VSync),
-		.AO(AO) );
+		.Blue(Blue) );
 
 	video_addr_gen video_addr_gen_inst (
 		.C1(C[1]),
@@ -1260,55 +1260,14 @@ module flash_xnor (input wire FL, input wire FlashClock, output wire nDataSelect
 	ula_nor g190 (.a(w64), .b(w65), .x(nDataSelect) );
 endmodule // flash_xnor
 
-module color_mux (input wire nHBlank, output wire Red, output wire Green, output wire Blue, input wire nDataSelect, input wire VSync, input wire [7:0] AO);
-	wire HBlank; 		// w480
-	wire w559;
-	wire w560;
-	wire w561;
-	wire w562;
-	wire w563;
-	wire w592;
-	wire w625;
-	wire w640;
-	wire w643;
-
-	not (HBlank, nHBlank );
-
-	not (w640, nDataSelect );
-	nor (w560, AO[5], w640 );
-	nor (w561, AO[4], nDataSelect );	
-	nor (Green, HBlank, w560, w561, VSync );
-
-	not (w559, nDataSelect );
-	nor (w563, AO[3], w559 );
-	nor (w592, AO[2], nDataSelect );
-	nor (Red, VSync, w592, HBlank, w563 );
-
-	not (w625, nDataSelect );
-	nor (w562, w625, AO[1] );	
-	nor (w643, nDataSelect, AO[0] );
-	nor (Blue, HBlank, w643, w562, VSync );
-
-
-/*
-	ula_not g27 (.a(nHBlank), .x(HBlank) );
-
-	ula_not g30 (.a(nDataSelect), .x(w640) );
-	ula_nor g266 (.a(AO[5]), .b(w640), .x(w560) );
-	ula_nor g263 (.a(AO[4]), .b(nDataSelect), .x(w561) );	
-	ula_nor4 g237 (.a(HBlank), .b(w560), .c(w561), .d(VSync), .x(Green) );
-
-	ula_not g31 (.a(nDataSelect), .x(w559) );
-	ula_nor g265 (.a(AO[3]), .b(w559), .x(w563) );
-	ula_nor g230 (.a(AO[2]), .b(nDataSelect), .x(w592) );
-	ula_nor4 g231 (.a(VSync), .b(w592), .c(HBlank), .d(w563), .x(Red) );
-
-	ula_not g28 (.a(nDataSelect), .x(w625) );
-	ula_nor g264 (.a(w625), .b(AO[1]), .x(w562) );	
-	ula_nor g229 (.a(nDataSelect), .b(AO[0]), .x(w643) );
-	ula_nor4 g238 (.a(HBlank), .b(w643), .c(w562), .d(VSync), .x(Blue) );
-*/
-
+module color_mux (input wire nHBlank, input wire VSync, input wire nDataSelect, input wire [7:0] AO, output wire Red, output wire Green, output wire Blue);
+	wire HBlank;
+	wire DataSelect;
+	assign HBlank = ~nHBlank;
+	assign DataSelect = ~nDataSelect;
+	assign Green = ~( ~(AO[5]|DataSelect) | ~(AO[4]|nDataSelect) | HBlank | VSync);
+	assign Red   = ~( ~(AO[3]|DataSelect) | ~(AO[2]|nDataSelect) | HBlank | VSync);
+	assign Blue  = ~( ~(AO[1]|DataSelect) | ~(AO[0]|nDataSelect) | HBlank | VSync);
 endmodule // color_mux
 
 module video_addr_gen (input wire C1, input wire C2, input wire C4, input wire C5, input wire C6, input wire C7, input wire V0, input wire V1, input wire V2, input wire V3, input wire V4, input wire V5, input wire V6, input wire V7, output wire nVidRAS, input wire VidRAS, output wire A0_to_pad,
