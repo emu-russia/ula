@@ -295,3 +295,16 @@ module ula_pad_int_output (  pad, to_pad);
 	assign pad = to_pad == 1'b0 ? to_pad : 1'bz;
 
 endmodule // ula_pad_int_output
+
+module GD (input wire D, input wire nE, output wire Q, output wire nQ);
+	reg val;
+	initial val = 1'b0;
+
+	always @(*) begin
+		if (~nE)
+			val = D;
+	end
+
+	assign Q = val;
+	assign nQ = ~Q;
+endmodule // GD
