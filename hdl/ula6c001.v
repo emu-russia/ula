@@ -808,9 +808,7 @@ module latch_control (input wire nCLK7, inout wire Border, input wire nBorder, i
 	output wire nDataLatch, output wire nAOLatch, output wire nVidC3, output wire C0_other, output wire SLoad, output wire nSLoad, output wire VidEn, output wire VidCASPulse );
 	wire w339;
 	wire w349;
-	wire w350;
-	wire w387;
-	wire w388;
+	wire nVidEn; 		// w350
 	wire w389;
 	wire w390;
 	wire w391;
@@ -839,14 +837,10 @@ module latch_control (input wire nCLK7, inout wire Border, input wire nBorder, i
 	ula_nor g409 (.a(w397), .b(w397), .x(w398) );
 	ula_not g51 (.a(w398), .x(nDataLatch) );
 
-	// GD
-	ula_nor g480 (.a(w388), .b(nC3), .x(w387) );
-	ula_nor g481 (.a(nC3), .b(nBorder), .x(w388) );
-	ula_nor g466 (.a(w350), .b(w388), .x(VidEn) );
-	ula_nor g467 (.a(w387), .b(VidEn), .x(w350) );
+	GD viden_gd (.D(nBorder), .nE(nC3), .Q(VidEn), .nQ(nVidEn) );
 
 	ula_not g57 (.a(nC0), .x(C0_other) );
-	ula_nor4 g443 (.a(C1), .b(nC2), .c(w350), .d(C0_other), .x(SLoad) );	
+	ula_nor4 g443 (.a(C1), .b(nC2), .c(nVidEn), .d(C0_other), .x(SLoad) );	
 	ula_not g339 (.a(SLoad), .x(nSLoad) );
 
 	ula_nor4 g407 (.a(nC0), .b(nVidC3), .c(nC1), .d(VidCASPulse), .x(w419) );
