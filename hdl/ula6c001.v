@@ -1676,10 +1676,7 @@ module io (input wire nIOREQ, input wire nWR, input wire nRD, output wire nTape,
 endmodule // io
 
 module contention (input wire nMREQ, input wire nIOREQ, input wire Border, input wire A14, input wire A15, input wire C2, input wire C3, output wire CPUCLK, input wire C0_other, output wire nIOREQT2);
-	wire w344;
-	wire w345;
-	wire w346;
-	wire w347;
+	wire MREQT2; 			// w347
 	wire w359;
 	wire w360;
 	wire w361;
@@ -1691,22 +1688,12 @@ module contention (input wire nMREQ, input wire nIOREQ, input wire Border, input
 	wire w412;
 	wire w413;
 	wire w414;
-	wire w425;
-	wire w426;
-	wire w448;
+	wire IOREQT2; 			// w426
 	wire w477;
 
-	// GD
-	ula_nor g395 (.a(w346), .b(w347), .x(w345) );
-	ula_nor g396 (.a(CPUCLK_internal), .b(nMREQ), .x(w346) );
-	ula_nor g397 (.a(w346), .b(CPUCLK_internal), .x(w344) );
-	ula_nor g394 (.a(w344), .b(w345), .x(w347) );	
+	GD mreq_gd (.D(nMREQ), .nE(CPUCLK_internal), .nQ(MREQT2) );
 
-	// GD
-	ula_nor g392 (.a(CPUCLK_internal), .b(nIOREQ), .x(w425) );
-	ula_nor g393 (.a(CPUCLK_internal), .b(w425), .x(w448) );
-	ula_nor g402 (.a(nIOREQT2), .b(w448), .x(w426) );
-	ula_nor g403 (.a(w426), .b(w425), .x(nIOREQT2) );
+	GD ioreq_gd (.D(nIOREQ), .nE(CPUCLK_internal), .Q(nIOREQT2), .nQ(IOREQT2) );
 
 	ula_not g41 (.a(A15), .x(w411) );
 	ula_not g42 (.a(CPUCLK_internal), .x(nCPUCLK_internal) );
@@ -1715,9 +1702,9 @@ module contention (input wire nMREQ, input wire nIOREQ, input wire Border, input
 	ula_nor3 g384 (.a(w359), .b(w477), .c(C0_other), .x(w414) );
 	ula_nor g385 (.a(w410), .b(w411), .x(w412) );
 	ula_nor g386 (.a(A14), .b(w410), .x(w413) );	
-	ula_nor4 g404 (.a(w426), .b(Border), .c(nCPUCLK_internal), .d(w347), .x(w362) );
+	ula_nor4 g404 (.a(IOREQT2), .b(Border), .c(nCPUCLK_internal), .d(MREQT2), .x(w362) );
 	ula_nor g411 (.a(C2), .b(C3), .x(w360) );
-	ula_nor5 g405 (.a(Border), .b(nCPUCLK_internal), .c(nIOREQ), .d(w360), .e(w426), .x(w359) );	
+	ula_nor5 g405 (.a(Border), .b(nCPUCLK_internal), .c(nIOREQ), .d(w360), .e(IOREQT2), .x(w359) );	
 	ula_not g45 (.a(nIOREQ), .x(w410) );	
 	ula_not g48 (.a(w362), .x(w361) );
 
