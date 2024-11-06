@@ -968,7 +968,7 @@ module attr_latch (input wire nAttrLatch, input wire B0_B, input wire B1_R, inpu
 endmodule // data_latch
 
 module ao_latch (input wire nAOLatch, input wire [7:0] AL, input wire PB0_B, input wire PB1_R, input wire PB2_G, output wire [7:0] AO);
-	GD ao (
+	GD ao [7:0] (
 		.D({AL[7],AL[6],PB2_G,AL[2],PB1_R,AL[1],PB0_B,AL[0]}),
 		.nE({8{nAOLatch}}),
 		.Q(AO) );
