@@ -1,3 +1,7 @@
 temp
 *.vcd
+*.rundone
+__pycache__/
+*.pyc
+
 *.run
