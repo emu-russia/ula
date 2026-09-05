@@ -1,8 +1,19 @@
 # Модули ULA 6C001
 
+> [!WARNING]
+> **Внимание!** Нейросети и агенты пока очень плохо работают с HDL-нетлистами:
+> картинки схем модулей и временные диаграммы (waves) ниже получились
+> «кривыми» и по сути являются **плейсхолдерами**. Достоверная информация —
+> в тексте, таблицах вентилей и уравнениях; рисунки стоит воспринимать как
+> иллюстрацию структуры, а не как точную документацию. Просьба отнестись
+> с пониманием.
+
+
 > Раздел по задаче [emu-russia/ula#4](https://github.com/emu-russia/ula/issues/4):
 > описание *каждого* модуля восстановленного модульного HDL
 > (`hdl/ula6c001.v`), его схема, типовые осциллограммы и модельный код на C++.
+
+> English version: [ula-modules.en.md](ula-modules.en.md)
 
 ## Как устроен раздел
 
@@ -61,7 +72,7 @@
 | 19 | `contention` | арбитраж DRAM: CPU-клок с растяжением (contention) | `:1514` |
 | — | `ula` (top) | связывает модули и пады (`hdl/ula6c001.v:6`, пады — `pads.md`) | `:6` |
 
-Полная структурная схема связей модулей и падов: [s_top](../imgstore/schematics/s_top.png).
+Полная структурная схема связей модулей и падов: ![s_top](../imgstore/schematics/s_top.png).
 
 Измеренные в модели тайминги, на которые ссылаются разделы:
 
@@ -113,8 +124,8 @@ D-триггер; именно так он и работает (делит на 
          └──────────────── nQ ────────────────────┘  (обратная связь)
 ```
 
-Диаграмма: [s_clkgen](../imgstore/schematics/s_clkgen.png).
-Осциллограмма (OSC, nCLK7, /PHICPU): [w_clockgen](../imgstore/waves/w_clockgen.png).
+Диаграмма: ![s_clkgen](../imgstore/schematics/s_clkgen.png).
+Осциллограмма (OSC, nCLK7, /PHICPU): ![w_clockgen](../imgstore/waves/w_clockgen.png).
 
 ### Поведение (проверено в модели)
 
@@ -176,7 +187,7 @@ g528:  K0     = nor(nV8, w313)                 // тестовый выход н
 `K0 = nV8 · nTCLKB`. На реальной плате `KB0` — единственный двунаправленный
 клавиатурный вывод, который ULA может прижимать к нулю.
 
-Диаграмма: [s_tclk](../imgstore/schematics/s_tclk.png).
+Диаграмма: ![s_tclk](../imgstore/schematics/s_tclk.png).
 
 ### C++
 
@@ -230,9 +241,9 @@ hcounter ( input nCLK7, nTCLKA,
 старших битов, — результирующий период строки получается ровно **448**,
 что соответствует 64 мкс строки на реальной частоте 7 МГц.
 
-Схема: [s_hcounter](../imgstore/schematics/s_hcounter.png).
-Осциллограммы: строка целиком [w_hline](../imgstore/waves/w_hline.png),
-младшие биты/фазы [w_clockgen](../imgstore/waves/w_clockgen.png).
+Схема: ![s_hcounter](../imgstore/schematics/s_hcounter.png).
+Осциллограммы: строка целиком ![w_hline](../imgstore/waves/w_hline.png),
+младшие биты/фазы *w_clockgen*.
 
 ### Измеренное поведение
 
@@ -296,9 +307,9 @@ vcounter ( input HCrst, CLKHC6, nC5,
 поэтому в осциллограммах на верхних битах `V` возможны "внутристрочные"
 переходы — модель честно показывает текущее состояние HDL.
 
-Схема: [s_vcounter](../imgstore/schematics/s_vcounter.png).
-Осциллограммы: вертикальная развёртка кадра [w_vframe](../imgstore/waves/w_vframe.png),
-[весь кадр w_frame](../imgstore/waves/w_frame.png).
+Схема: ![s_vcounter](../imgstore/schematics/s_vcounter.png).
+Осциллограммы: вертикальная развёртка кадра ![w_vframe](../imgstore/waves/w_vframe.png),
+![весь кадр w_frame](../imgstore/waves/w_frame.png).
 
 ### C++
 
@@ -356,8 +367,8 @@ GD viden_gd: VidEn/nVidEn — защёлка по nC3: при nC3=0 VidEn = /nBo
 `nDataLatch`/`nAttrLatch` — в момент выборки байта пикселя и следующего за
 ним атрибута (в модели: 32 пары на строку, атрибут на ~200 нс позже байта).
 
-Схема: [s_latch_control](../imgstore/schematics/s_latch_control.png).
-Осциллограмма: [w_latch_control](../imgstore/waves/w_latch_control.png).
+Схема: ![s_latch_control](../imgstore/schematics/s_latch_control.png).
+Осциллограмма: ![w_latch_control](../imgstore/waves/w_latch_control.png).
 
 ### C++
 
@@ -422,7 +433,7 @@ struct DataLatch {
 };
 ```
 
-Схема: [s_data_latch](../imgstore/schematics/s_data_latch.png) (8× `GD`).
+Схема: ![s_data_latch](../imgstore/schematics/s_data_latch.png) (8× `GD`).
 
 ---
 
@@ -465,7 +476,7 @@ G:  PB2_G = то же с AL[5] и B2_G
 заменяется в `PB0_B` на цвет рамки `B0_B`, когда `VidEn=0`, и т.д. — это и
 есть мультиплексор "paper/border".
 
-Схема: [s_attr_latch](../imgstore/schematics/s_attr_latch.png).
+Схема: ![s_attr_latch](../imgstore/schematics/s_attr_latch.png).
 
 ### C++
 
@@ -518,7 +529,7 @@ GD ao[7:0]: D = { AL[7], AL[6], PB2_G, AL[2], PB1_R, AL[1], PB0_B, AL[0] }
 уже вложен border-цвет для случая "видео выключено", так что AO всегда
 содержит правильный цвет текущего объекта.
 
-Схема: [s_ao_latch](../imgstore/schematics/s_ao_latch.png).
+Схема: ![s_ao_latch](../imgstore/schematics/s_ao_latch.png).
 
 ### C++
 
@@ -576,8 +587,8 @@ pixel_shift_reg ( input nCLK7, SLoad, nSLoad,
 открывает параллельный вход `nDL[i]`, после чего такты `nCLK7` двигают
 байт. В `color_mux` поток сравнивается с атрибутом (см. `flash_xnor`).
 
-Схема: [s_pixel_shift_reg](../imgstore/schematics/s_pixel_shift_reg.png).
-Осциллограмма (SLoad/SerialData/выбор ink-paper): [w_pixels](../imgstore/waves/w_pixels.png).
+Схема: ![s_pixel_shift_reg](../imgstore/schematics/s_pixel_shift_reg.png).
+Осциллограмма (SLoad/SerialData/выбор ink-paper): ![w_pixels](../imgstore/waves/w_pixels.png).
 
 ### C++
 
@@ -630,7 +641,7 @@ g529: w33 = nor(nTCLKB, nV8)            // входные импульсы (ши
 На плате реального «Спектрума» flash считается от активности процессора
 (каждый `MREQ`), т.е. частота привязана к числу выполненных инструкций;
 в модели с «чипом в вакууме» счёт идёт от фронтов `nV8` (V-счётчика).
-Диаграмма: [s_flash_clock](../imgstore/schematics/s_flash_clock.png).
+Диаграмма: ![s_flash_clock](../imgstore/schematics/s_flash_clock.png).
 
 ### C++
 
@@ -679,7 +690,7 @@ g190: nDataSelect = nor(w64, w65)
 nDataSelect = ~( (FL ^ FlashClock) == SerialData )
 ```
 
-Схема: [s_flash_xnor](../imgstore/schematics/s_flash_xnor.png).
+Схема: ![s_flash_xnor](../imgstore/schematics/s_flash_xnor.png).
 
 ### C++
 
@@ -724,8 +735,8 @@ Green — `(AO[5],AO[4])`; левый бит пары — paper, правый �
 (перестановка битов сделана ещё в `ao_latch`). Активный `DataSelect=1`
 выбирает ink-компоненту пары, иначе — paper.
 
-Схема: [s_color_mux](../imgstore/schematics/s_color_mux.png).
-Осциллограмма: [w_pixels](../imgstore/waves/w_pixels.png) (строки Red/Green/Blue).
+Схема: ![s_color_mux](../imgstore/schematics/s_color_mux.png).
+Осциллограмма: *w_pixels* (строки Red/Green/Blue).
 
 ### C++
 
@@ -794,8 +805,8 @@ A6 = f(V4, w99-фазы);
 где `w99 = ~w100`, `w100 = nor(w101,w102)`, `w101 = ~C1`, `w102 = VidRAS-ф.`,
 `w115 = ~w114`, `w114 = nor(w102, C1)`, `w217 = ~w102`.
 
-Схема: [s_video_addr_gen](../imgstore/schematics/s_video_addr_gen.png).
-Осциллограмма (адрес на фазах RAS/CAS): [w_memory](../imgstore/waves/w_memory.png).
+Схема: ![s_video_addr_gen](../imgstore/schematics/s_video_addr_gen.png).
+Осциллограмма (адрес на фазах RAS/CAS): ![w_memory](../imgstore/waves/w_memory.png).
 
 ### C++
 
@@ -844,7 +855,7 @@ nAE = Border  |  C3  |  (C0&C1&C2)   // активен (0) только вне �
                                      // в окнах выборки видеопамяти
 ```
 
-Схема: [s_address_enable](../imgstore/schematics/s_address_enable.png).
+Схема: ![s_address_enable](../imgstore/schematics/s_address_enable.png).
 
 ### C++
 
@@ -900,8 +911,8 @@ g473..g477: CAS-декады: nCAS_to_pad = ... (w433/w434 с VidCASPulse, C1, n
 инверторов (g60..g71, g65..g70 и т.п.) — это **линии задержки**, задающие
 ширину стробов (в модели ширина RAS ≈ 275 нс, CAS — пачка импульсов).
 
-Схема: [s_ras_cas_romcs](../imgstore/schematics/s_ras_cas_romcs.png).
-Осциллограмма: [w_memory](../imgstore/waves/w_memory.png).
+Схема: ![s_ras_cas_romcs](../imgstore/schematics/s_ras_cas_romcs.png).
+Осциллограмма: *w_memory*.
 
 ### C++
 
@@ -967,10 +978,10 @@ g118,g6: nBurstS/nBurstDD; g117: BurstS  // цветовая синхрониз�
 `Timing` — внутренняя защёлка (`g119,g120,g150,g151`), "растягивающая"
 синхро-окно: именно её используют `dac_setup` и логика burst.
 
-Схема: [s_video_signal_features](../imgstore/schematics/s_video_signal_features.png).
-Осциллограммы: [w_hline](../imgstore/waves/w_hline.png),
-[w_dac_sync](../imgstore/waves/w_dac_sync.png),
-[w_vframe](../imgstore/waves/w_vframe.png), [w_frame](../imgstore/waves/w_frame.png).
+Схема: ![s_video_signal_features](../imgstore/schematics/s_video_signal_features.png).
+Осциллограммы: *w_hline*,
+![w_dac_sync](../imgstore/waves/w_dac_sync.png),
+*w_vframe*, *w_frame*.
 
 ### C++
 
@@ -1034,8 +1045,8 @@ RedS  = not nor(w129, w128)  ...  nGreenS = nor(w3, w129); nBlueS = nor(w130, w1
 Двойные инверторы (`g15..g18` и т.п.) — задержка/буферизация половинок
 ЦАП (яркость и полу-яркость). Точную таблицу вентилей см. в исходнике.
 
-Схема: [s_dac_setup](../imgstore/schematics/s_dac_setup.png).
-Осциллограмма: [w_dac_sync](../imgstore/waves/w_dac_sync.png).
+Схема: ![s_dac_setup](../imgstore/schematics/s_dac_setup.png).
+Осциллограмма: *w_dac_sync*.
 
 ### C++
 
@@ -1098,8 +1109,8 @@ g37: nTape = not Tape ;  g38: nSpeaker = not Speaker
 `nSpeaker`/`nTape` — открытые коллекторы на пад SOUND (в `hdl/ulabase.v`
 модель пада заглушена: `from_pad = 0`).
 
-Схема: [s_io](../imgstore/schematics/s_io.png).
-Осциллограмма: [w_io](../imgstore/waves/w_io.png).
+Схема: ![s_io](../imgstore/schematics/s_io.png).
+Осциллограмма: ![w_io](../imgstore/waves/w_io.png).
 
 ### C++
 
@@ -1170,9 +1181,9 @@ g405: w359 = nor5(Border, nCPUCLK_internal, nIOREQ, w360, IOREQT2)
 стоит ограничитель итераций релаксации) — полный сценарий растяжения такта
 пока не доведён (честное ограничение, раздел 21).
 
-Схема: [s_contention](../imgstore/schematics/s_contention.png).
+Схема: ![s_contention](../imgstore/schematics/s_contention.png).
 Осциллограмма (попытка CPU-доступа к RAM во время видео-выборки):
-[w_contention](../imgstore/waves/w_contention.png).
+![w_contention](../imgstore/waves/w_contention.png).
 
 ### C++
 
@@ -1210,7 +1221,7 @@ struct Contention {
   с `nAE`), `/INT`, `/PHICPU` (инвертирующий OC), `U`, `V`, `/Y` (аналог);
 - клавиатурные `KB0..KB4`; `KB0` двунаправленный (тест-режим `K0`).
 
-Карта связей верхнего уровня (из `ula6c001.v`): [s_top](../imgstore/schematics/s_top.png).
+Карта связей верхнего уровня (из `ula6c001.v`): *s_top*.
 
 ## 21. Simulator: `ulasim.py`
 
