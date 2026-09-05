@@ -99,7 +99,7 @@ right after power-on.
 
 ```
 clkgen (
-  input  osc_from_pad,   // OSC с пада
+  input  osc_from_pad,   // from the OSC pad
   output nCLK7           // CLK7 = OSC/2
 );
 ```
@@ -120,8 +120,8 @@ Here the RS latches are **not** shown as a NOR pair — this is a classic
 divide-by-2 D flip-flop; that is exactly how it works (divides by 2):
 
 ```
-   OSC ──┬─► буфер ──► [D-триггер ÷2] ──► буфер ──► nCLK7
-         └──────────────── nQ ────────────────────┘  (обратная связь)
+   OSC ──┬─► buffer ──► [D flip-flop ÷2] ──► buffer ──► nCLK7
+         └──────────────── nQ ────────────────────┘  (feedback)
 ```
 
 Diagram: ![s_clkgen](../imgstore/schematics/s_clkgen.png).
@@ -141,15 +141,15 @@ contention (see section 19).
 ```cpp
 // clkgen: OSC/2 -> nCLK7
 struct ClkGen {
-    bool master = 0, slave = 0;          // два плеча D-триггера
+    bool master = 0, slave = 0;          // two D-flip-flop stages
     bool nCLK7   = 0;
 
-    // вызывается по каждому изменению OSC (на платe 14 MHz)
+    // called on every OSC change (14 MHz on the board)
     void eval(bool osc) {
-        bool d = osc;                    // входной буфер/инвертор не меняет фазу
-        if (!osc) { master = d; }        // master прозрачен при OSC=0
-        else      { slave = master; }    // slave копирует при OSC=1
-        nCLK7 = !slave;                  // выходной буфер-инвертор
+        bool d = osc;                    // input buffer/inverter keeps the phase
+        if (!osc) { master = d; }        // master transparent while OSC=0
+        else      { slave = master; }    // slave copies while OSC=1
+        nCLK7 = !slave;                  // output buffer-inverter
     }
 };
 ```
@@ -177,10 +177,10 @@ tclk ( nMREQ, nIOREQ, nRD, nWR, WR(inout), RD(inout),
 ### Gates and equations
 
 ```
-g527:  nTCLKA = nor4(nMREQ, nIOREQ, WR, nRD)   = 1, только если все 4 входа = 0
-g525:  nTCLKB = nor4(RD, nWR, nMREQ, nIOREQ)   = 1, только если все 4 входа = 0
+g527:  nTCLKA = nor4(nMREQ, nIOREQ, WR, nRD)   = 1, only if all 4 inputs are 0
+g525:  nTCLKB = nor4(RD, nWR, nMREQ, nIOREQ)   = 1, only if all 4 inputs are 0
 g83:   w313   = not nTCLKB
-g528:  K0     = nor(nV8, w313)                 // тестовый выход на KB0
+g528:  K0     = nor(nV8, w313)                 // test-mode output to KB0
 ```
 
 `K0` (goes to pad `KB0`) is active when `nV8=0` and `nTCLKB=1` — i.e.
@@ -255,16 +255,16 @@ low bits/phases *w_clockgen*.
 ### C++
 
 ```cpp
-// hcounter: 9-битный счётчик строки, период 448, счёт по nCLK7
+// hcounter: 9-bit scanline counter, period 448, counting on nCLK7
 struct HCounter {
     uint16_t C = 0;              // C[8:0]
     bool HCrst = 0;
 
-    void tick(bool nCLK7) {      // активный фронт nCLK7
+    void tick(bool nCLK7) {      // active nCLK7 edge
         if (!nCLK7) {
-            C = (C + 1) % 448;   // эквивалент сброса по декаде C8·C7
+            C = (C + 1) % 448;   // equivalent of the C8·C7 reset decade
         }
-        HCrst = (C >= 384);      // nor(nC8,nC7) — декада сброса
+        HCrst = (C >= 384);      // nor(nC8,nC7) — reset decade
     }
     int  count() const { return C; }
 };
@@ -484,7 +484,7 @@ Schematic: ![s_attr_latch](../imgstore/schematics/s_attr_latch.png).
 
 ```cpp
 struct AttrLatch {
-    uint8_t al = 0;                       // захваченный атрибут
+    uint8_t al = 0;                       // latched attribute byte
     bool B0_B, B1_R, B2_G, VidEn;
     void latch(bool nAttrLatch, uint8_t d) { if (!nAttrLatch) al = d; }
     void eval() {
@@ -577,11 +577,11 @@ Each of the 8 stages is a master–slave cell (in raw form 6-8 NORs per bit,
 here — a D flip-flop with a load circuit):
 
 ```
-гр. g482..g486  : бит 0
-гр. g461..g465  : бит 1
-гр. g456..g460  : бит 2
+gr. g482..g486  : bit 0
+gr. g461..g465  : bit 1
+gr. g456..g460  : bit 2
 ...
-гр. g398..g401  : бит 7, выход SerialData = сдвиг старшего разряда
+gr. g398..g401  : bit 7; SerialData output = MSB shifted out
 ```
 
 Output order: bits shift from 7 down to 0; the MSB (first pixel of the
@@ -598,12 +598,12 @@ Oscillogram (SLoad/SerialData/ink-paper selection): ![w_pixels](../imgstore/wave
 struct PixelShiftReg {
     uint8_t reg = 0;
     bool SerialData = 0;
-    // загрузка по SLoad (активный уровень 1), сдвиг по nCLK7
+    // parallel load on SLoad (active high), shift on nCLK7
     void tick(bool nCLK7, bool SLoad, uint8_t nDL) {
         if (SLoad) { reg = ~nDL; SerialData = (reg >> 7) & 1; return; }
-        if (!nCLK7) {                 // на каждом такте выдаём старший бит
+        if (!nCLK7) {                 // output the MSB on every tick
             SerialData = (reg >> 7) & 1;
-            reg = (reg << 1);         // MSB первым, младшие добиваются нулём
+            reg = (reg << 1);         // MSB first, LSBs filled with zero
         }
     }
 };
@@ -633,12 +633,12 @@ Five cascaded counter cells (grp. g180..g209), each ÷2, i.e. ÷32 total from th
 input packet:
 
 ```
-g529: w33 = nor(nTCLKB, nV8)            // входные импульсы (шина или кадр)
-бит0: g180/g181/g207..g210
-бит1: g182/g183/g203..g206
-бит2: g184/g185/g199..g202
-бит3: g186/g187/g195..g198
-бит4: g188..g194 → FlashClock
+g529: w33 = nor(nTCLKB, nV8)            // input pulses (bus or frame)
+bit0: g180/g181/g207..g210
+bit1: g182/g183/g203..g206
+bit2: g184/g185/g199..g202
+bit3: g186/g187/g195..g198
+bit4: g188..g194 → FlashClock
 ```
 
 On a real Spectrum board flash is counted from CPU activity (each `MREQ`),
@@ -652,9 +652,9 @@ Diagram: ![s_flash_clock](../imgstore/schematics/s_flash_clock.png).
 struct FlashClock {
     uint16_t cnt = 0;
     bool FlashClock = 0;
-    void pulse() {                       // фронт входного пакета
-        cnt = (cnt + 1) & 0x1F;          // 5 бит (÷32)
-        FlashClock = (cnt >> 4) & 1;     // старший разряд
+    void pulse() {                       // edge of the input pulse train
+        cnt = (cnt + 1) & 0x1F;          // 5 bits (÷32)
+        FlashClock = (cnt >> 4) & 1;     // most significant bit
     }
 };
 ```
@@ -751,7 +751,7 @@ struct ColorMux {
         bool blank = !nHBlank || VSync;
         bool ds = !nDataSelect;
         if (blank) { Red = Green = Blue = 0; return; }
-        auto ch = [&](bool paper, bool ink) {   // paper/ink = AO биты
+        auto ch = [&](bool paper, bool ink) {   // paper/ink = AO bits
             return ds ? ink : paper;
         };
         Blue  = ch((AO >> 1) & 1, AO & 1);
@@ -789,10 +789,10 @@ buffer chain (an even number of inverters) that equalises the delay of `w217`.
 Output functions:
 
 ```
-A0 = f(C1, V5, w217-фаза);   A1 = f(C4, V6, V0);
-A2 = f(C5, V7, V1);          A3 = f(C6, V2, w99-фаза);
+A0 = f(C1, V5, w217 phase);  A1 = f(C4, V6, V0);
+A2 = f(C5, V7, V1);          A3 = f(C6, V2, w99 phase);
 A4 = f(C7, V6);              A5 = f(V7, V3);
-A6 = f(V4, w99-фазы);
+A6 = f(V4, w99 phases);
 ```
 
 Exact formulas are in the gate table below:
@@ -807,7 +807,7 @@ Exact formulas are in the gate table below:
 | `A4` | g557, g559, g587 | `nor2( nor(C7,w217), nor(w115,V6) )` |
 | `A6` | g562, g555 | `nor3( nor(V4,w217), not(w115), not(w99) )` |
 
-where `w99 = ~w100`, `w100 = nor(w101,w102)`, `w101 = ~C1`, `w102 = VidRAS-ф.`,
+where `w99 = ~w100`, `w100 = nor(w101,w102)`, `w101 = ~C1`, `w102 = VidRAS phase.`,
 `w115 = ~w114`, `w114 = nor(w102, C1)`, `w217 = ~w102`.
 
 Schematic: ![s_video_addr_gen](../imgstore/schematics/s_video_addr_gen.png).
@@ -816,18 +816,18 @@ Oscillogram (address on RAS/CAS phases): ![w_memory](../imgstore/waves/w_memory.
 ### C++
 
 ```cpp
-// видеоадрес: 14-битный адрес экрана из (C,V), выдаётся двумя фазами
+// video address: 14-bit screen address from (C,V), output in two phases
 struct VideoAddrGen {
-    // 7 бит row (фаза RAS) и 7 бит col (фаза CAS)
+    // 7 row bits (RAS phase) and 7 column bits (CAS phase)
     uint8_t row, col;
     void gen(uint16_t C, uint16_t V) {
-        // стандартная раскладка экрана ZX Spectrum 48K
+        // standard ZX Spectrum 48K screen layout
         uint16_t vc = ((V & 0x7) << 8) | ((V >> 3) & 7) << 5 |
                       ((V >> 6) & 0x1F);
         uint16_t hc = (C & 0x1F);
         uint16_t addr = (vc << 5) | hc;
-        row = addr & 0x7F;         // младшие 7 бит (RAS)
-        col = (addr >> 7) & 0x7F;  // старшие 7 бит (CAS)
+        row = addr & 0x7F;         // lower 7 bits (RAS)
+        col = (addr >> 7) & 0x7F;  // upper 7 bits (CAS)
     }
 };
 ```
@@ -1035,16 +1035,16 @@ dac_setup ( input Timing, nSync, Red, HL(AO[6]), Blue, Green,
 ### Equations (from gates g1..g23, g152..g179, g211..g216, g624,g625)
 
 ```
-g152: w152 = nor3(Green, Red, Blue)          // нет ни одного цвета -> 0
-g174: w129 = nor3(w130, w3, w128)            // "black": гашение по цветам
-g19 : nBLACKS = not w129                     // сигнал /BLACKS на ЦАП
+g152: w152 = nor3(Green, Red, Blue)          // no colour set -> 0
+g174: w129 = nor3(w130, w3, w128)            // "black": colour blanking
+g19 : nBLACKS = not w129                     // /BLACKS signal to the DAC
 g23 : nHL = not AO[6]                        // high-light (HL)
-g5  : nSyncD = not not nSync                 // буфер nSync
-// каналы:
+g5  : nSyncD = not not nSync                 // nSync buffer
+// channels:
 R: RedD  = not not Red;   nRedDD = nor(w152, Red)
 G: GreenD= not not Green; nGreenDD= nor(Green, w152)
 B: BlueD = not not Blue;  BlueDD = not nor(w152, Blue)  // g20/g21/g214
-// яркостные "S" (после Timing-логики g176..g178):
+// luminance "S" signals (after the Timing logic g176..g178):
 RedS  = not nor(w129, w128)  ...  nGreenS = nor(w3, w129); nBlueS = nor(w130, w129)
 ```
 
@@ -1059,7 +1059,7 @@ Waveform: *w_dac_sync*.
 
 ```cpp
 struct DacSetup {
-    // входы ЦАП (см. pads.md: U,V,/Y аналоговые; здесь цифровые биты)
+    // DAC inputs (see pads.md: U,V,/Y are analogue; here the digital bits)
     bool BlueD, RedD, nRedDD, nBLACKS, nHL, nSyncD, GreenD;
     bool RedS, BlueDD, nGreenDD, nBlueS, nGreenS;
     void eval(bool Timing, bool nSync, bool Red, bool HL,
@@ -1069,10 +1069,10 @@ struct DacSetup {
         nHL      = !HL;
         nSyncD   = nSync;
         RedD  = Red;   GreenD = Green;   BlueD = Blue;
-        nRedDD = !none && !Red;                       // гашение красного
+        nRedDD = !none && !Red;                       // red blanking
         nGreenDD = !none && !Green;
         BlueDD   = none || Blue;
-        RedS  = !none && Red;                         // после Timing-логики
+        RedS  = !none && Red;                         // after the Timing logic
         nGreenS = !none || Green;
         nBlueS  = !none || Blue;
     }
@@ -1105,10 +1105,10 @@ io ( input nIOREQ, nWR, nRD, nIOREQT2, A0_from_pad,
 ```
 g622: w237 = nor4(nIOREQ, A0_from_pad, nWR, nIOREQT2); g77: nPortWR = not w237
 g623: w317 = nor4(nIOREQ, A0_from_pad, nRD, nIOREQT2); g80: nPortRD = not w317
-       // порт открыт, когда /IOREQ=0, A0=0 и нет "IOREQ в фазе 2" (contention)
+       // port is open when /IOREQ=0, A0=0 and there is no "IOREQ phase 2" (contention)
 KB:  D4_to_pad = not nor(nPortRD, KB4) ...  D0_to_pad = not nor(KB0, nPortRD)
 Ear: D6_to_pad = not nor(Ear_Input, nPortRD)
-GD port[4:0]: по nPortWR: Q = {Speaker, Tape, B2_G, B1_R, B0_B} = D4..D0
+GD port[4:0]: on nPortWR: Q = {Speaker, Tape, B2_G, B1_R, B0_B} = D4..D0
 g37: nTape = not Tape ;  g38: nSpeaker = not Speaker
 ```
 
@@ -1125,18 +1125,18 @@ Waveform: ![w_io](../imgstore/waves/w_io.png).
 struct IO {
     bool nPortWR = 1, nPortRD = 1;
     bool B0_B=0, B1_R=0, B2_G=0, Speaker=0, Tape=0;
-    uint8_t reg = 0;                      // 5-битный порт
+    uint8_t reg = 0;                      // 5-bit port
     void decode(bool nIOREQ, bool A0, bool nWR, bool nRD, bool nIOREQT2) {
         bool sel = !nIOREQ && !A0 && !nIOREQT2;
         nPortWR = !(sel && !nWR);
         nPortRD = !(sel && !nRD);
     }
     void write_cycle() {
-        if (!nPortWR) { reg = reg; /* взять D4..D0 с шины */ }
+        if (!nPortWR) { reg = reg; /* take D4..D0 from the bus */ }
         B0_B = (reg >> 0) & 1; B1_R = (reg >> 1) & 1; B2_G = (reg >> 2) & 1;
         Tape = (reg >> 3) & 1; Speaker = (reg >> 4) & 1;
     }
-    bool d4_from_kb(bool kb4) { return !(!nPortRD && kb4); }  // к паду D4
+    bool d4_from_kb(bool kb4) { return !(!nPortRD && kb4); }  // to the D4 pad
 };
 ```
 
@@ -1163,12 +1163,12 @@ contention ( input nMREQ, nIOREQ, Border, A14, A15, C2, C3, C0_other,
 ### Analysis
 
 ```
-GD mreq_gd :  MREQT2 = ~D(nMREQ), прозрачна при CPUCLK_internal=0
-GD ioreq_gd:  nIOREQT2/IOREQT2 = захват nIOREQ по CPUCLK_internal
-g384: w414 = nor(w359, w477, C0_other)     // C0_other = C0 (3.5 МГц)
+GD mreq_gd :  MREQT2 = ~D(nMREQ), transparent when CPUCLK_internal=0
+GD ioreq_gd:  nIOREQT2/IOREQT2 = captures nIOREQ on CPUCLK_internal
+g384: w414 = nor(w359, w477, C0_other)     // C0_other = C0 (3.5 MHz)
 g44 : CPUCLK = not w414                    // CPUCLK_internal = not w414
 g411: w360 = nor(C2, C3)
-g383: w477 = nor(w413, w412, w360, w361)   // решение "RAM-доступ CPU"
+g383: w477 = nor(w413, w412, w360, w361)   // decides "CPU RAM access"
 g385: w412 = nor(w410, w411);  w411 = not A15;  w410 = not nIOREQ
 g386: w413 = nor(A14, w410)
 g404: w362 = nor(IOREQT2, Border, nCPUCLK_internal, MREQT2)
@@ -1195,20 +1195,20 @@ Waveform (a CPU RAM-access attempt during a video fetch):
 ### C++
 
 ```cpp
-// contention: такт CPU = C0, растягиваемый при конфликте с видео
+// contention: CPU clock = C0, stretched when conflicting with video
 struct Contention {
-    bool nIOREQT2 = 1;                    // защёлка nIOREQ (фаза 2)
-    bool stretch = 0;                     // признак "отдать такт видео"
+    bool nIOREQT2 = 1;                    // nIOREQ latch (phase 2)
+    bool stretch = 0;                     // flag "give the tick to video"
 
     void eval(bool nMREQ, bool nIOREQ, bool Border, bool A14, bool A15,
               bool C2, bool C3, bool C0) {
-        // запрос CPU к RAM (0x4000-0x7FFF)
+        // CPU RAM request (0x4000-0x7FFF)
         bool cpuRAM = nMREQ == 0 && A14 == 1 && A15 == 0;
-        // видео активно (не рамка) в этой части строки
-        bool videoBusy = !Border && !(C2 | C3);      // упрощённо
+        // video is active (not border) in this part of the line
+        bool videoBusy = !Border && !(C2 | C3);      // simplified
         stretch = cpuRAM && videoBusy;
     }
-    bool cpuclk(bool C0) { return stretch ? 0 : C0; }  // удержание такта
+    bool cpuclk(bool C0) { return stretch ? 0 : C0; }  // holding the tick
 };
 ```
 
