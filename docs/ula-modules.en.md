@@ -74,6 +74,10 @@ independent.
 
 Full structural diagram of the module-to-module and pad connections: ![s_top](../imgstore/schematics/s_top.png).
 
+A name-by-name table of **all internal signals** (name → from → to →
+description) is in [ula-signals.en.md](ula-signals.en.md) (issue
+[#10](https://github.com/emu-russia/ula/issues/10)).
+
 Model-measured timings referenced by the sections:
 
 - scanline: `HCrst`→`HCrst` = **448** `nCLK7` ticks (44.8 µs in the model);
@@ -1229,6 +1233,9 @@ only what is needed to read the module schematics:
 - keyboard lines `KB0..KB4`; `KB0` is bidirectional (test mode `K0`).
 
 Top-level connection map (from `ula6c001.v`): *s_top*.
+
+The full signal-by-signal list of the top-level wiring (from/to/description) is
+in [ula-signals.en.md](ula-signals.en.md).
 
 ## 21. Simulator: `ulasim.py`
 
