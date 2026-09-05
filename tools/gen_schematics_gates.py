@@ -425,6 +425,8 @@ def render_module(mods, heads, name, title):
             s.el.append(f'<circle cx="{cx - pw/2 + 3:.1f}" cy="{cy:.1f}" '
                         f'r="2.2" fill="#8a3a10"/>')
     png = os.path.join(OUT, 's_%s.png' % name)
+    if os.environ.get('SCH_SVG'):
+        s.save(png[:-4] + '.svg')
     s.save(png)
     print('wrote', png)
 
@@ -457,20 +459,18 @@ def draw_glyph(s, nd, x, y, w, h):
                     f'stroke="#203040" stroke-width="1.5"/>')
         s.dot(x + w + 3, cy, r=2.6)
         s.line(x + w + 5.6, cy, x + w + 12, cy)
-    elif k == 'nor':
-        ni = 2
-    elif k.startswith('nor'):
-        ni = int(k[3:])
+    elif k == 'nor' or k.startswith('nor'):
+        ni = 2 if k == 'nor' else int(k[3:])
         for i in range(ni):
             yy = y + h * (i + 0.5) / ni
             s.line(x, yy, x + w * 0.3, yy)
         s.el.append(f'<path d="M {x + w*0.3:.1f} {y:.1f} '
                     f'L {x + w*0.86:.1f} {y:.1f} Q {x + w + 3:.1f} {cy:.1f} '
                     f'{x + w*0.86:.1f} {y + h:.1f} L {x + w*0.3:.1f} '
-                    f'{y + h:.1f} Z" fill="#fff" stroke="#203040" '
-                    f'stroke-width="1.5"/>')
-        s.dot(x + w + 3.5, cy, r=2.6)
-        s.line(x + w + 6.1, cy, x + w + 12, cy)
+                    f'{y + h:.1f} Z" fill="#ffffff" stroke="#203040" '
+                    f'stroke-width="1.6"/>')
+        s.dot(x + w + 3.5, cy, r=2.8)
+        s.line(x + w + 6.3, cy, x + w + 12, cy)
     elif k == 'and':
         s.el.append(f'<path d="M {x + w*0.3:.1f} {y:.1f} L {x + w*0.86:.1f} '
                     f'{y:.1f} A {w*0.16:.1f} {h/2:.1f} 0 0 1 '
