@@ -27,6 +27,13 @@ waves, модельный C++) лежит в [docs/ula-modules.md](/docs/ula-mod
 а погонный вентильный симулятор HDL — в [ulasim.py](/ulasim.py)
 (запуск: `python3 ulasim.py` → `ula_waves.vcd` с типичным набором сигналов).
 
+## Таблица сигналов (issue #10)
+
+Таблица всех внутренних сигналов ULA (название → откуда → куда → описание) —
+в [docs/ula-signals.md](/docs/ula-signals.md)
+(English: [ula-signals.en.md](/docs/ula-signals.en.md)); ссылка из раздела
+схем дана в [ula-modules.md](/docs/ula-modules.md).
+
 ## Дробление схемы полученной из нетлиста обратно на модули
 
 В целом аннотирование схемы завершено и вырисовывается следующая картина:
