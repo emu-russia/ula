@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Внутренние сигналы ULA 6C001 · ZX Spectrum ULA 6C001</title>
+<meta name="description" content="Таблица всех внутренних сигналов ULA 6C001: название, откуда приходит, куда уходит и что делает.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23111'/%3E%3Crect x='3' y='3' width='3' height='10' fill='%23e5484d'/%3E%3Crect x='7' y='3' width='3' height='10' fill='%2330a46c'/%3E%3Crect x='11' y='3' width='2' height='10' fill='%233e63dd'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.ru.html">◫ ZX Spectrum ULA 6C001</a>
+    <nav class="site-nav" aria-label="main">
+      <a href="ula-modules.ru.html">Модули ULA</a><a class="active" href="ula-signals.ru.html">Внутренние сигналы</a><a href="pads.ru.html">Пады</a><a href="topo.ru.html">Топология</a><a href="hdl-vs-netlist-verification.html">Верификация (EN)</a>
+      <a class="lang-switch" href="ula-signals.html">English</a>
+      
+      <button class="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle color theme">
+        <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <article class="doc">
+<h1 id="внутренние-сигналы-ula-6c001">Внутренние сигналы ULA 6C001</h1>
+<details class="page-toc"><summary>Содержание</summary><ul>
+<li><a href="#что-описано">Что описано</a></li>
+<li><a href="#соглашения">Соглашения</a></li>
+<li><a href="#1-тактирование">1. Тактирование</a></li>
+<li><a href="#2-счётчики-шины-c-nc-v-nv">2. Счётчики: шины C, nC, V, nV</a></li>
+<li><a href="#3-шина-cpu-и-дешифрация-циклов-tclk">3. Шина CPU и дешифрация циклов (tclk)</a></li>
+<li><a href="#4-стробы-защёлок-и-видеорежим-latch_control">4. Стробы защёлок и видеорежим (latch_control)</a></li>
+<li><a href="#5-шина-данных-пады-d0d7-защёлки">5. Шина данных (пады D0..D7 → защёлки)</a></li>
+<li><a href="#6-порт-ввода-вывода-клавиатура-ear-border-io">6. Порт ввода-вывода: клавиатура, EAR, border (io)</a></li>
+<li><a href="#7-защёлки-данных-атрибутов-и-объекта">7. Защёлки данных, атрибутов и объекта</a></li>
+<li><a href="#8-пиксельный-поток-и-flash">8. Пиксельный поток и flash</a></li>
+<li><a href="#9-видеосигнал-синхро-border-цвет">9. Видеосигнал: синхро, border, цвет</a></li>
+<li><a href="#10-входы-видеоцап-пады-u-v-y">10. Входы видеоЦАП (пады U, V, /Y)</a></li>
+<li><a href="#11-адрес-видеопамяти-и-управление-dram">11. Адрес видеопамяти и управление DRAM</a></li>
+<li><a href="#справочник-разрядов-шин">Справочник разрядов шин</a></li>
+<li><a href="#приложение-именованные-сигналы-внутри-модулей">Приложение. Именованные сигналы внутри модулей</a></li>
+</ul></details>
+<blockquote>
+<p>Раздел по задаче <a href="https://github.com/emu-russia/ula/issues/10">emu-russia/ula#10</a>:
+таблица <strong>всех внутренних сигналов</strong> ULA: название, откуда приходит,
+куда уходит и что делает.</p>
+<p>English version: <a href="ula-signals.html">ula-signals.en.md</a>.</p>
+<p>Описание модулей, их схемы и waves — в <a href="ula-modules.ru.html">ula-modules.md</a>;
+пины/пады чипа — в <a href="pads.ru.html">pads.md</a>.</p>
+</blockquote>
+<h2 id="что-описано">Что описано</h2>
+<p>Таблица покрывает всю внутреннюю проводку чипа в том виде, в каком она
+восстановлена в модульном HDL <code>hdl/ula6c001.v</code>: <strong>каждая сеть, которая
+пересекает границу модуля или пада</strong> (объявления wires модуля верхнего
+уровня <code>ula</code>, строки 46–153). Шины <code>C</code>, <code>nC</code>, <code>V</code>, <code>nV</code>, <code>nDL</code>, <code>AL</code>, <code>AO</code>
+приведены по одной строке на шину, но их разряды — это отдельные сети
+плоского нетлиста (<code>netlist/ula6c001.v</code>); соответствие разрядов номерам
+сетей <code>wNNN</code> дано в конце раздела («Справочник разрядов шин»).</p>
+<p>Неназванные внутримодульные сети (<code>wNNN</code>) в таблицу не включены: они
+описаны в разделах модулей (<code>specs/ula-modules.md</code>) и в плоском нетлисте.
+Именованные сигналы, живущие <em>внутри</em> модулей (<code>nVidEn</code>, <code>nPortRD</code> и т.п.),
+собраны в отдельном приложении в конце.</p>
+<h2 id="соглашения">Соглашения</h2>
+<ul>
+<li>Сигнал <code>/X</code> (или <code>nX</code>) активен низким уровнем. В таблице используются
+  имена из HDL (<code>nBorder</code> = <code>/Border</code> на схемах).</li>
+<li><strong>Откуда</strong> — модуль/пад и его выходной порт, управляющий сетью
+  (для падов: выход <code>from_pad</code>, т.е. сигнал, идущий с пина внутрь чипа).</li>
+<li><strong>Куда</strong> — модули/пады, на входы которых сеть заведена.</li>
+<li>Имена инстансов модулей — <code>&lt;module&gt;_inst</code> (как в <code>hdl/ula6c001.v</code>),
+  пады — инстансы <code>gNNN</code>; номера вентилей <code>gNNN</code> совпадают с плоским
+  нетлистом.</li>
+<li>В скобках у имени сигнала — номер сети <code>wNNN</code> из плоского нетлиста
+  (по комментариям исходника), где он известен.</li>
+<li>Структурная схема связей модулей и падов: <code>imgstore/schematics/s_top.png</code>
+  (см. раздел 0 в <code>ula-modules.md</code>).</li>
+</ul>
+<hr />
+<h2 id="1-тактирование">1. Тактирование</h2>
+<table>
+<thead>
+<tr>
+<th>Сигнал</th>
+<th>Откуда</th>
+<th>Куда</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>osc_from_pad</code></td>
+<td>пад <code>g630</code> (пин <code>OSC</code>), выход <code>from_pad</code></td>
+<td><code>clkgen_inst.osc_from_pad</code></td>
+<td>Входная частота чипа с пина OSC: 14 МГц на плате «Спектрума» (в модели <code>ulasim.py</code> — 20 МГц). Единственный внешний тактовый источник; делится в <code>clkgen</code> на <code>nCLK7</code>.</td>
+</tr>
+<tr>
+<td><code>nCLK7</code></td>
+<td><code>clkgen_inst.nCLK7</code> (делитель OSC÷2, g52..g432)</td>
+<td><code>hcounter_inst.nCLK7</code>, <code>latch_control_inst.nCLK7</code>, <code>pixel_shift_reg_inst.nCLK7</code></td>
+<td>Главный такт видеотракта: <code>OSC÷2</code> (реально 7 МГц, в модели 10 МГц). Тактирует горизонтальный счётчик, линии задержки стробов защёлок и сдвиговый регистр пикселей.</td>
+</tr>
+<tr>
+<td><code>HCrst</code> (w81)</td>
+<td><code>hcounter_inst.HCrst</code> (g104: декада <code>C7·C8</code>)</td>
+<td><code>vcounter_inst.HCrst</code></td>
+<td>Импульс сброса горизонтального счётчика — раз в строку; период ровно 448 тактов <code>nCLK7</code>. По нему вертикальный счётчик увеличивается на 1.</td>
+</tr>
+<tr>
+<td><code>CLKHC6</code> (w34)</td>
+<td><code>hcounter_inst.CLKHC6</code> (g518)</td>
+<td><code>vcounter_inst.CLKHC6</code></td>
+<td>Тактовая/стробовая сетка вертикального счётчика: <code>CLKHC6 = ~nTCLKA · C5</code>. В простое (нет шинной активности, <code>nTCLKA=0</code>) повторяет <code>C5</code>.</td>
+</tr>
+<tr>
+<td><code>C0_other</code> (w367)</td>
+<td><code>latch_control_inst.C0_other</code> (g57: <code>= ~nC[0]</code>)</td>
+<td><code>contention_inst.C0_other</code></td>
+<td>«Чужой» C0: свободный сигнал младшего бита горизонтального счётчика (3.5 МГц на реальном чипе). Опорный такт, из которого арбитр <code>contention</code> собирает <code>CPUCLK</code>.</td>
+</tr>
+<tr>
+<td><code>CPUCLK</code></td>
+<td><code>contention_inst.CPUCLK</code> (g44)</td>
+<td>пад <code>g637</code> (пин <code>/PHICPU</code>)</td>
+<td>Такт процессора 3.5 МГц: повторяет <code>C0_other</code>, а при конфликте CPU↔видео за DRAM растягивается (contention). На пин уходит через инвертирующий open-collector пад.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-счётчики-шины-c-nc-v-nv">2. Счётчики: шины <code>C</code>, <code>nC</code>, <code>V</code>, <code>nV</code></h2>
+<p>Разряды шин и их сети в плоском нетлисте — см. <a href="#справочник-разрядов-шин">Справочник разрядов</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Сигнал</th>
+<th>Откуда</th>
+<th>Куда</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>C[8:0]</code></td>
+<td><code>hcounter_inst.C</code></td>
+<td>биты: <code>C[1]</code> → <code>latch_control_inst.C1</code>, <code>video_addr_gen_inst.C1</code>, <code>ras_cas_romcs_inst.C1</code>; <code>C[2]</code> → <code>video_addr_gen_inst.C2</code>, <code>contention_inst.C2</code>; <code>C[3]</code> → <code>address_enable_inst.C3</code>, <code>contention_inst.C3</code>; <code>C[4..7]</code> → <code>video_addr_gen_inst</code>, <code>video_signal_features_inst</code>; <code>C[8]</code> → <code>video_signal_features_inst.C8</code></td>
+<td>Горизонтальный счётчик строки: позиция 0..447 (строка = 448 тактов <code>nCLK7</code>). <code>C0</code> наружу не выходит (используется внутри счётчика и как <code>C0_other</code>); старшие биты <code>C7·C8</code> (g104) дают декаду сброса <code>HCrst</code> (счёт 384..447).</td>
+</tr>
+<tr>
+<td><code>nC[8:0]</code></td>
+<td><code>hcounter_inst.nC</code></td>
+<td>биты: <code>nC[0]</code> → <code>latch_control_inst.nC0</code>, <code>address_enable_inst.nC0</code>, <code>ras_cas_romcs_inst.nC0</code>; <code>nC[1]</code> → <code>latch_control_inst.nC1</code>, <code>address_enable_inst.nC1</code>, <code>ras_cas_romcs_inst.nC1</code>; <code>nC[2]</code> → <code>latch_control_inst.nC2</code>, <code>address_enable_inst.nC2</code>; <code>nC[3]</code> → <code>latch_control_inst.nC3</code>, <code>video_signal_features_inst.nC3</code>; <code>nC[4]</code> → <code>video_signal_features_inst.nC4</code>; <code>nC[5]</code> → <code>vcounter_inst.nC5</code>, <code>video_signal_features_inst.nC5</code>; <code>nC[6..8]</code> → <code>video_signal_features_inst</code></td>
+<td>Инверсные разряды горизонтального счётчика. Используются логикой стробов/синхро/blank/адреса, где нужны нули счётчика.</td>
+</tr>
+<tr>
+<td><code>V[8:0]</code></td>
+<td><code>vcounter_inst.V</code></td>
+<td>биты: <code>V[0..2]</code> → <code>video_addr_gen_inst</code>, <code>video_signal_features_inst</code>; <code>V[3..7]</code> → <code>video_addr_gen_inst</code>; <code>V[8]</code> → <code>video_signal_features_inst.V8</code></td>
+<td>Вертикальный счётчик кадра: 0..311 строк (кадр = 312 строк, сброс на 312-й). <code>V0..V7</code> уходят в генератор адреса видеопамяти (раскладка «треть/строка знакоместа»); <code>V0..V2</code>, <code>V8</code> и <code>nV3..nV7</code> — в логику border/синхро/INT.</td>
+</tr>
+<tr>
+<td><code>nV[8:0]</code></td>
+<td><code>vcounter_inst.nV</code></td>
+<td>биты: <code>nV[3]</code> → <code>video_signal_features_inst.nV3</code>; <code>nV[4]</code> → <code>video_signal_features_inst.nV4</code>; <code>nV[5]</code> → <code>video_signal_features_inst.nV5</code>; <code>nV[6]</code> → <code>video_signal_features_inst.nV6</code>; <code>nV[7]</code> → <code>video_signal_features_inst.nV7</code>; <code>nV[8]</code> → <code>tclk_inst.nV8</code>, <code>flash_clock_inst.nV8</code></td>
+<td>Инверсные разряды вертикального счётчика. <code>nV[3..7]</code> — для логики VSync/border/INT (<code>nor6</code> по <code>nV6,nV7,V2,nV3..nV5</code> даёт декаду 248..251); <code>nV8</code> — признак «не нижняя часть кадра» для <code>K0</code> и счёта flash.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-шина-cpu-и-дешифрация-циклов-tclk">3. Шина CPU и дешифрация циклов (<code>tclk</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Сигнал</th>
+<th>Откуда</th>
+<th>Куда</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nMREQ_from_pad</code> (w314)</td>
+<td>пад <code>g631</code> (пин <code>/MREQ</code>), выход <code>from_pad</code></td>
+<td><code>tclk_inst.nMREQ</code>, <code>ras_cas_romcs_inst.nMREQ</code>, <code>contention_inst.nMREQ</code></td>
+<td>Запрос памяти от CPU (активный низкий). Участвует в декодировании циклов (<code>tclk</code>), в таймингах DRAM и в арбитре contention.</td>
+</tr>
+<tr>
+<td><code>nIOREQ_from_pad</code> (w259)</td>
+<td>пад <code>g636</code> (пин <code>/IOREQ</code>), выход <code>from_pad</code></td>
+<td><code>tclk_inst.nIOREQ</code>, <code>io_inst.nIOREQ</code>, <code>contention_inst.nIOREQ</code></td>
+<td>Запрос ввода-вывода от CPU (активный низкий). Открывает порт ULA в <code>io</code> (вместе с <code>A0=0</code>), учитывается в декодировании циклов и contention.</td>
+</tr>
+<tr>
+<td><code>nRD</code> (w309)</td>
+<td>пад <code>g627</code> (пин <code>/RD</code>), выход <code>from_pad</code></td>
+<td><code>tclk_inst.nRD</code>, <code>io_inst.nRD</code></td>
+<td>Строб чтения CPU (активный низкий).</td>
+</tr>
+<tr>
+<td><code>nWR</code> (w244)</td>
+<td>пад <code>g628</code> (пин <code>/WR</code>), выход <code>from_pad</code></td>
+<td><code>tclk_inst.nWR</code>, <code>ras_cas_romcs_inst.nWR</code>, <code>io_inst.nWR</code></td>
+<td>Строб записи CPU (активный низкий); участвует в формировании <code>/WE</code> DRAM.</td>
+</tr>
+<tr>
+<td><code>RD</code> (w238)</td>
+<td><code>tclk_inst.RD</code> (g82: <code>= ~nRD</code>)</td>
+<td><code>ras_cas_romcs_inst.RD</code></td>
+<td>Положительная фаза чтения (буфер от <code>nRD</code>).</td>
+</tr>
+<tr>
+<td><code>WR</code> (w318)</td>
+<td><code>tclk_inst.WR</code> (g81: <code>= ~nWR</code>)</td>
+<td><code>ras_cas_romcs_inst.WR</code></td>
+<td>Положительная фаза записи (буфер от <code>nWR</code>).</td>
+</tr>
+<tr>
+<td><code>nTCLKA</code> (w228)</td>
+<td><code>tclk_inst.nTCLKA</code> (g527: <code>nor4</code>)</td>
+<td><code>hcounter_inst.nTCLKA</code></td>
+<td>Признак активности шины (дешифрация <code>/MREQ</code>,<code>/IOREQ</code>,<code>/RD</code>,<code>/WR</code>). Через <code>g518</code> останавливает тактовую сетку вертикального счётчика <code>CLKHC6</code>.</td>
+</tr>
+<tr>
+<td><code>nTCLKB</code> (w235)</td>
+<td><code>tclk_inst.nTCLKB</code> (g525: <code>nor4</code>)</td>
+<td><code>flash_clock_inst.nTCLKB</code></td>
+<td>Второй строб «шина занята»; вместе с <code>nV[8]</code> даёт импульсы счёта делителя мигания <code>flash_clock</code>.</td>
+</tr>
+<tr>
+<td><code>K0_topad</code> (w276)</td>
+<td><code>tclk_inst.K0</code> (g528: <code>= nV8 · nTCLKB</code>)</td>
+<td>пад <code>g650</code> (<code>KB0</code>, вход <code>to_pad</code>)</td>
+<td>Тестовый выход на двунаправленный вывод <code>KB0</code>: прижимает его к нулю, когда <code>nV8=0</code> и активна шина (тест-режим/клавиатурная строка 0).</td>
+</tr>
+<tr>
+<td><code>nIOREQT2</code> (w243)</td>
+<td><code>contention_inst.nIOREQT2</code> (GD <code>ioreq_gd</code>, Q)</td>
+<td><code>io_inst.nIOREQT2</code></td>
+<td>«IOREQ в фазе 2»: защёлкнутая по <code>CPUCLK</code> копия <code>/IOREQ</code>. Порт <code>io</code> открывается только при <code>nIOREQT2=0</code>, т.е. когда <code>/IOREQ</code> подтверждён в нужной фазе такта CPU (защита от двойного декодирования при растянутом такте).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-стробы-защёлок-и-видеорежим-latch_control">4. Стробы защёлок и видеорежим (<code>latch_control</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Сигнал</th>
+<th>Откуда</th>
+<th>Куда</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Border</code> (w348)</td>
+<td><code>latch_control_inst.Border</code> (g49: <code>= ~nBorder</code>)</td>
+<td><code>address_enable_inst.Border</code>, <code>contention_inst.Border</code></td>
+<td>Положительный признак «рамка/не экран»: <code>1</code>, когда видео вне активной области (правая часть строки, верх/низ кадра). Гасит выдачу видеопамяти: <code>nAE</code> и арбитр contention учитывают его как «видео не активно».</td>
+</tr>
+<tr>
+<td><code>nVidC3</code> (w330)</td>
+<td><code>latch_control_inst.nVidC3</code> (g422/g50)</td>
+<td><code>ras_cas_romcs_inst.nVidC3</code></td>
+<td>«Видео-фаза C3» (активный низкий): <code>0</code> в окне выборки видеопамяти (<code>C3=0</code> вне рамки). В <code>ras_cas_romcs</code> участвует в формировании <code>VidRAS</code> и CAS-импульсов.</td>
+</tr>
+<tr>
+<td><code>VidEn</code> (w351)</td>
+<td><code>latch_control_inst.VidEn</code> (GD <code>viden_gd</code>, Q)</td>
+<td><code>attr_latch_inst.VidEn</code></td>
+<td>«Видеоактивная область»: защёлка по <code>nC3</code> значения <code>~nBorder</code>. При <code>VidEn=1</code> <code>attr_latch</code> выдаёт настоящий цвет атрибута, при <code>0</code> — цвет рамки (<code>B0_B..B2_G</code>).</td>
+</tr>
+<tr>
+<td><code>nDataLatch</code></td>
+<td><code>latch_control_inst.nDataLatch</code> (g427..g51)</td>
+<td><code>data_latch_inst.nDataLatch</code></td>
+<td>Строб (активный низкий) защёлки байта пикселей из шины данных: 32 раза на строку, по одному байту на знакоместо.</td>
+</tr>
+<tr>
+<td><code>nAttrLatch</code> (w418)</td>
+<td><code>latch_control_inst.nAttrLatch</code> (g407/g47)</td>
+<td><code>attr_latch_inst.nAttrLatch</code></td>
+<td>Строб (активный низкий) защёлки байта атрибута — сразу после байта пикселя той же пары (32 раза на строку).</td>
+</tr>
+<tr>
+<td><code>nAOLatch</code> (w340)</td>
+<td><code>latch_control_inst.nAOLatch</code> (g406/g46)</td>
+<td><code>ao_latch_inst.nAOLatch</code></td>
+<td>Перезарядка «объектной» защёлки каждые 8 тактов <code>nCLK7</code> (граница знакоместа): 56 раз на строку, включая рамку.</td>
+</tr>
+<tr>
+<td><code>SLoad</code> (w357)</td>
+<td><code>latch_control_inst.SLoad</code> (g443)</td>
+<td><code>pixel_shift_reg_inst.SLoad</code></td>
+<td>Параллельная загрузка сдвигового регистра пикселей (окно ~8 тактов на знакоместо).</td>
+</tr>
+<tr>
+<td><code>nSLoad</code> (w549)</td>
+<td><code>latch_control_inst.nSLoad</code> (g339: <code>= ~SLoad</code>)</td>
+<td><code>pixel_shift_reg_inst.nSLoad</code></td>
+<td>Инверсия <code>SLoad</code> — NOR-схеме загрузки сдвигового регистра нужны обе фазы.</td>
+</tr>
+<tr>
+<td><code>VidCASPulse</code> (w366)</td>
+<td><code>latch_control_inst.VidCASPulse</code> (g449 + линии задержки g55..g59)</td>
+<td><code>ras_cas_romcs_inst.VidCASPulse</code></td>
+<td>Импульс начала CAS-фазы видео-цикла (задержанный <code>nCLK7</code> по <code>nC0</code>); в <code>ras_cas_romcs</code> открывает CAS-декады.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-шина-данных-пады-d0d7-защёлки">5. Шина данных (пады <code>D0..D7</code> → защёлки)</h2>
+<table>
+<thead>
+<tr>
+<th>Сигнал</th>
+<th>Откуда</th>
+<th>Куда</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>D0_from_pad</code> (w7)</td>
+<td>пад <code>g651</code> (пин <code>D0</code>, bidir), выход <code>from_pad</code></td>
+<td><code>data_latch_inst.DI[0]</code>, <code>attr_latch_inst.D0_from_pad</code>, <code>io_inst.D0_from_pad</code></td>
+<td>Бит 0 шины данных (внутрь чипа). Питает защёлку пикселей и атрибутов; в <code>io</code> — данные записи порта (бит рамки <code>B0_B</code>).</td>
+</tr>
+<tr>
+<td><code>D1_from_pad</code> (w478)</td>
+<td>пад <code>g648</code> (пин <code>D1</code>, bidir), выход <code>from_pad</code></td>
+<td><code>data_latch_inst.DI[1]</code>, <code>attr_latch_inst.D1_from_pad</code>, <code>io_inst.D1_from_pad</code></td>
+<td>Бит 1 шины данных (внутрь чипа); в <code>io</code> — бит <code>B1_R</code> регистра порта.</td>
+</tr>
+<tr>
+<td><code>D2_from_pad</code> (w512)</td>
+<td>пад <code>g647</code> (пин <code>D2</code>, bidir), выход <code>from_pad</code></td>
+<td><code>data_latch_inst.DI[2]</code>, <code>attr_latch_inst.D2_from_pad</code>, <code>io_inst.D2_from_pad</code></td>
+<td>Бит 2 шины данных (внутрь чипа); в <code>io</code> — бит <code>B2_G</code> регистра порта.</td>
+</tr>
+<tr>
+<td><code>D3_from_pad</code> (w608)</td>
+<td>пад <code>g644</code> (пин <code>D3</code>, bidir), выход <code>from_pad</code></td>
+<td><code>data_latch_inst.DI[3]</code>, <code>attr_latch_inst.D3_from_pad</code>, <code>io_inst.D3_from_pad</code></td>
+<td>Бит 3 шины данных (внутрь чипа); в <code>io</code> — бит <code>Tape</code> (MIC).</td>
+</tr>
+<tr>
+<td><code>D4_from_pad</code> (w522)</td>
+<td>пад <code>g642</code> (пин <code>D4</code>, bidir), выход <code>from_pad</code></td>
+<td><code>data_latch_inst.DI[4]</code>, <code>attr_latch_inst.D4_from_pad</code>, <code>io_inst.D4_from_pad</code></td>
+<td>Бит 4 шины данных (внутрь чипа); в <code>io</code> — бит <code>Speaker</code> (бипер).</td>
+</tr>
+<tr>
+<td><code>D5_from_pad</code> (w416)</td>
+<td>пад <code>g640</code> (пин <code>D5</code>, input-only), выход <code>from_pad</code></td>
+<td><code>data_latch_inst.DI[5]</code>, <code>attr_latch_inst.D5_from_pad</code></td>
+<td>Бит 5 шины данных — только вход (CPU читает из DRAM; ULA на D5 не пишет).</td>
+</tr>
+<tr>
+<td><code>D6_from_pad</code> (w516)</td>
+<td>пад <code>g639</code> (пин <code>D6</code>, bidir), выход <code>from_pad</code></td>
+<td><code>data_latch_inst.DI[6]</code>, <code>attr_latch_inst.D6_from_pad</code></td>
+<td>Бит 6 шины данных (внутрь чипа); наружу ULA выставляет на <code>D6</code> состояние EAR при чтении порта (<code>D6_to_pad</code>).</td>
+</tr>
+<tr>
+<td><code>D7_from_pad</code> (w417)</td>
+<td>пад <code>g638</code> (пин <code>D7</code>, input-only), выход <code>from_pad</code></td>
+<td><code>data_latch_inst.DI[7]</code>, <code>attr_latch_inst.D7_from_pad</code></td>
+<td>Бит 7 шины данных — только вход: ULA наружу на <code>D7</code> не пишет (как и на <code>D5</code>).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-порт-ввода-вывода-клавиатура-ear-border-io">6. Порт ввода-вывода: клавиатура, EAR, border (<code>io</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Сигнал</th>
+<th>Откуда</th>
+<th>Куда</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>KB0_from_pad</code> (w13)</td>
+<td>пад <code>g650</code> (пин <code>KB0</code>, bidir), выход <code>from_pad</code></td>
+<td><code>io_inst.KB0_from_pad</code></td>
+<td>Линия клавиатуры 0 (двунаправленная: на ней же тестовый выход <code>K0_topad</code>). При чтении порта (<code>nPortRD</code>) выдаётся на <code>D0</code>.</td>
+</tr>
+<tr>
+<td><code>KB1_from_pad</code> (w9)</td>
+<td>пад <code>g649</code> (пин <code>KB1</code>), выход <code>from_pad</code></td>
+<td><code>io_inst.KB1_from_pad</code></td>
+<td>Линия клавиатуры 1 → <code>D1</code> при чтении порта.</td>
+</tr>
+<tr>
+<td><code>KB2_from_pad</code> (w645)</td>
+<td>пад <code>g646</code> (пин <code>KB2</code>), выход <code>from_pad</code></td>
+<td><code>io_inst.KB2_from_pad</code></td>
+<td>Линия клавиатуры 2 → <code>D2</code> при чтении порта.</td>
+</tr>
+<tr>
+<td><code>KB3_from_pad</code> (w581)</td>
+<td>пад <code>g645</code> (пин <code>KB3</code>), выход <code>from_pad</code></td>
+<td><code>io_inst.KB3_from_pad</code></td>
+<td>Линия клавиатуры 3 → <code>D3</code> при чтении порта.</td>
+</tr>
+<tr>
+<td><code>KB4_from_pad</code> (w647)</td>
+<td>пад <code>g643</code> (пин <code>KB4</code>), выход <code>from_pad</code></td>
+<td><code>io_inst.KB4_from_pad</code></td>
+<td>Линия клавиатуры 4 → <code>D4</code> при чтении порта.</td>
+</tr>
+<tr>
+<td><code>Ear_Input</code> (w513)</td>
+<td>пад <code>g641</code> (пин <code>SOUND</code>, вход EAR), выход <code>from_pad</code></td>
+<td><code>io_inst.Ear_Input</code></td>
+<td>Вход магнитофона (EAR) через аналоговый пад SOUND; при чтении порта выставляется на <code>D6</code>. В модели пад заглушен (<code>Ear=0</code>).</td>
+</tr>
+<tr>
+<td><code>D0_to_pad</code> (w10)</td>
+<td><code>io_inst.D0_to_pad</code> (g25: <code>~nor(KB0, nPortRD)</code>)</td>
+<td>пад <code>g651</code> (<code>D0</code>, вход <code>to_pad</code>)</td>
+<td>Чтение клавиатуры наружу: прижимает <code>D0</code> к нулю, если <code>KB0</code> нажат и порт читается (open-collector).</td>
+</tr>
+<tr>
+<td><code>D1_to_pad</code> (w6)</td>
+<td><code>io_inst.D1_to_pad</code> (g24)</td>
+<td>пад <code>g648</code> (<code>D1</code>, вход <code>to_pad</code>)</td>
+<td>То же для <code>KB1</code> → <code>D1</code>.</td>
+</tr>
+<tr>
+<td><code>D2_to_pad</code> (w644)</td>
+<td><code>io_inst.D2_to_pad</code> (g26)</td>
+<td>пад <code>g647</code> (<code>D2</code>, вход <code>to_pad</code>)</td>
+<td>То же для <code>KB2</code> → <code>D2</code>.</td>
+</tr>
+<tr>
+<td><code>D3_to_pad</code> (w582)</td>
+<td><code>io_inst.D3_to_pad</code> (g29)</td>
+<td>пад <code>g644</code> (<code>D3</code>, вход <code>to_pad</code>)</td>
+<td>То же для <code>KB3</code> → <code>D3</code>.</td>
+</tr>
+<tr>
+<td><code>D4_to_pad</code> (w536)</td>
+<td><code>io_inst.D4_to_pad</code> (g33)</td>
+<td>пад <code>g642</code> (<code>D4</code>, вход <code>to_pad</code>)</td>
+<td>То же для <code>KB4</code> → <code>D4</code>.</td>
+</tr>
+<tr>
+<td><code>D6_to_pad</code> (w515)</td>
+<td><code>io_inst.D6_to_pad</code> (g36: <code>~nor(Ear_Input, nPortRD)</code>)</td>
+<td>пад <code>g639</code> (<code>D6</code>, вход <code>to_pad</code>)</td>
+<td>Вывод состояния EAR на <code>D6</code> при чтении порта (open-collector).</td>
+</tr>
+<tr>
+<td><code>B0_B</code> (w510)</td>
+<td><code>io_inst.B0_B</code> (GD <code>port[0]</code>, Q)</td>
+<td><code>attr_latch_inst.B0_B</code></td>
+<td>Бит 0 регистра порта — цвет рамки, синий компонент (0xFE, запись). Вне видеоактивной области подставляется вместо paper-синего.</td>
+</tr>
+<tr>
+<td><code>B1_R</code> (w610)</td>
+<td><code>io_inst.B1_R</code> (GD <code>port[1]</code>, Q)</td>
+<td><code>attr_latch_inst.B1_R</code></td>
+<td>Бит 1 регистра порта — цвет рамки, красный компонент.</td>
+</tr>
+<tr>
+<td><code>B2_G</code> (w570)</td>
+<td><code>io_inst.B2_G</code> (GD <code>port[2]</code>, Q)</td>
+<td><code>attr_latch_inst.B2_G</code></td>
+<td>Бит 2 регистра порта — цвет рамки, зелёный компонент.</td>
+</tr>
+<tr>
+<td><code>nTape</code> (w486)</td>
+<td><code>io_inst.nTape</code> (g37: <code>= ~Tape</code>, GD <code>port[3]</code>)</td>
+<td>пад <code>g641</code> (<code>SOUND</code>, вход <code>to_pad1</code>)</td>
+<td>Выход MIC (запись на магнитофон), open-collector на аналоговый пад SOUND.</td>
+</tr>
+<tr>
+<td><code>nSpeaker</code> (w485)</td>
+<td><code>io_inst.nSpeaker</code> (g38: <code>= ~Speaker</code>, GD <code>port[4]</code>)</td>
+<td>пад <code>g641</code> (<code>SOUND</code>, вход <code>to_pad2</code>)</td>
+<td>Выход бипера, open-collector на аналоговый пад SOUND.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="7-защёлки-данных-атрибутов-и-объекта">7. Защёлки данных, атрибутов и объекта</h2>
+<table>
+<thead>
+<tr>
+<th>Сигнал</th>
+<th>Откуда</th>
+<th>Куда</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nDL[7:0]</code></td>
+<td><code>data_latch_inst.nDL</code> (8× GD, выходы <code>nQ</code>)</td>
+<td><code>pixel_shift_reg_inst.nDL</code></td>
+<td>Инверсные выходы защёлки байта пикселей: <code>nDL[i] = ~DI[i]</code>. Захват — по <code>nDataLatch</code> (32 раза на строку). Инверсия нужна NOR-схеме сдвигового регистра.</td>
+</tr>
+<tr>
+<td><code>AL[7:0]</code></td>
+<td><code>attr_latch_inst.AL</code></td>
+<td><code>ao_latch_inst.AL</code></td>
+<td>Защёлкнутый байт атрибута: <code>AL[5:0]</code> = <code>D5..D0</code> (INK <code>D2..D0</code>, PAPER <code>D5..D3</code>); <code>AL[6]</code> = HL (BRIGHT, <code>D6</code>) и <code>AL[7]</code> = FL (FLASH, <code>D7</code>) проходят только при <code>VidEn=1</code> (g309/g326).</td>
+</tr>
+<tr>
+<td><code>PB0_B</code> (w622)</td>
+<td><code>attr_latch_inst.PB0_B</code> (g310/g257/g291)</td>
+<td><code>ao_latch_inst.PB0_B</code></td>
+<td>«Paper/border» синий: мультиплексор paper (<code>AL[3]</code>) и цвета рамки <code>B0_B</code> по <code>VidEn</code>. Ложится в <code>AO[1]</code>.</td>
+</tr>
+<tr>
+<td><code>PB1_R</code> (w554)</td>
+<td><code>attr_latch_inst.PB1_R</code> (g324/g258/g325)</td>
+<td><code>ao_latch_inst.PB1_R</code></td>
+<td>«Paper/border» красный (<code>AL[4]</code>/<code>B1_R</code>), ложится в <code>AO[3]</code>.</td>
+</tr>
+<tr>
+<td><code>PB2_G</code> (w568)</td>
+<td><code>attr_latch_inst.PB2_G</code> (g340/g277/g292)</td>
+<td><code>ao_latch_inst.PB2_G</code></td>
+<td>«Paper/border» зелёный (<code>AL[5]</code>/<code>B2_G</code>), ложится в <code>AO[5]</code>.</td>
+</tr>
+<tr>
+<td><code>AO[7:0]</code></td>
+<td><code>ao_latch_inst.AO</code> (8× GD)</td>
+<td><code>color_mux_inst.AO</code> (байт), <code>dac_setup_inst.HL</code> = <code>AO[6]</code>, <code>flash_xnor_inst.FL</code> = <code>AO[7]</code></td>
+<td>«Объект» — цвет текущего знакоместа, перезаряжается каждые 8 тактов по <code>nAOLatch</code>. Перестановка битов: <code>AO[0]=ink B</code>, <code>AO[1]=paper B</code>, <code>AO[2]=ink R</code>, <code>AO[3]=paper R</code>, <code>AO[4]=ink G</code>, <code>AO[5]=paper G</code>, <code>AO[6]=HL</code>, <code>AO[7]=FL</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-пиксельный-поток-и-flash">8. Пиксельный поток и flash</h2>
+<table>
+<thead>
+<tr>
+<th>Сигнал</th>
+<th>Откуда</th>
+<th>Куда</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SerialData</code> (w197)</td>
+<td><code>pixel_shift_reg_inst.SerialData</code> (выход старшего разряда, g400)</td>
+<td><code>flash_xnor_inst.SerialData</code></td>
+<td>Последовательный поток пикселей: один бит на такт <code>nCLK7</code>, MSB (первый пиксель знакоместа) первым.</td>
+</tr>
+<tr>
+<td><code>FlashClock</code> (w168)</td>
+<td><code>flash_clock_inst.FlashClock</code> (делитель ÷32, g188..g194)</td>
+<td><code>flash_xnor_inst.FlashClock</code></td>
+<td>Медленный делитель частоты мигания (≈1.5–3 Гц на плате): переключает инверсию ink/paper атрибута FLASH.</td>
+</tr>
+<tr>
+<td><code>nDataSelect</code> (w66)</td>
+<td><code>flash_xnor_inst.nDataSelect</code> (g190: XNOR пикселя с <code>FL^FlashClock</code>)</td>
+<td><code>color_mux_inst.nDataSelect</code></td>
+<td>Селектор «ink/paper» для цветового мультиплексора (активный низкий): пиксель 1 → ink, 0 → paper; при <code>FL=1</code> и <code>FlashClock=1</code> — инверсия (мигание).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="9-видеосигнал-синхро-border-цвет">9. Видеосигнал: синхро, border, цвет</h2>
+<table>
+<thead>
+<tr>
+<th>Сигнал</th>
+<th>Откуда</th>
+<th>Куда</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nBorder</code> (w260)</td>
+<td><code>video_signal_features_inst.nBorder</code> (g613/g614)</td>
+<td><code>latch_control_inst.nBorder</code>, <code>ras_cas_romcs_inst.nBorder</code></td>
+<td>«Экран» (активный низкий: <code>0</code> — рамка/вне экрана, <code>C8</code> или низ кадра). Даёт положительный <code>Border</code> в <code>latch_control</code> и участвует в разрешении выхода пада <code>/RAS</code> (<code>nRAS_oe</code>).</td>
+</tr>
+<tr>
+<td><code>VSync</code> (w30)</td>
+<td><code>video_signal_features_inst.VSync</code> (nor6: <code>V ∈ {248..251}</code>)</td>
+<td><code>color_mux_inst.VSync</code></td>
+<td>Кадровый синхроимпульс: глушит цвет в <code>color_mux</code>; внутри <code>video_signal_features</code> участвует в <code>nSync</code> и <code>nINT</code>.</td>
+</tr>
+<tr>
+<td><code>nHBlank</code> (w67)</td>
+<td><code>video_signal_features_inst.nHBlank</code> (g107/g131/g133)</td>
+<td><code>color_mux_inst.nHBlank</code></td>
+<td>Горизонтальное гашение (активный низкий): <code>0</code> около начала/конца строки — цвет выключен.</td>
+</tr>
+<tr>
+<td><code>nSync</code> (w29)</td>
+<td><code>video_signal_features_inst.nSync</code> (g105/g106: <code>nor</code> HSync-окна и <code>VSync</code>)</td>
+<td><code>dac_setup_inst.nSync</code></td>
+<td>Композитный синхросигнал <code>HSync|VSync</code> (активный низкий); буферизуется в <code>dac_setup</code> в <code>nSyncD</code> для уровня синхро ЦАП.</td>
+</tr>
+<tr>
+<td><code>Timing</code> (w19)</td>
+<td><code>video_signal_features_inst.Timing</code> (RS-лата g119/g120/g150/g151, inout)</td>
+<td><code>dac_setup_inst.Timing</code></td>
+<td>«Растянутое» синхро-окно: защёлка, удерживающая признак области синхро/цветовой синхронизации после <code>nSync</code>; по нему <code>dac_setup</code> стробирует S-компоненты и burst.</td>
+</tr>
+<tr>
+<td><code>nINT_to_pad</code> (w117)</td>
+<td><code>video_signal_features_inst.nINT_to_pad</code> (g619/g4)</td>
+<td>пад <code>g660</code> (пин <code>/INT</code>)</td>
+<td>Прерывание CPU: импульс в начале кадра (по <code>C6..C8</code>, <code>V0..V2</code> и <code>~VSync</code>), open-collector.</td>
+</tr>
+<tr>
+<td><code>Red</code> (w51)</td>
+<td><code>color_mux_inst.Red</code> (assign)</td>
+<td><code>dac_setup_inst.Red</code></td>
+<td>Логический красный текущего пикселя (после ink/paper-селекции и гашения blank/VSync).</td>
+</tr>
+<tr>
+<td><code>Green</code> (w56)</td>
+<td><code>color_mux_inst.Green</code> (assign)</td>
+<td><code>dac_setup_inst.Green</code></td>
+<td>Логический зелёный текущего пикселя.</td>
+</tr>
+<tr>
+<td><code>Blue</code> (w18)</td>
+<td><code>color_mux_inst.Blue</code> (assign)</td>
+<td><code>dac_setup_inst.Blue</code></td>
+<td>Логический синий текущего пикселя.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="10-входы-видеоцап-пады-u-v-y">10. Входы видеоЦАП (пады <code>U</code>, <code>V</code>, <code>/Y</code>)</h2>
+<p>Все сигналы этой таблицы — цифровые входы <code>i14..i0</code> аналогового пада
+<code>ula_VideoDAC</code> (g652); аналоговые выходы <code>U</code>, <code>V</code>, <code>/Y</code> уходят на пины
+(см. <a href="pads.ru.html">pads.md</a>). Назначение и вентильные формулы каждого сигнала —
+в разделе 17 (<code>dac_setup</code>) и 16 (<code>video_signal_features</code>) документа
+<a href="ula-modules.ru.html">ula-modules.md</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Сигнал</th>
+<th>Вход ЦАП</th>
+<th>Откуда</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>RedD</code></td>
+<td><code>i11</code></td>
+<td><code>dac_setup_inst.RedD</code> (буфер <code>Red</code>, g15/g18)</td>
+<td>Красный канал, «первая» фаза (<code>Red</code> после буферов).</td>
+</tr>
+<tr>
+<td><code>GreenD</code> (w154)</td>
+<td><code>i10</code></td>
+<td><code>dac_setup_inst.GreenD</code> (g16/g17)</td>
+<td>Зелёный канал, «первая» фаза.</td>
+</tr>
+<tr>
+<td><code>BlueD</code></td>
+<td><code>i9</code></td>
+<td><code>dac_setup_inst.BlueD</code> (g20/g22)</td>
+<td>Синий канал, «первая» фаза.</td>
+</tr>
+<tr>
+<td><code>nRedDD</code></td>
+<td><code>i2</code></td>
+<td><code>dac_setup_inst.nRedDD</code> (g173/g624: <code>nor(w152, Red)</code>)</td>
+<td>«Вторая» (инверсная) фаза красного: активен, когда красный выключен при включённом другом цвете.</td>
+</tr>
+<tr>
+<td><code>nGreenDD</code> (w147)</td>
+<td><code>i1</code></td>
+<td><code>dac_setup_inst.nGreenDD</code> (g179)</td>
+<td>«Вторая» (инверсная) фаза зелёного (аналог <code>nRedDD</code>).</td>
+</tr>
+<tr>
+<td><code>BlueDD</code> (w58)</td>
+<td><code>i0</code></td>
+<td><code>dac_setup_inst.BlueDD</code> (g21/g214: <code>Blue</code> ИЛИ «чёрный»)</td>
+<td>«Вторая» фаза синего (в отличие от R/G — неинверсная).</td>
+</tr>
+<tr>
+<td><code>RedS</code> (w132)</td>
+<td><code>i6</code></td>
+<td><code>dac_setup_inst.RedS</code> (g1/g624)</td>
+<td>Красный, S-фаза (комбинация с окном <code>Timing</code>/«чёрным»).</td>
+</tr>
+<tr>
+<td><code>nGreenS</code> (w144)</td>
+<td><code>i8</code></td>
+<td><code>dac_setup_inst.nGreenS</code> (g153)</td>
+<td>Зелёный, инверсная S-фаза.</td>
+</tr>
+<tr>
+<td><code>nBlueS</code> (w145)</td>
+<td><code>i4</code></td>
+<td><code>dac_setup_inst.nBlueS</code> (g625)</td>
+<td>Синий, инверсная S-фаза.</td>
+</tr>
+<tr>
+<td><code>nBLACKS</code> (w4)</td>
+<td><code>i14</code></td>
+<td><code>dac_setup_inst.nBLACKS</code> (g19)</td>
+<td>«Чёрный»/гашение: управляет уровнем чёрного ЦАП, когда цвет отсутствует/гасится.</td>
+</tr>
+<tr>
+<td><code>nHL</code> (w5)</td>
+<td><code>i13</code></td>
+<td><code>dac_setup_inst.nHL</code> (g23: <code>= ~AO[6]</code>)</td>
+<td>High-light: инверсия <code>HL</code> (атрибут BRIGHT) — приращение яркости.</td>
+</tr>
+<tr>
+<td><code>nSyncD</code> (w124)</td>
+<td><code>i12</code></td>
+<td><code>dac_setup_inst.nSyncD</code> (буфер <code>nSync</code>, g2/g5)</td>
+<td>Синхро для ЦАП: буферизованный <code>nSync</code> (задаёт уровень синхро на выходе).</td>
+</tr>
+<tr>
+<td><code>BurstS</code> (w137)</td>
+<td><code>i5</code></td>
+<td><code>video_signal_features_inst.BurstS</code> (g117)</td>
+<td>Пакет цветовой синхронизации (burst), S-фаза.</td>
+</tr>
+<tr>
+<td><code>nBurstS</code> (w136)</td>
+<td><code>i7</code></td>
+<td><code>video_signal_features_inst.nBurstS</code> (g118/g6)</td>
+<td>Инверсный burst, S-фаза.</td>
+</tr>
+<tr>
+<td><code>nBurstDD</code> (w146)</td>
+<td><code>i3</code></td>
+<td><code>video_signal_features_inst.nBurstDD</code> (g10)</td>
+<td>Burst, «вторая» (инверсная) фаза — задний фронт/уровень пакета.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="11-адрес-видеопамяти-и-управление-dram">11. Адрес видеопамяти и управление DRAM</h2>
+<table>
+<thead>
+<tr>
+<th>Сигнал</th>
+<th>Откуда</th>
+<th>Куда</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>VidRAS</code> (w427)</td>
+<td><code>ras_cas_romcs_inst.VidRAS</code> (g451)</td>
+<td><code>video_addr_gen_inst.VidRAS</code></td>
+<td>Видео-RAS: строб фазы выборки строки адреса видеопамяти (по <code>nVidC3</code> и фазам счётчика). В <code>video_addr_gen</code> переключает row-адрес; с его инверсией связана CAS-цепочка.</td>
+</tr>
+<tr>
+<td><code>nVidRAS</code> (w423)</td>
+<td><code>video_addr_gen_inst.nVidRAS</code> (g69: <code>= ~VidRAS</code>)</td>
+<td><code>ras_cas_romcs_inst.nVidRAS</code></td>
+<td>Инверсия <code>VidRAS</code> (видео-CAS-фаза); участвует в формировании CAS-импульсов.</td>
+</tr>
+<tr>
+<td><code>A0_from_pad</code> (w310)</td>
+<td>пад <code>g653</code> (пин <code>A0</code>, bidir), выход <code>from_pad</code></td>
+<td><code>io_inst.A0_from_pad</code></td>
+<td>Чтение <code>A0</code> снаружи (CPU адресует порт ULA при <code>A0=0</code>): младший разряд адреса для декодирования <code>/IOREQ</code>.</td>
+</tr>
+<tr>
+<td><code>A14_from_pad</code> (w407)</td>
+<td>пад <code>g633</code> (пин <code>A14</code>), выход <code>from_pad</code></td>
+<td><code>ras_cas_romcs_inst.A14</code>, <code>contention_inst.A14</code></td>
+<td>Разряд адреса CPU <code>A14</code>: вместе с <code>A15</code>/<code>/MREQ</code> определяет обращение к RAM <code>0x4000..0x7FFF</code> (RAS/contention) и к ROM.</td>
+</tr>
+<tr>
+<td><code>A15_from_pad</code> (w358)</td>
+<td>пад <code>g632</code> (пин <code>A15</code>), выход <code>from_pad</code></td>
+<td><code>ras_cas_romcs_inst.A15</code>, <code>contention_inst.A15</code></td>
+<td>Разряд адреса CPU <code>A15</code>: участвует в декодировании RAM/ROM и в арбитре contention.</td>
+</tr>
+<tr>
+<td><code>A0_to_pad</code> (w173)</td>
+<td><code>video_addr_gen_inst.A0_to_pad</code> (g593/g615..g617)</td>
+<td>пад <code>g653</code> (<code>A0</code>, вход <code>to_pad</code>, <code>n_oe</code> = <code>nAE</code>)</td>
+<td>Бит 0 адреса видеопамяти (multiplex row/col по фазам RAS/CAS). <code>A0</code> — двунаправленный пад: на CPU-циклах его драйвит внешняя шина (<code>A0_from_pad</code>).</td>
+</tr>
+<tr>
+<td><code>A1_to_pad</code> (w191)</td>
+<td><code>video_addr_gen_inst.A1_to_pad</code> (g590..g592)</td>
+<td>пад <code>g654</code> (<code>A1</code>, вход <code>to_pad</code>, <code>n_oe</code> = <code>nAE</code>)</td>
+<td>Бит 1 адреса видеопамяти (фазы row/col).</td>
+</tr>
+<tr>
+<td><code>A2_to_pad</code> (w327)</td>
+<td><code>video_addr_gen_inst.A2_to_pad</code> (g583..g586)</td>
+<td>пад <code>g655</code> (<code>A2</code>, вход <code>to_pad</code>, <code>n_oe</code> = <code>nAE</code>)</td>
+<td>Бит 2 адреса видеопамяти.</td>
+</tr>
+<tr>
+<td><code>A3_to_pad</code> (w323)</td>
+<td><code>video_addr_gen_inst.A3_to_pad</code> (g588/g589/g618)</td>
+<td>пад <code>g656</code> (<code>A3</code>, вход <code>to_pad</code>, <code>n_oe</code> = <code>nAE</code>)</td>
+<td>Бит 3 адреса видеопамяти.</td>
+</tr>
+<tr>
+<td><code>A4_to_pad</code> (w322)</td>
+<td><code>video_addr_gen_inst.A4_to_pad</code> (g557/g559/g587)</td>
+<td>пад <code>g657</code> (<code>A4</code>, вход <code>to_pad</code>, <code>n_oe</code> = <code>nAE</code>)</td>
+<td>Бит 4 адреса видеопамяти.</td>
+</tr>
+<tr>
+<td><code>A5_to_pad</code> (w274)</td>
+<td><code>video_addr_gen_inst.A5_to_pad</code> (g560/g561)</td>
+<td>пад <code>g658</code> (<code>A5</code>, вход <code>to_pad</code>, <code>n_oe</code> = <code>nAE</code>)</td>
+<td>Бит 5 адреса видеопамяти.</td>
+</tr>
+<tr>
+<td><code>A6_to_pad</code> (w275)</td>
+<td><code>video_addr_gen_inst.A6_to_pad</code> (g562/g555)</td>
+<td>пад <code>g659</code> (<code>A6</code>, вход <code>to_pad</code>, <code>n_oe</code> = <code>nAE</code>)</td>
+<td>Бит 6 адреса видеопамяти.</td>
+</tr>
+<tr>
+<td><code>nAE</code></td>
+<td><code>address_enable_inst.nAE</code> (g661)</td>
+<td>входы <code>n_oe</code> падов <code>g653..g659</code> (<code>A0..A6</code>)</td>
+<td>Разрешение выходов адресных падов (активный низкий): <code>0</code> — ULA выдаёт адрес видеопамяти; <code>1</code> — пады в Z (адресом владеет CPU). <code>nAE = Border | C3 | (C0·C1·C2)</code>.</td>
+</tr>
+<tr>
+<td><code>nRAS_to_pad</code> (w439)</td>
+<td><code>ras_cas_romcs_inst.nRAS_to_pad</code> (g390)</td>
+<td>пад <code>g634</code> (<code>/RAS</code>, вход <code>to_pad</code>)</td>
+<td>Строб <code>/RAS</code> DRAM: видео-RAS (<code>VidRAS</code>) ИЛИ процессорное обращение к RAM (<code>w242</code> = <code>A14·/A15·/MREQ</code>).</td>
+</tr>
+<tr>
+<td><code>nRAS_oe</code> (w438)</td>
+<td><code>ras_cas_romcs_inst.nRAS_oe</code> (g388)</td>
+<td>пад <code>g634</code> (<code>/RAS</code>, вход <code>n_oe</code>)</td>
+<td>Разрешение выхода пада <code>/RAS</code> (tri-state): активно, когда ULA должна драйвить RAS (не в рамке при обращении к RAM).</td>
+</tr>
+<tr>
+<td><code>nCAS_to_pad</code> (w421)</td>
+<td><code>ras_cas_romcs_inst.nCAS_to_pad</code> (g476..g74)</td>
+<td>пад <code>g629</code> (<code>/CAS</code>, вход <code>to_pad</code>)</td>
+<td>Строб <code>/CAS</code> DRAM (CAS-декады по <code>VidCASPulse</code>, <code>C1</code>, <code>nVidC3</code> + процессорные циклы).</td>
+</tr>
+<tr>
+<td><code>nWE_to_pad</code> (w316)</td>
+<td><code>ras_cas_romcs_inst.nWE_to_pad</code> (g526/g87)</td>
+<td>пад <code>g626</code> (<code>/WE</code>, вход <code>to_pad</code>)</td>
+<td>Строб записи <code>/WE</code> DRAM: активен при записи CPU в RAM (<code>w245·/WR</code>).</td>
+</tr>
+<tr>
+<td><code>nROMCS_to_pad</code> (w409)</td>
+<td><code>ras_cas_romcs_inst.nROMCS_to_pad</code> (g387/g39)</td>
+<td>пад <code>g635</code> (<code>/ROMCS</code>, вход <code>to_pad</code>)</td>
+<td>Выбор ПЗУ: <code>0</code>, когда CPU обращается к <code>0x0000..0x3FFF</code> (<code>A15=A14=0</code>) — RAM тогда не выбирается.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="справочник-разрядов-шин">Справочник разрядов шин</h2>
+<p>Каждый разряд шины — отдельная сеть; в скобках — её номер в плоском
+нетлисте (<code>netlist/ula6c001.v</code>), по комментариям <code>hdl/ula6c001.v</code>:</p>
+<pre><code>C[8:0]  0=w338   1=w72    2=w208   3=w253   4=w113   5=w112   6=w17    7=w16    8=w31
+nC[8:0] 0=w336   1=w331   2=w234   3=w203   4=w227   5=w221   6=w70    7=w79    8=w78
+V[8:0]  0=w25    1=w86    2=w91    3=w279   4=w187   5=w179   6=w178   7=w272   8=w261
+nV[8:0] 0=w24    1=w140   2=w92    3=w293   4=w291   5=w286   6=w270   7=w269   8=w311
+nDL[7:0] 0=w479  1=w532   2=w596   3=w593   4=w524   5=w632   6=w501   7=w517   (nQ защёлок data_latch)
+AL[7:0] 0=w506   1=w585   2=w575   3=w491   4=w527   5=w494   6=w550   7=w631   (AL6=HL, AL7=FL)
+AO[7:0] 0=w590   1=w624   2=w589   3=w558   4=w579   5=w564   6=HL(w14) 7=FL(w198)
+</code></pre>
+<h2 id="приложение-именованные-сигналы-внутри-модулей">Приложение. Именованные сигналы внутри модулей</h2>
+<p>Сети, которые не покидают модуль, но имеют имена (нужны для чтения waves и
+<code>icarus/ula.gtkw</code>; подробнее — Приложение <code>ula-modules.md</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Сигнал</th>
+<th>Модуль (сеть в нетлисте)</th>
+<th>Откуда (внутри)</th>
+<th>Куда (внутри)</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nVidEn</code></td>
+<td><code>latch_control</code> (w350)</td>
+<td>GD <code>viden_gd</code>, выход <code>nQ</code></td>
+<td>вентиль <code>g443</code> (SLoad)</td>
+<td>Инверсия <code>VidEn</code>.</td>
+</tr>
+<tr>
+<td><code>nVidEn</code></td>
+<td><code>attr_latch</code> (w528)</td>
+<td>инвертор от входа <code>VidEn</code> (<code>assign</code>)</td>
+<td><code>g309</code>/<code>g326</code> (HL/FL), <code>g310</code>, <code>g324</code>, <code>g340</code></td>
+<td>Инверсия <code>VidEn</code>, локальная копия для гейтинга атрибутов.</td>
+</tr>
+<tr>
+<td><code>al_6</code>, <code>al_7</code></td>
+<td><code>attr_latch</code> (w542, w543)</td>
+<td>GD <code>al[6]</code>, <code>al[7]</code> (Q: захваченные <code>D6</code>/<code>D7</code>)</td>
+<td><code>g34</code>/<code>g35</code> → <code>AL[6]</code>/<code>AL[7]</code></td>
+<td>Захваченные биты атрибута BRIGHT/FLASH до гейтинга <code>VidEn</code>.</td>
+</tr>
+<tr>
+<td><code>nPortWR</code></td>
+<td><code>io</code></td>
+<td><code>g77</code> (<code>= ~w237</code>)</td>
+<td>GD <code>port</code> (nE)</td>
+<td>Строб записи в порт ULA (активный низкий): <code>/IOREQ</code>+<code>A0=0</code>+<code>/WR</code>, не в фазе 2.</td>
+</tr>
+<tr>
+<td><code>nPortRD</code></td>
+<td><code>io</code></td>
+<td><code>g80</code> (<code>= ~w317</code>)</td>
+<td><code>g218</code> (KB0→<code>D0</code>), <code>g217</code> (KB1→<code>D1</code>), <code>g250</code> (KB2→<code>D2</code>), <code>g249</code> (KB3→<code>D3</code>), <code>g284</code> (KB4→<code>D4</code>), <code>g317</code> (EAR→<code>D6</code>)</td>
+<td>Строб чтения порта ULA: выдаёт клавиатуру на <code>D4..D0</code> и EAR на <code>D6</code>.</td>
+</tr>
+<tr>
+<td><code>Speaker</code></td>
+<td><code>io</code> (w484)</td>
+<td>GD <code>port[4]</code> (Q)</td>
+<td><code>g38</code> → <code>nSpeaker</code></td>
+<td>Разряд 4 регистра порта (бипер), положительная фаза.</td>
+</tr>
+<tr>
+<td><code>Tape</code></td>
+<td><code>io</code> (w487)</td>
+<td>GD <code>port[3]</code> (Q)</td>
+<td><code>g37</code> → <code>nTape</code></td>
+<td>Разряд 3 регистра порта (MIC), положительная фаза.</td>
+</tr>
+<tr>
+<td><code>MREQT2</code></td>
+<td><code>contention</code> (w347)</td>
+<td>GD <code>mreq_gd</code> (nQ)</td>
+<td><code>g404</code></td>
+<td>Защёлка <code>/MREQ</code> по <code>CPUCLK</code> (фаза 2 запроса памяти).</td>
+</tr>
+<tr>
+<td><code>IOREQT2</code></td>
+<td><code>contention</code> (w426)</td>
+<td>GD <code>ioreq_gd</code> (nQ)</td>
+<td><code>g404</code>, <code>g405</code></td>
+<td>Инверсная защёлка <code>/IOREQ</code> (положительная копия для комбинаторики арбитра).</td>
+</tr>
+<tr>
+<td><code>CPUCLK_internal</code></td>
+<td><code>contention</code> (w405)</td>
+<td><code>g43</code> (<code>= ~w414</code>)</td>
+<td>GD <code>mreq_gd</code>/<code>ioreq_gd</code> (nE), <code>g42</code></td>
+<td>Такт CPU внутри арбитра (та же логика, что и <code>CPUCLK</code>; разведён на защёлки).</td>
+</tr>
+<tr>
+<td><code>nCPUCLK_internal</code></td>
+<td><code>contention</code> (w404)</td>
+<td><code>g42</code> (<code>= ~CPUCLK_internal</code>)</td>
+<td><code>g404</code>, <code>g405</code></td>
+<td>Инверсия внутреннего такта для комбинаторики арбитра.</td>
+</tr>
+</tbody>
+</table>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <p class="f-title">◫ ZX Spectrum ULA 6C001 <span class="f-sub">— Реверс-инжиниринг ZX Spectrum ULA 6C001 на уровне кристалла: восстановление нетлиста, разбор модулей, схемы и осциллограммы.</span></p>
+      <p class="f-links">
+        <a href="https://github.com/emu-russia/ula">GitHub · emu-russia/ula</a>
+        <a href="https://github.com/emu-russia/ula/issues">Issues</a>
+        <a href="https://github.com/emu-russia/ula/blob/main/LICENSE">License (MIT)</a>
+      </p>
+    </div>
+    <p class="srcnote">Исходник (markdown): <a href="https://github.com/emu-russia/ula/blob/main/ula-signals.md">specs/ula-signals.md</a></p>
+    <p class="f-gen">Generated from the <code>specs/</code> markdown sources by <code>tools/gen_docs_site.py</code>.</p>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Пады · ZX Spectrum ULA 6C001</title>
+<meta name="description" content="Пады ZX Spectrum ULA 6C001: направление, тип (tri-state, open-collector, аналоговые) и описание.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23111'/%3E%3Crect x='3' y='3' width='3' height='10' fill='%23e5484d'/%3E%3Crect x='7' y='3' width='3' height='10' fill='%2330a46c'/%3E%3Crect x='11' y='3' width='2' height='10' fill='%233e63dd'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.ru.html">◫ ZX Spectrum ULA 6C001</a>
+    <nav class="site-nav" aria-label="main">
+      <a href="ula-modules.ru.html">Модули ULA</a><a href="ula-signals.ru.html">Внутренние сигналы</a><a class="active" href="pads.ru.html">Пады</a><a href="topo.ru.html">Топология</a><a href="hdl-vs-netlist-verification.html">Верификация (EN)</a>
+      <a class="lang-switch" href="pads.html">English</a>
+      
+      <button class="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle color theme">
+        <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <article class="doc">
+<h1 id="пады">Пады</h1>
+<p><img alt="pinout" src="imgstore/pinout.png" /></p>
+<p>Типы:</p>
+<ul>
+<li>Tri-state: если активен output enable то пад всегда драйвится, иначе - z</li>
+<li>Open-collector: пад драйвится только когда на пад подаётся значение 0. Когда подаётся значение 1 - пад в состоянии z (чтобы внешние потребители могли его задрайвить нулём). Двунаправленные пады работают аналогично на выход.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Port</th>
+<th>Direction/type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vcc2 (AVCC)</td>
+<td></td>
+<td>Аналоговый VCC для видео ЦАП (+5в)</td>
+</tr>
+<tr>
+<td>Vcc1</td>
+<td></td>
+<td>+5в</td>
+</tr>
+<tr>
+<td>/INT</td>
+<td>Output Open-collector</td>
+<td>Сигнал прерывания</td>
+</tr>
+<tr>
+<td>A[6:1]</td>
+<td>Output Tri-state</td>
+<td>Выходные адреса для VRAM</td>
+</tr>
+<tr>
+<td>A[0]</td>
+<td>Bidir</td>
+<td>A0 особенный</td>
+</tr>
+<tr>
+<td>/WE</td>
+<td>Output</td>
+<td>WriteEnable для DRAM</td>
+</tr>
+<tr>
+<td>/RD</td>
+<td>Input</td>
+<td>RD от проца</td>
+</tr>
+<tr>
+<td>/WR</td>
+<td>Input</td>
+<td>WR от проца</td>
+</tr>
+<tr>
+<td>/CAS</td>
+<td>Output Tri-state</td>
+<td>Выбор Column для DRAM</td>
+</tr>
+<tr>
+<td>GND</td>
+<td></td>
+<td>Общая земля</td>
+</tr>
+<tr>
+<td>OSC</td>
+<td>Input</td>
+<td>Входной клок 14 MHz</td>
+</tr>
+<tr>
+<td>/MREQ</td>
+<td>Input</td>
+<td>от проца</td>
+</tr>
+<tr>
+<td>A[15:14]</td>
+<td>Input</td>
+<td>от проца старшие разряды адреса, для понимания куда стучимся</td>
+</tr>
+<tr>
+<td>/RAS</td>
+<td>Output Tri-state</td>
+<td>Выбор Row для DRAM</td>
+</tr>
+<tr>
+<td>/ROMCS</td>
+<td>Output</td>
+<td>ULA решает что проц лезет в ROM по старшим разрядам адреса</td>
+</tr>
+<tr>
+<td>/IOREQ</td>
+<td>Input</td>
+<td>от проца</td>
+</tr>
+<tr>
+<td>/PHICPU</td>
+<td>⚠️ Inverting Output Open-collector</td>
+<td>Выход CLK на проц OSC ÷ 4</td>
+</tr>
+<tr>
+<td>D[7:6]</td>
+<td>Bidir Open-collector</td>
+<td>Разряды 6,7 шины данных.  D7 - Input Only</td>
+</tr>
+<tr>
+<td>D[5]</td>
+<td>Input</td>
+<td>D5 - Input Only</td>
+</tr>
+<tr>
+<td>SOUND</td>
+<td>Bidir Analog</td>
+<td>MIC/TAPE для кассет и динамика</td>
+</tr>
+<tr>
+<td>D[4:0]</td>
+<td>Bidir Open-collector</td>
+<td>Разряды 0,1,2,3,4 шины данных</td>
+</tr>
+<tr>
+<td>KB[4:1]</td>
+<td>Input</td>
+<td>Входы 1,2,3,4 с клавы</td>
+</tr>
+<tr>
+<td>KB[0]</td>
+<td>Bidir Open-collector</td>
+<td>Вход 0 клавы, а также может использоваться на выход для Test Mode</td>
+</tr>
+<tr>
+<td>U,V,/Y</td>
+<td>Output Analog</td>
+<td>Аналоговый видео выход с ЦАП</td>
+</tr>
+</tbody>
+</table>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <p class="f-title">◫ ZX Spectrum ULA 6C001 <span class="f-sub">— Реверс-инжиниринг ZX Spectrum ULA 6C001 на уровне кристалла: восстановление нетлиста, разбор модулей, схемы и осциллограммы.</span></p>
+      <p class="f-links">
+        <a href="https://github.com/emu-russia/ula">GitHub · emu-russia/ula</a>
+        <a href="https://github.com/emu-russia/ula/issues">Issues</a>
+        <a href="https://github.com/emu-russia/ula/blob/main/LICENSE">License (MIT)</a>
+      </p>
+    </div>
+    <p class="srcnote">Исходник (markdown): <a href="https://github.com/emu-russia/ula/blob/main/pads.md">specs/pads.md</a></p>
+    <p class="f-gen">Generated from the <code>specs/</code> markdown sources by <code>tools/gen_docs_site.py</code>.</p>
+  </div>
+</footer>
+</body>
+</html>

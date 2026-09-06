@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Модули ULA 6C001 · ZX Spectrum ULA 6C001</title>
+<meta name="description" content="Описание каждого модуля восстановленного модульного HDL ZX Spectrum ULA 6C001: назначение, анализ вентилей, схема, типовые осциллограммы, модель на C++.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23111'/%3E%3Crect x='3' y='3' width='3' height='10' fill='%23e5484d'/%3E%3Crect x='7' y='3' width='3' height='10' fill='%2330a46c'/%3E%3Crect x='11' y='3' width='2' height='10' fill='%233e63dd'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.ru.html">◫ ZX Spectrum ULA 6C001</a>
+    <nav class="site-nav" aria-label="main">
+      <a class="active" href="ula-modules.ru.html">Модули ULA</a><a href="ula-signals.ru.html">Внутренние сигналы</a><a href="pads.ru.html">Пады</a><a href="topo.ru.html">Топология</a><a href="hdl-vs-netlist-verification.html">Верификация (EN)</a>
+      <a class="lang-switch" href="ula-modules.html">English</a>
+      
+      <button class="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle color theme">
+        <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <article class="doc">
+<h1 id="модули-ula-6c001">Модули ULA 6C001</h1>
+<details class="page-toc"><summary>Содержание</summary><ul>
+<li><a href="#как-устроен-раздел">Как устроен раздел</a></li>
+<li><a href="#0-обзор-20-модулей-и-их-связи">0. Обзор: 20 модулей и их связи</a></li>
+<li><a href="#1-clkgen-генератор-тактов-2-7-мгц">1. clkgen — генератор тактов (÷2, 7 МГц)</a><ul>
+<li><a href="#назначение">Назначение</a></li>
+<li><a href="#интерфейс">Интерфейс</a></li>
+<li><a href="#структура-восстановление-из-вентилей-g52-g54-g423g432">Структура (восстановление из вентилей g52, g54, g423..g432)</a></li>
+<li><a href="#поведение-проверено-в-модели">Поведение (проверено в модели)</a></li>
+<li><a href="#c-эмулятор">C++ (эмулятор)</a></li>
+</ul>
+</li>
+<li><a href="#2-tclk-дешифрация-шинных-циклов">2. tclk — дешифрация шинных циклов</a><ul>
+<li><a href="#назначение_1">Назначение</a></li>
+<li><a href="#интерфейс_1">Интерфейс</a></li>
+<li><a href="#вентили-и-уравнения">Вентили и уравнения</a></li>
+<li><a href="#c">C++</a></li>
+</ul>
+</li>
+<li><a href="#3-hcounter-горизонтальный-счётчик-448-тактов-на-строку">3. hcounter — горизонтальный счётчик (448 тактов на строку)</a><ul>
+<li><a href="#назначение_2">Назначение</a></li>
+<li><a href="#интерфейс_2">Интерфейс</a></li>
+<li><a href="#анализ-вентилей">Анализ вентилей</a></li>
+<li><a href="#измеренное-поведение">Измеренное поведение</a></li>
+<li><a href="#c_1">C++</a></li>
+</ul>
+</li>
+<li><a href="#4-vcounter-вертикальный-счётчик-312-строк-на-кадр">4. vcounter — вертикальный счётчик (312 строк на кадр)</a><ul>
+<li><a href="#назначение_3">Назначение</a></li>
+<li><a href="#интерфейс_3">Интерфейс</a></li>
+<li><a href="#анализ-вентилей_1">Анализ вентилей</a></li>
+<li><a href="#c_2">C++</a></li>
+</ul>
+</li>
+<li><a href="#5-latch_control-стробы-защёлок-и-видеорежим">5. latch_control — стробы защёлок и видеорежим</a><ul>
+<li><a href="#назначение_4">Назначение</a></li>
+<li><a href="#интерфейс_4">Интерфейс</a></li>
+<li><a href="#вентили-и-уравнения_1">Вентили и уравнения</a></li>
+<li><a href="#c_3">C++</a></li>
+</ul>
+</li>
+<li><a href="#6-data_latch-защёлка-байта-пикселей">6. data_latch — защёлка байта пикселей</a><ul>
+<li><a href="#назначение_5">Назначение</a></li>
+<li><a href="#интерфейс_5">Интерфейс</a></li>
+<li><a href="#вентили-и-c">Вентили и C++</a></li>
+</ul>
+</li>
+<li><a href="#7-attr_latch-защёлка-атрибутов-выбор-inkpaper">7. attr_latch — защёлка атрибутов + выбор ink/paper</a><ul>
+<li><a href="#назначение_6">Назначение</a></li>
+<li><a href="#интерфейс_6">Интерфейс</a></li>
+<li><a href="#вентили-после-редукции">Вентили (после редукции)</a></li>
+<li><a href="#c_4">C++</a></li>
+</ul>
+</li>
+<li><a href="#8-ao_latch-объектная-защёлка-inkpaperborder-для-цап">8. ao_latch — объектная защёлка (ink/paper/border для ЦАП)</a><ul>
+<li><a href="#назначение_7">Назначение</a></li>
+<li><a href="#интерфейс_7">Интерфейс</a></li>
+<li><a href="#структура">Структура</a></li>
+<li><a href="#c_5">C++</a></li>
+</ul>
+</li>
+<li><a href="#9-pixel_shift_reg-сдвиговый-регистр-пикселей">9. pixel_shift_reg — сдвиговый регистр пикселей</a><ul>
+<li><a href="#назначение_8">Назначение</a></li>
+<li><a href="#интерфейс_8">Интерфейс</a></li>
+<li><a href="#анализ">Анализ</a></li>
+<li><a href="#c_6">C++</a></li>
+</ul>
+</li>
+<li><a href="#10-flash_clock-делитель-частоты-мигания">10. flash_clock — делитель частоты мигания</a><ul>
+<li><a href="#назначение_9">Назначение</a></li>
+<li><a href="#интерфейс_9">Интерфейс</a></li>
+<li><a href="#анализ_1">Анализ</a></li>
+<li><a href="#c_7">C++</a></li>
+</ul>
+</li>
+<li><a href="#11-flash_xnor-выбор-inkpaper-по-пикселю-и-flash">11. flash_xnor — выбор ink/paper по пикселю и flash</a><ul>
+<li><a href="#назначение_10">Назначение</a></li>
+<li><a href="#интерфейс_10">Интерфейс</a></li>
+<li><a href="#вентили">Вентили</a></li>
+<li><a href="#c_8">C++</a></li>
+</ul>
+</li>
+<li><a href="#12-color_mux-сборка-rgb">12. color_mux — сборка R/G/B</a><ul>
+<li><a href="#назначение_11">Назначение</a></li>
+<li><a href="#интерфейс_11">Интерфейс</a></li>
+<li><a href="#уравнения-после-редукции-assign-в-hdl">Уравнения (после редукции, assign в HDL)</a></li>
+<li><a href="#c_9">C++</a></li>
+</ul>
+</li>
+<li><a href="#13-video_addr_gen-адрес-видеопамяти-rowcol">13. video_addr_gen — адрес видеопамяти (row/col)</a><ul>
+<li><a href="#назначение_12">Назначение</a></li>
+<li><a href="#интерфейс_12">Интерфейс</a></li>
+<li><a href="#анализ_2">Анализ</a></li>
+<li><a href="#c_10">C++</a></li>
+</ul>
+</li>
+<li><a href="#14-address_enable-разрешение-адресных-падов-nae">14. address_enable — разрешение адресных падов (nAE)</a><ul>
+<li><a href="#назначение_13">Назначение</a></li>
+<li><a href="#интерфейс_13">Интерфейс</a></li>
+<li><a href="#уравнения">Уравнения</a></li>
+<li><a href="#c_11">C++</a></li>
+</ul>
+</li>
+<li><a href="#15-ras_cas_romcs-тайминги-dram-и-выбор-rom">15. ras_cas_romcs — тайминги DRAM и выбор ROM</a><ul>
+<li><a href="#назначение_14">Назначение</a></li>
+<li><a href="#интерфейс_14">Интерфейс</a></li>
+<li><a href="#анализ_3">Анализ</a></li>
+<li><a href="#c_12">C++</a></li>
+</ul>
+</li>
+<li><a href="#16-video_signal_features-синхро-blank-border-int-burst">16. video_signal_features — синхро, blank, border, INT, burst</a><ul>
+<li><a href="#назначение_15">Назначение</a></li>
+<li><a href="#интерфейс_15">Интерфейс</a></li>
+<li><a href="#ключевые-уравнения-после-анализа-вентилей">Ключевые уравнения (после анализа вентилей)</a></li>
+<li><a href="#c_13">C++</a></li>
+</ul>
+</li>
+<li><a href="#17-dac_setup-подготовка-входов-видеоцап">17. dac_setup — подготовка входов видеоЦАП</a><ul>
+<li><a href="#назначение_16">Назначение</a></li>
+<li><a href="#интерфейс_16">Интерфейс</a></li>
+<li><a href="#уравнения-из-вентилей-g1g23-g152g179-g211g216-g624g625">Уравнения (из вентилей g1..g23, g152..g179, g211..g216, g624,g625)</a></li>
+<li><a href="#c_14">C++</a></li>
+</ul>
+</li>
+<li><a href="#18-io-порт-ввода-вывода-клавиатура-border-micear">18. io — порт ввода-вывода (клавиатура, border, mic/ear)</a><ul>
+<li><a href="#назначение_17">Назначение</a></li>
+<li><a href="#интерфейс_17">Интерфейс</a></li>
+<li><a href="#анализ_4">Анализ</a></li>
+<li><a href="#c_15">C++</a></li>
+</ul>
+</li>
+<li><a href="#19-contention-арбитраж-dram-cpu-клок-с-растяжением">19. contention — арбитраж DRAM (CPU-клок с растяжением)</a><ul>
+<li><a href="#назначение_18">Назначение</a></li>
+<li><a href="#интерфейс_18">Интерфейс</a></li>
+<li><a href="#анализ_5">Анализ</a></li>
+<li><a href="#c_16">C++</a></li>
+</ul>
+</li>
+<li><a href="#20-top-ula-и-пады">20. Top ula и пады</a></li>
+<li><a href="#21-simulator-ulasimpy">21. Simulator: ulasim.py</a></li>
+<li><a href="#приложение-соответствие-сигналов-icarusulagtkw">Приложение. Соответствие сигналов icarus/ula.gtkw</a></li>
+</ul></details>
+<div class="callout warning"><p><strong>Внимание!</strong> Нейросети и агенты пока очень плохо работают с HDL-нетлистами:
+картинки схем модулей и временные диаграммы (waves) ниже получились
+«кривыми» и по сути являются <strong>плейсхолдерами</strong>. Достоверная информация —
+в тексте, таблицах вентилей и уравнениях; рисунки стоит воспринимать как
+иллюстрацию структуры, а не как точную документацию. Просьба отнестись
+с пониманием.</p></div>
+<blockquote>
+<p>Раздел по задаче <a href="https://github.com/emu-russia/ula/issues/4">emu-russia/ula#4</a>:
+описание <em>каждого</em> модуля восстановленного модульного HDL
+(<code>hdl/ula6c001.v</code>), его схема, типовые осциллограммы и модельный код на C++.</p>
+<p>English version: <a href="ula-modules.html">ula-modules.en.md</a></p>
+</blockquote>
+<h2 id="как-устроен-раздел">Как устроен раздел</h2>
+<p><code>hdl/ula6c001.v</code> — это "простыня" нетлиста (661 ячейка), растащенная по
+модулям. При этом пары закольцованных NOR, образующие RS-триггеры, свёрнуты
+в примитивы <code>GD</code> (прозрачная защёлка), а там, где последовательностная логика
+осталась на уровне вентилей (счётчики, делитель клока, сдвиговый регистр),
+мы <strong>не</strong> рисуем её "как месиво NOR": ниже для каждого модуля показана
+<em>восстановленная структура</em> — защёлки/триггеры изображены нормальными
+символами, а комбинационные деревья — через их булевы функции (они получены
+честным анализом вентилей, а не перерисовкой из чужой схемы).</p>
+<p>Соглашения об именах:</p>
+<ul>
+<li>сигнал <code>/X</code> (или <code>nX</code>) активен низким уровнем;</li>
+<li><code>GD</code> — защёлка с инверсным разрешением (<code>nE</code>):
+  <code>Q = D</code> пока <code>nE=0</code>, иначе состояние хранится
+  (в <code>hdl/ulabase.v</code> это <code>reg val; always @(*) if (~nE) val = D;</code>), <code>nQ = ~Q</code>;</li>
+<li>логические вентили нумеруются как в исходнике (<code>gNNN</code>) — номера ячеек
+  совпадают с плоским нетлистом <code>netlist/ula6c001.v</code> (см. отчёт по задаче #2);</li>
+<li>имена шин: <code>C[8:0]</code> — горизонтальный счётчик, <code>V[8:0]</code> — вертикальный.</li>
+</ul>
+<p>Все осциллограммы в <code>imgstore/waves/*.png</code> — <strong>честный вывод модели</strong>:
+<code>ulasim.py</code> (см. последний раздел) погонно воспроизводит тот же самый HDL
+с вентильной точностью и дампит VCD с набором сигналов из мониторов
+<code>icarus/ula.gtkw</code>. В модели тактовый вход <code>OSC</code> задан 20 МГц (период 50 нс,
+как в <code>icarus/run_ula.v</code>), поэтому <code>nCLK7 = OSC/2 = 10 МГц</code>, строка =
+448 тактов <code>nCLK7</code> = 44.8 мкс, кадр = 312 строк = 13.98 мс. На реальном чипе
+<code>OSC = 14 МГц</code> (<a href="pads.ru.html">pads.md</a>, <code>/PHICPU = OSC÷4</code>), т.е. строке
+соответствует 64 мкс, а кадру ~20 мс; вся логика частотно-независима.</p>
+<hr />
+<h2 id="0-обзор-20-модулей-и-их-связи">0. Обзор: 20 модулей и их связи</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Модуль</th>
+<th>Назначение</th>
+<th>Источник</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>clkgen</code></td>
+<td>делитель <code>OSC÷2</code> → <code>nCLK7</code> (7 МГц)</td>
+<td><code>hdl/ula6c001.v:453</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>tclk</code></td>
+<td>дешифрация шинных циклов CPU → <code>TCLK</code>/<code>K0</code></td>
+<td><code>:796</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>hcounter</code></td>
+<td>горизонтальный счётчик <code>C[8:0]</code>, 448 тактов/строка</td>
+<td><code>:474</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>vcounter</code></td>
+<td>вертикальный счётчик <code>V[8:0]</code>, 312 строк/кадр</td>
+<td><code>:613</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>latch_control</code></td>
+<td>стробы защёлок данных/атрибутов, border/video-enable</td>
+<td><code>:807</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>data_latch</code></td>
+<td>защёлка байта пикселей (8× <code>GD</code>)</td>
+<td><code>:853</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>attr_latch</code></td>
+<td>защёлка байта атрибутов + ink/paper→bright-логика</td>
+<td><code>:860</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>ao_latch</code></td>
+<td>"объектная" защёлка (ink/paper/border) 8× <code>GD</code></td>
+<td><code>:906</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>pixel_shift_reg</code></td>
+<td>сдвиговый регистр пикселей (загрузка 8 бит, выдача серией)</td>
+<td><code>:913</code></td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>flash_clock</code></td>
+<td>делитель частоты мигания (flash)</td>
+<td><code>:1053</code></td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>flash_xnor</code></td>
+<td>XNOR мигания с пиксельным потоком → выбор ink/paper</td>
+<td><code>:1123</code></td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>color_mux</code></td>
+<td>сборка цветов R/G/B из ink/paper + blank/sync</td>
+<td><code>:1138</code></td>
+</tr>
+<tr>
+<td>13</td>
+<td><code>video_addr_gen</code></td>
+<td>мультиплексор адреса видеопамяти (row/col из C,V)</td>
+<td><code>:1148</code></td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>address_enable</code></td>
+<td>разрешение выхода адресных падов <code>A[6:0]</code> (<code>nAE</code>)</td>
+<td><code>:1245</code></td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>ras_cas_romcs</code></td>
+<td>тайминги DRAM (<code>/RAS</code>, <code>/CAS</code>, <code>/WE</code>), выбор ROM</td>
+<td><code>:1256</code></td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>video_signal_features</code></td>
+<td>синхро/blank/border/INT/цветовой burst</td>
+<td><code>:1331</code></td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>dac_setup</code></td>
+<td>формирование входов видеоЦАП (U,V,/Y)</td>
+<td><code>:1400</code></td>
+</tr>
+<tr>
+<td>18</td>
+<td><code>io</code></td>
+<td>порт ввода-вывода (клавиатура, border, mic/ear)</td>
+<td><code>:1464</code></td>
+</tr>
+<tr>
+<td>19</td>
+<td><code>contention</code></td>
+<td>арбитраж DRAM: CPU-клок с растяжением (contention)</td>
+<td><code>:1514</code></td>
+</tr>
+<tr>
+<td>—</td>
+<td><code>ula</code> (top)</td>
+<td>связывает модули и пады (<code>hdl/ula6c001.v:6</code>, пады — <code>pads.md</code>)</td>
+<td><code>:6</code></td>
+</tr>
+</tbody>
+</table>
+<p>Полная структурная схема связей модулей и падов: <img alt="s_top" src="imgstore/schematics/s_top.png" />.</p>
+<p>Поимённая таблица <strong>всех внутренних сигналов</strong> (название → откуда → куда →
+описание) — в <a href="ula-signals.ru.html">ula-signals.md</a> (задача
+<a href="https://github.com/emu-russia/ula/issues/10">#10</a>).</p>
+<p>Измеренные в модели тайминги, на которые ссылаются разделы:</p>
+<ul>
+<li>строка: <code>HCrst</code>→<code>HCrst</code> = <strong>448</strong> тактов <code>nCLK7</code> (44.8 мкс в модели);</li>
+<li>кадр: <strong>312</strong> строк = 13.98 мс в модели; сброс <code>V</code> на 312-й строке;</li>
+<li><code>VSync</code>: декада <code>V ∈ {248..251}</code> (<code>nor6</code> по <code>nV6,nV7,V2,nV3..nV5</code>);</li>
+<li>выборка данных: <strong>32 байта пикселей + 32 атрибута</strong> на строку (парами,
+  атрибут сразу после байта пикселя), <code>nAOLatch</code> перезаряжается каждые 8
+  тактов <code>nCLK7</code> (56 раз/строку — включая рамку);</li>
+<li><code>nINT</code>: импульс в начале кадра.</li>
+</ul>
+<hr />
+<h2 id="1-clkgen-генератор-тактов-2-7-мгц">1. <code>clkgen</code> — генератор тактов (<code>÷2</code>, 7 МГц)</h2>
+<h3 id="назначение">Назначение</h3>
+<p>Единственный по-настоящему асинхронный узел: делит входной <code>OSC</code> (14 МГц на
+плате, см. <a href="pads.ru.html">pads.md</a>) на два и формирует главную тактовую частоту
+видеотракта <code>nCLK7</code> (~7 МГц). Никакого внешнего сброса у чипа нет: делитель
+"взводится" сам сразу после включения питания.</p>
+<h3 id="интерфейс">Интерфейс</h3>
+<pre><code>clkgen (
+  input  osc_from_pad,   // OSC с пада
+  output nCLK7           // CLK7 = OSC/2
+);
+</code></pre>
+<h3 id="структура-восстановление-из-вентилей-g52-g54-g423g432">Структура (восстановление из вентилей g52, g54, g423..g432)</h3>
+<p>Собственно делитель — два каскадных RS-лата (<code>// FD</code> в исходнике), т.е.
+D-триггер "master–slave", включённый счётным кольцом (<code>nQ → D</code>):</p>
+<table>
+<thead>
+<tr>
+<th>вентили</th>
+<th>функция</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>g52</code></td>
+<td>буфер-инвертор <code>w441 = /OSC</code></td>
+</tr>
+<tr>
+<td><code>g423,g424,g425</code></td>
+<td>RS-лата master (<code>w442</code>, <code>w443</code>)</td>
+</tr>
+<tr>
+<td><code>g430,g431,g432</code></td>
+<td>RS-лата slave (<code>w444..w446</code>, <code>w449</code>)</td>
+</tr>
+<tr>
+<td><code>g54</code></td>
+<td>буфер-инвертор <code>nCLK7 = /w446</code></td>
+</tr>
+</tbody>
+</table>
+<p>RS-латы здесь <strong>не</strong> показаны парой NOR — это классический счётный
+D-триггер; именно так он и работает (делит на 2):</p>
+<pre><code>   OSC ──┬─► буфер ──► [D-триггер ÷2] ──► буфер ──► nCLK7
+         └──────────────── nQ ────────────────────┘  (обратная связь)
+</code></pre>
+<p>Диаграмма: <img loading="lazy" alt="s_clkgen" src="imgstore/schematics/s_clkgen.png" />.
+Осциллограмма (OSC, nCLK7, /PHICPU): <img loading="lazy" alt="w_clockgen" src="imgstore/waves/w_clockgen.png" />.</p>
+<h3 id="поведение-проверено-в-модели">Поведение (проверено в модели)</h3>
+<p><code>nCLK7</code> переключается один раз за период <code>OSC</code>
+(÷2): в модели при <code>OSC=20 МГц</code> период <code>nCLK7</code> = 100 нс. От <code>nCLK7</code>
+тактируются h-счётчик, защёлки данных и сдвиговый регистр пикселей.
+<code>/PHICPU</code> (такт CPU) получается не здесь, а в <code>contention</code> из младших битов
+<code>C</code> — по сути это <code>C0</code>-подобный сигнал (3.5 МГц), растягиваемый при
+contention (см. раздел 19).</p>
+<h3 id="c-эмулятор">C++ (эмулятор)</h3>
+<pre><code class="language-cpp">// clkgen: OSC/2 -&gt; nCLK7
+struct ClkGen {
+    bool master = 0, slave = 0;          // два плеча D-триггера
+    bool nCLK7   = 0;
+
+    // вызывается по каждому изменению OSC (на платe 14 MHz)
+    void eval(bool osc) {
+        bool d = osc;                    // входной буфер/инвертор не меняет фазу
+        if (!osc) { master = d; }        // master прозрачен при OSC=0
+        else      { slave = master; }    // slave копирует при OSC=1
+        nCLK7 = !slave;                  // выходной буфер-инвертор
+    }
+};
+</code></pre>
+<hr />
+<h2 id="2-tclk-дешифрация-шинных-циклов">2. <code>tclk</code> — дешифрация шинных циклов</h2>
+<h3 id="назначение_1">Назначение</h3>
+<p>По сигналам <code>/MREQ</code>, <code>/IOREQ</code>, <code>/RD</code>, <code>/WR</code> от процессора формирует два
+внутренних строба <code>nTCLKA</code>/<code>nTCLKB</code> (активны, когда <em>оба</em> запроса
+<code>/MREQ</code>+<code>/IOREQ</code> низкие — т.е. на самом деле "шина занята"), а также выход
+<code>K0</code> (тестовый режим/клавиатурная строка 0).</p>
+<h3 id="интерфейс_1">Интерфейс</h3>
+<pre><code>tclk ( nMREQ, nIOREQ, nRD, nWR, WR(inout), RD(inout),
+       output nTCLKA, nTCLKB(inout), K0, input nV8 );
+</code></pre>
+<p><code>WR = /nWR</code>, <code>RD = /nRD</code> — просто инверторы-буферы (<code>g81</code>, <code>g82</code>).</p>
+<h3 id="вентили-и-уравнения">Вентили и уравнения</h3>
+<pre><code>g527:  nTCLKA = nor4(nMREQ, nIOREQ, WR, nRD)   = 1, только если все 4 входа = 0
+g525:  nTCLKB = nor4(RD, nWR, nMREQ, nIOREQ)   = 1, только если все 4 входа = 0
+g83:   w313   = not nTCLKB
+g528:  K0     = nor(nV8, w313)                 // тестовый выход на KB0
+</code></pre>
+<p><code>K0</code> (уходит на пад <code>KB0</code>) активен, когда <code>nV8=0</code> и <code>nTCLKB=1</code> — т.е.
+<code>K0 = nV8 · nTCLKB</code>. На реальной плате <code>KB0</code> — единственный двунаправленный
+клавиатурный вывод, который ULA может прижимать к нулю.</p>
+<p>Диаграмма: <img loading="lazy" alt="s_tclk" src="imgstore/schematics/s_tclk.png" />.</p>
+<h3 id="c">C++</h3>
+<pre><code class="language-cpp">struct TClk {
+    bool nMREQ, nIOREQ, nRD, nWR, nV8;
+    bool nTCLKA, nTCLKB, K0;
+    void eval() {
+        bool WR = !nWR, RD = !nRD;
+        nTCLKA = !( nMREQ || nIOREQ || WR || nRD );   // nor4
+        nTCLKB = !( RD   || nWR   || nMREQ|| nIOREQ); // nor4
+        K0     = !( nV8 || nTCLKB );                  // nV8 &amp; nTCLKB
+    }
+};
+</code></pre>
+<hr />
+<h2 id="3-hcounter-горизонтальный-счётчик-448-тактов-на-строку">3. <code>hcounter</code> — горизонтальный счётчик (448 тактов на строку)</h2>
+<h3 id="назначение_2">Назначение</h3>
+<p>Считает позицию внутри строки. Тактируется от <code>nCLK7</code> (через внутренние
+фазы), выдаёт <code>C[8:0]</code>/<code>nC[8:0]</code> всем потребителям (адрес видеопамяти,
+логика синхро/blank, декодеры RAS/CAS, арбитраж). Сбрасывается раз в строку
+сигналом <code>HCrst</code> — <strong>период счёта ровно 448 тактов</strong> (измерено в модели:
+<code>HCrst</code>→<code>HCrst</code> = 448 периодов <code>nCLK7</code>).</p>
+<h3 id="интерфейс_2">Интерфейс</h3>
+<pre><code>hcounter ( input nCLK7, nTCLKA,
+           output [8:0] nC, C, output HCrst, CLKHC6 );
+</code></pre>
+<h3 id="анализ-вентилей">Анализ вентилей</h3>
+<p>Счётчик построен из <strong>одинаковых битовых ячеек</strong>; каждая ячейка в
+сыром нетлисте — это 5-6 NOR (RS-лата "master–slave" с комбинаторикой
+переноса), здесь мы показываем её как обычный T-триггер с разрешением:</p>
+<ul>
+<li>бит 0 (<code>g444..g455</code>): считает по фронтам <code>CLK7 = /nCLK7</code>;</li>
+<li>биты 1..5 (<code>g447..g522</code> и т.д.): тактовый вход — комбинация фазы и
+  младших битов (каскад переноса);</li>
+<li>биты 6..8 (<code>g98..g129</code>): дополнительно имеют сброс <code>HCrst</code>;</li>
+<li><code>g518</code>: <code>CLKHC6 = nor(nTCLKA, nC[5])</code> — такт вертикального счётчика (см. <code>vcounter</code>);</li>
+<li><code>g104</code>: <code>HCrst = nor(nC[8], nC[7]) = C8 · C7</code> — декада сброса.</li>
+</ul>
+<p>Ключевая находка анализа: сброс происходит не по значению 448 как таковому,
+а по декаде <code>C8·C7</code> (счёт 384..447), совмещённой с фазой тактирования
+старших битов, — результирующий период строки получается ровно <strong>448</strong>,
+что соответствует 64 мкс строки на реальной частоте 7 МГц.</p>
+<p>Схема: <img loading="lazy" alt="s_hcounter" src="imgstore/schematics/s_hcounter.png" />.
+Осциллограммы: строка целиком <img loading="lazy" alt="w_hline" src="imgstore/waves/w_hline.png" />,
+младшие биты/фазы <em>w_clockgen</em>.</p>
+<h3 id="измеренное-поведение">Измеренное поведение</h3>
+<ul>
+<li><code>C0</code> переключается каждые 2 такта <code>nCLK7</code> (3.5 МГц на реальном чипе);</li>
+<li><code>HCrst</code> — один импульс на строку (см. [w_hline]).</li>
+<li><code>CLKHC6</code> используется вертикальным счётчиком: в простое (нет шинной
+  активности, <code>nTCLKA=0</code>) <code>CLKHC6 = C5</code>.</li>
+</ul>
+<h3 id="c_1">C++</h3>
+<pre><code class="language-cpp">// hcounter: 9-битный счётчик строки, период 448, счёт по nCLK7
+struct HCounter {
+    uint16_t C = 0;              // C[8:0]
+    bool HCrst = 0;
+
+    void tick(bool nCLK7) {      // активный фронт nCLK7
+        if (!nCLK7) {
+            C = (C + 1) % 448;   // эквивалент сброса по декаде C8·C7
+        }
+        HCrst = (C &gt;= 384);      // nor(nC8,nC7) — декада сброса
+    }
+    int  count() const { return C; }
+};
+</code></pre>
+<p>Примечание: в эмуляторе целочисленный счётчик с модулем 448 даёт тот же
+результат, что и вентильная декада, но без 448-тактового "хвоста"
+(в эмуляторе не нужны промежуточные состояния переноса).</p>
+<hr />
+<h2 id="4-vcounter-вертикальный-счётчик-312-строк-на-кадр">4. <code>vcounter</code> — вертикальный счётчик (312 строк на кадр)</h2>
+<h3 id="назначение_3">Назначение</h3>
+<p>Считает строки кадра: <code>V[8:0]</code>/<code>nV[8:0]</code> идут в логику border/синхро,
+в генератор адреса видеопамяти и в INT. Инкремент — раз в строку
+(измерено в модели: <code>V = V+1</code> на каждую <code>HCrst</code>), сброс — на 312-й строке
+(кадр = 312 строк, 20 мс при 7 МГц).</p>
+<h3 id="интерфейс_3">Интерфейс</h3>
+<pre><code>vcounter ( input HCrst, CLKHC6, nC5,
+           output [8:0] nV, V );
+</code></pre>
+<h3 id="анализ-вентилей_1">Анализ вентилей</h3>
+<p>Биты счётчика разобраны в <a href="https://github.com/emu-russia/ula/blob/main/vcounter.md">vcounter.md</a> на типовые ячейки:
+- биты 0..2 — <code>TCE</code> (toggle with clock enable), тактируются <code>CLKHC6</code>;
+- биты 3..5 — <code>TRCE</code> (TCE + сброс); дополнительный внутренний сброс <code>vrst</code>
+  получается в <code>g567</code> (переиспользует инвертор <code>g89</code> бита 3);
+- биты 6,7 — снова <code>TCE</code>;
+- бит 8 — <code>TRE</code> (TRCE без carry out; лишний NOR выкинут, т.к. перенос
+  дальше не нужен).</p>
+<p>В <code>hdl/ula6c001.v</code> биты 3..8 всё ещё помечены <code>// not sure</code> — это зона
+наименьшей уверенности реверса (см. <code>vcounter.md</code>, отчёт по задаче #2),
+поэтому в осциллограммах на верхних битах <code>V</code> возможны "внутристрочные"
+переходы — модель честно показывает текущее состояние HDL.</p>
+<p>Схема: <img loading="lazy" alt="s_vcounter" src="imgstore/schematics/s_vcounter.png" />.
+Осциллограммы: вертикальная развёртка кадра <img loading="lazy" alt="w_vframe" src="imgstore/waves/w_vframe.png" />,
+<img loading="lazy" alt="весь кадр w_frame" src="imgstore/waves/w_frame.png" />.</p>
+<h3 id="c_2">C++</h3>
+<pre><code class="language-cpp">// vcounter: счётчик строк кадра; модуль 312
+struct VCounter {
+    uint16_t V = 0;              // V[8:0]
+    void line() {                // раз в строку (по HCrst)
+        V++;
+        if (V &gt;= 312) V = 0;     // 312 строк/кадр
+    }
+};
+</code></pre>
+<hr />
+<h2 id="5-latch_control-стробы-защёлок-и-видеорежим">5. <code>latch_control</code> — стробы защёлок и видеорежим</h2>
+<h3 id="назначение_4">Назначение</h3>
+<p>Самый "управляющий" модуль: вырабатывает активные стробы защёлок данных
+(<code>nDataLatch</code>), атрибутов (<code>nAttrLatch</code>), объектной защёлки (<code>nAOLatch</code>),
+сигнал параллельной загрузки сдвигового регистра (<code>SLoad</code>), признак
+"видеоактивной области" (<code>VidEn</code>, <code>nVidEn</code>), а также вспомогательные
+<code>nVidC3</code>, <code>VidCASPulse</code>, <code>C0_other</code>, <code>Border</code>.</p>
+<h3 id="интерфейс_4">Интерфейс</h3>
+<pre><code>latch_control ( input nCLK7, nBorder, nC0..nC3, C1,
+                inout Border,
+                output nAttrLatch, nDataLatch, nAOLatch,
+                       nVidC3, C0_other, SLoad, nSLoad, VidEn,
+                       VidCASPulse );
+</code></pre>
+<h3 id="вентили-и-уравнения_1">Вентили и уравнения</h3>
+<pre><code>g49:  Border = /nBorder                      // &quot;рамка&quot; как положительный сигнал
+g422: w349   = nor(nC3, Border);  g50: nVidC3 = /w349
+        // nVidC3 = 0 (видео) в окне: C3=0 и не рамка  -&gt; &quot;видео-фаза C3&quot;
+g55..g59: цепочка буферов-инверторов от nCLK7 (задержка на 2 вентиля)
+g449: VidCASPulse = nor(w394, nC0)            // импульс в начале строки
+g427: w396 = nor4(C1, nC0, VidCASPulse, nVidC3)
+g408,g409: w398 = not not w396 (2 инвертора); g51: nDataLatch = /w398
+g443: SLoad = nor4(C1, nC2, nVidEn, C0_other); g339: nSLoad = /SLoad
+g406: w339 = nor3(C1, nC0, nC2); g46: nAOLatch = /w339
+g407: w419 = nor4(nC0, nVidC3, nC1, VidCASPulse); g47: nAttrLatch = /w419
+GD viden_gd: VidEn/nVidEn — защёлка по nC3: при nC3=0 VidEn = /nBorder
+</code></pre>
+<p>Смысл: пока <code>C</code> проходит область экрана (декоды по <code>C1..C3</code>), защёлки
+поочерёдно открываются: <code>nAOLatch</code> — каждые 8 тактов (на границе знакоместа),
+<code>nDataLatch</code>/<code>nAttrLatch</code> — в момент выборки байта пикселя и следующего за
+ним атрибута (в модели: 32 пары на строку, атрибут на ~200 нс позже байта).</p>
+<p>Схема: <img loading="lazy" alt="s_latch_control" src="imgstore/schematics/s_latch_control.png" />.
+Осциллограмма: <img loading="lazy" alt="w_latch_control" src="imgstore/waves/w_latch_control.png" />.</p>
+<h3 id="c_3">C++</h3>
+<pre><code class="language-cpp">// стробы по формулам (по вентилям g422..g449, g406..g443)
+struct LatchControl {
+    bool nCLK7, nBorder;
+    bool nC0, nC1, nC2, nC3, C1;
+    bool nAttrLatch, nDataLatch, nAOLatch, nVidC3, VidCASPulse;
+    bool C0_other, SLoad, nSLoad, VidEn;
+    bool VidCASPulse_d1;                    // задержка (g55..g59)
+
+    void eval() {
+        bool Border = !nBorder;
+        bool w349 = !(nC3 | Border);        // g422
+        nVidC3    = !w349;                  // g50
+        VidCASPulse = !(VidCASPulse_d1 | nC0);  // g449 (g55..g59 задержка)
+        VidCASPulse_d1 = nCLK7;                  // (упрощённо: цепочка буферов)
+        // nDataLatch = !(C1|nC0|VidCASPulse|nVidC3)  после 2 инверторов (g408/9)
+        bool w396 = !(C1 || nC0 || VidCASPulse || nVidC3);
+        nDataLatch = !w396;                 // g51
+        C0_other   = !nC0;                  // g57
+        bool w339 = !(C1 || nC0 || nC2);    // g406
+        nAOLatch   = !w339;                 // g46
+        bool w419 = !(nC0 || nVidC3 || nC1 || VidCASPulse); // g407
+        nAttrLatch = !w419;                 // g47
+        SLoad = !(C1 || nC2 || nVidEn_out() || C0_other);   // g443
+        nSLoad = !SLoad;                    // g339
+    }
+};
+</code></pre>
+<hr />
+<h2 id="6-data_latch-защёлка-байта-пикселей">6. <code>data_latch</code> — защёлка байта пикселей</h2>
+<h3 id="назначение_5">Назначение</h3>
+<p>Прозрачная защёлка на 8 бит (<code>GD dl[7:0]</code>): во время строба <code>nDataLatch</code>
+захватывает байт данных <code>D7..D0</code> с шины данных (чтение видеопамяти ULA) и
+хранит его до следующего знакоместа. Выходы — инверсные <code>nDL[7:0]</code>
+(использует <code>nQ</code> защёлок), т.к. дальше сдвиговый регистр устроен на NOR.</p>
+<h3 id="интерфейс_5">Интерфейс</h3>
+<pre><code>data_latch ( input [7:0] DI,   // DI = {D7..D0}_from_pad (старший бит первым)
+             input nDataLatch,
+             output [7:0] nDL );    // nDL[i] = nQ защёлки i
+</code></pre>
+<h3 id="вентили-и-c">Вентили и C++</h3>
+<pre><code class="language-cpp">struct DataLatch {
+    uint8_t dl = 0;
+    void eval(bool nDataLatch, uint8_t D) {
+        if (!nDataLatch) dl = D;         // прозрачная защёлка
+    }
+    uint8_t nDL() const { return ~dl; }  // выходы nQ
+};
+</code></pre>
+<p>Схема: <img loading="lazy" alt="s_data_latch" src="imgstore/schematics/s_data_latch.png" /> (8× <code>GD</code>).</p>
+<hr />
+<h2 id="7-attr_latch-защёлка-атрибутов-выбор-inkpaper">7. <code>attr_latch</code> — защёлка атрибутов + выбор ink/paper</h2>
+<h3 id="назначение_6">Назначение</h3>
+<p>Защёлкивает байт атрибута (цвет ink/paper, яркость, flash) во время
+<code>nAttrLatch</code>, а затем, учитывая <code>VidEn</code>, выдаёт в объектную защёлку
+составные сигналы: готовый цвет ink/paper для каждой компоненты
+(<code>PB0_B</code>,<code>PB1_R</code>,<code>PB2_G</code>) и полу-яркие <code>AL[6]=HL</code>, <code>AL[7]=FL</code>.</p>
+<p>Биты атрибута (ZX Spectrum): <code>D7=FLASH</code>, <code>D6=BRIGHT</code>, <code>D5..D3=PAPER</code>,
+<code>D2..D0=INK</code>. Логика с <code>VidEn</code> делает следующее: когда видеоактивная
+область выключена (<code>VidEn=0</code>), в ink/paper подставляется цвет рамки
+(<code>B0_B..B2_G</code> от <code>io</code>), т.е. работает мультиплексор "paper/border"
+(комментарий <code>// +paper/border mux</code> в исходнике).</p>
+<h3 id="интерфейс_6">Интерфейс</h3>
+<pre><code>attr_latch ( input nAttrLatch, B0_B, B1_R, B2_G, VidEn,
+             input D7..D0_from_pad,
+             output [7:0] AL, PB0_B, PB1_R, PB2_G );
+</code></pre>
+<h3 id="вентили-после-редукции">Вентили (после редукции)</h3>
+<pre><code>GD al[7:0]: AL(захват) по nAttrLatch, al_7..al_0 = D7..D0
+g34/g309: AL[6] = nor(~al_6, nVidEn) = al_6 · VidEn     // HL
+g35/g326: AL[7] = al_7 · VidEn                          // FL
+B:  PB0_B = nor( nor(AL[3], nVidEn), nor(B0_B, VidEn) ) // paper/border blue
+R:  PB1_R = то же с AL[4] и B1_R
+G:  PB2_G = то же с AL[5] и B2_G
+</code></pre>
+<p><code>al_6</code> (атрибут <code>D6</code>, BRIGHT) проходит на <code>AL[6]</code> только в видеоактивной
+области (<code>VidEn</code>); то же для <code>al_7</code> (D7, FLASH). Бит paper канала B (<code>AL[3]</code>)
+заменяется в <code>PB0_B</code> на цвет рамки <code>B0_B</code>, когда <code>VidEn=0</code>, и т.д. — это и
+есть мультиплексор "paper/border".</p>
+<p>Схема: <img loading="lazy" alt="s_attr_latch" src="imgstore/schematics/s_attr_latch.png" />.</p>
+<h3 id="c_4">C++</h3>
+<pre><code class="language-cpp">struct AttrLatch {
+    uint8_t al = 0;                       // захваченный атрибут
+    bool B0_B, B1_R, B2_G, VidEn;
+    void latch(bool nAttrLatch, uint8_t d) { if (!nAttrLatch) al = d; }
+    void eval() {
+        bool nVidEn = !VidEn;
+        AL6_HL = nVidEn || !bit(al,6);    // nor g309
+        AL7_FL = nVidEn || !bit(al,7);
+        PB0_B  = !( (nVidEn &amp;&amp; !bit(al,3)) || (B0_B &amp;&amp; VidEn) );
+        PB1_R  = !( (nVidEn &amp;&amp; !bit(al,4)) || (B1_R &amp;&amp; VidEn) );
+        PB2_G  = !( (nVidEn &amp;&amp; !bit(al,5)) || (B2_G &amp;&amp; VidEn) );
+    }
+};
+</code></pre>
+<hr />
+<h2 id="8-ao_latch-объектная-защёлка-inkpaperborder-для-цап">8. <code>ao_latch</code> — объектная защёлка (ink/paper/border для ЦАП)</h2>
+<h3 id="назначение_7">Назначение</h3>
+<p>Хранит 8-битный "объект", который в каждый момент определяет цвет пикселя.
+Перезаряжается каждые 8 тактов <code>nCLK7</code> (на границе знакоместа, <code>nAOLatch</code>),
+в том числе и в области рамки, когда на входах — цвет рамки (<code>PB*</code> от
+<code>io</code>/<code>attr_latch</code>). Выход <code>AO</code> читают <code>color_mux</code>, <code>dac_setup</code> (HL) и
+<code>flash_xnor</code> (FL). Биты <code>AO</code> переставлены так, чтобы пары (paper, ink) шли
+по цветовым каналам (перестановка описана ниже в этом разделе).</p>
+<h3 id="интерфейс_7">Интерфейс</h3>
+<pre><code>ao_latch ( input nAOLatch, input [7:0] AL, PB0_B, PB1_R, PB2_G,
+           output [7:0] AO );
+</code></pre>
+<h3 id="структура">Структура</h3>
+<pre><code>GD ao[7:0]: D = { AL[7], AL[6], PB2_G, AL[2], PB1_R, AL[1], PB0_B, AL[0] }
+              Q = AO            // AO[i] = D[i] (i = 0..7)
+</code></pre>
+<p>Т.е. перестановка: <code>AO[7]=FL</code>, <code>AO[6]=HL</code>, <code>AO[5]=PB2_G</code> (paper green),
+<code>AO[4]=AL[2]</code> (ink green), <code>AO[3]=PB1_R</code> (paper red), <code>AO[2]=AL[1]</code> (ink red),
+<code>AO[1]=PB0_B</code> (paper blue), <code>AO[0]=AL[0]</code> (ink blue). В <code>PB*</code> от <code>attr_latch</code>
+уже вложен border-цвет для случая "видео выключено", так что AO всегда
+содержит правильный цвет текущего объекта.</p>
+<p>Схема: <img loading="lazy" alt="s_ao_latch" src="imgstore/schematics/s_ao_latch.png" />.</p>
+<h3 id="c_5">C++</h3>
+<pre><code class="language-cpp">struct AOLatch {
+    uint8_t ao = 0;
+    // AO = { AL7, AL6, PB2_G, AL2, PB1_R, AL1, PB0_B, AL0 }
+    void eval(bool nAOLatch, uint8_t AL,
+              bool PB0_B, bool PB1_R, bool PB2_G) {
+        if (!nAOLatch) {
+            ao = ((AL &gt;&gt; 7) &amp; 1) &lt;&lt; 7 | ((AL &gt;&gt; 6) &amp; 1) &lt;&lt; 6 |
+                 (PB2_G &amp; 1) &lt;&lt; 5 | ((AL &gt;&gt; 2) &amp; 1) &lt;&lt; 4 |
+                 (PB1_R &amp; 1) &lt;&lt; 3 | ((AL &gt;&gt; 1) &amp; 1) &lt;&lt; 2 |
+                 (PB0_B &amp; 1) &lt;&lt; 1 | (AL &amp; 1);
+        }
+    }
+};
+</code></pre>
+<hr />
+<h2 id="9-pixel_shift_reg-сдвиговый-регистр-пикселей">9. <code>pixel_shift_reg</code> — сдвиговый регистр пикселей</h2>
+<h3 id="назначение_8">Назначение</h3>
+<p>Превращает байт пикселей <code>nDL[7:0]</code> (из <code>data_latch</code>) в последовательный
+поток <code>SerialData</code> со скоростью один бит на такт <code>nCLK7</code>. Параллельная
+загрузка — по <code>SLoad</code> (в начале каждого знакоместа), сдвиг — по фронтам
+<code>nCLK7</code>.</p>
+<h3 id="интерфейс_8">Интерфейс</h3>
+<pre><code>pixel_shift_reg ( input nCLK7, SLoad, nSLoad,
+                  input [7:0] nDL,
+                  inout SerialData );
+</code></pre>
+<h3 id="анализ">Анализ</h3>
+<p>Каждый из 8 разрядов — ячейка master–slave (в сыром виде 6-8 NOR на бит,
+здесь — D-триггер со схемой загрузки):</p>
+<pre><code>гр. g482..g486  : бит 0
+гр. g461..g465  : бит 1
+гр. g456..g460  : бит 2
+...
+гр. g398..g401  : бит 7, выход SerialData = сдвиг старшего разряда
+</code></pre>
+<p>Порядок выдачи: биты сдвигаются от 7 к 0; старший бит (первый пиксель
+знакоместа) уходит на <code>SerialData</code> первым. <code>SLoad</code> на время ~8 тактов
+открывает параллельный вход <code>nDL[i]</code>, после чего такты <code>nCLK7</code> двигают
+байт. В <code>color_mux</code> поток сравнивается с атрибутом (см. <code>flash_xnor</code>).</p>
+<p>Схема: <img loading="lazy" alt="s_pixel_shift_reg" src="imgstore/schematics/s_pixel_shift_reg.png" />.
+Осциллограмма (SLoad/SerialData/выбор ink-paper): <img loading="lazy" alt="w_pixels" src="imgstore/waves/w_pixels.png" />.</p>
+<h3 id="c_6">C++</h3>
+<pre><code class="language-cpp">struct PixelShiftReg {
+    uint8_t reg = 0;
+    bool SerialData = 0;
+    // загрузка по SLoad (активный уровень 1), сдвиг по nCLK7
+    void tick(bool nCLK7, bool SLoad, uint8_t nDL) {
+        if (SLoad) { reg = ~nDL; SerialData = (reg &gt;&gt; 7) &amp; 1; return; }
+        if (!nCLK7) {                 // на каждом такте выдаём старший бит
+            SerialData = (reg &gt;&gt; 7) &amp; 1;
+            reg = (reg &lt;&lt; 1);         // MSB первым, младшие добиваются нулём
+        }
+    }
+};
+</code></pre>
+<hr />
+<h2 id="10-flash_clock-делитель-частоты-мигания">10. <code>flash_clock</code> — делитель частоты мигания</h2>
+<h3 id="назначение_9">Назначение</h3>
+<p>Делит опорную частоту (в модели — пакеты по фронтам <code>nV8</code>/<code>nTCLKB</code>) до
+~1.5–3 Гц — частоты мигания атрибута <code>FLASH</code>. Выход <code>FlashClock</code> управляет
+инверсией ink/paper в <code>flash_xnor</code>.</p>
+<h3 id="интерфейс_9">Интерфейс</h3>
+<pre><code>flash_clock ( input nTCLKB, nV8, inout FlashClock );
+</code></pre>
+<h3 id="анализ_1">Анализ</h3>
+<p>Пять каскадных счётных ячеек (гр. g180..g209), каждая ÷2, итого ÷32 от
+входного пакета:</p>
+<pre><code>g529: w33 = nor(nTCLKB, nV8)            // входные импульсы (шина или кадр)
+бит0: g180/g181/g207..g210
+бит1: g182/g183/g203..g206
+бит2: g184/g185/g199..g202
+бит3: g186/g187/g195..g198
+бит4: g188..g194 → FlashClock
+</code></pre>
+<p>На плате реального «Спектрума» flash считается от активности процессора
+(каждый <code>MREQ</code>), т.е. частота привязана к числу выполненных инструкций;
+в модели с «чипом в вакууме» счёт идёт от фронтов <code>nV8</code> (V-счётчика).
+Диаграмма: <img loading="lazy" alt="s_flash_clock" src="imgstore/schematics/s_flash_clock.png" />.</p>
+<h3 id="c_7">C++</h3>
+<pre><code class="language-cpp">struct FlashClock {
+    uint16_t cnt = 0;
+    bool FlashClock = 0;
+    void pulse() {                       // фронт входного пакета
+        cnt = (cnt + 1) &amp; 0x1F;          // 5 бит (÷32)
+        FlashClock = (cnt &gt;&gt; 4) &amp; 1;     // старший разряд
+    }
+};
+</code></pre>
+<hr />
+<h2 id="11-flash_xnor-выбор-inkpaper-по-пикселю-и-flash">11. <code>flash_xnor</code> — выбор ink/paper по пикселю и flash</h2>
+<h3 id="назначение_10">Назначение</h3>
+<p>Сравнивает текущий бит пиксельного потока <code>SerialData</code> с битом мигания
+<code>FlashClock</code> (атрибут <code>FL</code>) и формирует <code>nDataSelect</code> — селектор
+"ink или paper" для цветового мультиплексора:</p>
+<ul>
+<li>пиксель = 0 → paper, пиксель = 1 → ink;</li>
+<li>если <code>FL=1</code> и <code>FlashClock=1</code> — инверсия (мигание).</li>
+</ul>
+<h3 id="интерфейс_10">Интерфейс</h3>
+<pre><code>flash_xnor ( input FL, FlashClock, SerialData, output nDataSelect );
+</code></pre>
+<h3 id="вентили">Вентили</h3>
+<pre><code>g79 : w195 = not FL
+g516: w64 = nor(w199, w196);  g517: w196 = nor(w195, FlashClock)
+g487: w65 = nor(SerialData, w199); g488: w199 = nor(w196, SerialData)
+g190: nDataSelect = nor(w64, w65)
+</code></pre>
+<p>После редукции (перекрёстные пары — это XNOR-эквивалент):</p>
+<pre><code>nDataSelect = ~( (FL ^ FlashClock) == SerialData )
+</code></pre>
+<p>Схема: <img loading="lazy" alt="s_flash_xnor" src="imgstore/schematics/s_flash_xnor.png" />.</p>
+<h3 id="c_8">C++</h3>
+<pre><code class="language-cpp">struct FlashXnor {
+    bool nDataSelect;
+    void eval(bool FL, bool FlashClock, bool SerialData) {
+        bool dataSel = (FL ^ FlashClock) == SerialData;  // 1 -&gt; ink
+        nDataSelect = !dataSel;
+    }
+};
+</code></pre>
+<hr />
+<h2 id="12-color_mux-сборка-rgb">12. <code>color_mux</code> — сборка R/G/B</h2>
+<h3 id="назначение_11">Назначение</h3>
+<p>Из <code>AO</code> (цвет объекта) и <code>nDataSelect</code> (ink/paper) собирает три видеосигнала
+<code>Red</code>, <code>Green</code>, <code>Blue</code> с учётом гашения: в <code>HBlank</code>/<code>VSync</code> цвет = 0.</p>
+<h3 id="интерфейс_11">Интерфейс</h3>
+<pre><code>color_mux ( input nHBlank, VSync, nDataSelect, input [7:0] AO,
+            output Red, Green, Blue );
+</code></pre>
+<h3 id="уравнения-после-редукции-assign-в-hdl">Уравнения (после редукции, <code>assign</code> в HDL)</h3>
+<pre><code>HBlank = ~nHBlank;  DataSelect = ~nDataSelect;
+
+Green = ~( ~(AO[5]|DataSelect) | ~(AO[4]|nDataSelect) | HBlank | VSync );
+Red   = ~( ~(AO[3]|DataSelect) | ~(AO[2]|nDataSelect) | HBlank | VSync );
+Blue  = ~( ~(AO[1]|DataSelect) | ~(AO[0]|nDataSelect) | HBlank | VSync );
+</code></pre>
+<p>Пары каналов: Blue — <code>(AO[1],AO[0])</code>, Red — <code>(AO[3],AO[2])</code>,
+Green — <code>(AO[5],AO[4])</code>; левый бит пары — paper, правый — ink
+(перестановка битов сделана ещё в <code>ao_latch</code>). Активный <code>DataSelect=1</code>
+выбирает ink-компоненту пары, иначе — paper.</p>
+<p>Схема: <img loading="lazy" alt="s_color_mux" src="imgstore/schematics/s_color_mux.png" />.
+Осциллограмма: <em>w_pixels</em> (строки Red/Green/Blue).</p>
+<h3 id="c_9">C++</h3>
+<pre><code class="language-cpp">struct ColorMux {
+    bool Red, Green, Blue;
+    void eval(bool nHBlank, bool VSync, bool nDataSelect, uint8_t AO) {
+        bool blank = !nHBlank || VSync;
+        bool ds = !nDataSelect;
+        if (blank) { Red = Green = Blue = 0; return; }
+        auto ch = [&amp;](bool paper, bool ink) {   // paper/ink = AO биты
+            return ds ? ink : paper;
+        };
+        Blue  = ch((AO &gt;&gt; 1) &amp; 1, AO &amp; 1);
+        Red   = ch((AO &gt;&gt; 3) &amp; 1, (AO &gt;&gt; 2) &amp; 1);
+        Green = ch((AO &gt;&gt; 5) &amp; 1, (AO &gt;&gt; 4) &amp; 1);
+    }
+};
+</code></pre>
+<hr />
+<h2 id="13-video_addr_gen-адрес-видеопамяти-rowcol">13. <code>video_addr_gen</code> — адрес видеопамяти (row/col)</h2>
+<h3 id="назначение_12">Назначение</h3>
+<p>Из счётчиков <code>C</code> и <code>V</code> формирует 7-битные адреса строки и столбца для DRAM
+(по 7 линий <code>A0..A6</code> на фазах RAS/CAS). Реализует "перемешанный" адрес
+экрана ZX Spectrum (знакоместо → три трети экрана и 8 строк знакоместа).
+Выдаёт также <code>nVidRAS</code> (инверсию <code>VidRAS</code>).</p>
+<h3 id="интерфейс_12">Интерфейс</h3>
+<pre><code>video_addr_gen ( input C1,C2,C4..C7, V0..V7, VidRAS,
+                 output nVidRAS, A0_to_pad..A6_to_pad );
+</code></pre>
+<h3 id="анализ_2">Анализ</h3>
+<p>Комбинаторика (гр. g7..g96, g530..g618) свёрнута в мультиплексор
+"row/col": внутренние шины <code>w99/w100/w101/w102</code>, <code>w115</code> и <code>w217</code> — это
+фазы RAS (<code>w102 = VidRAS-задержанный</code> и его инверсии), а <code>g530..g582</code>
+— цепочка буферов (чётное число инверторов) для выравнивания задержки
+<code>w217</code>. Выходные функции:</p>
+<pre><code>A0 = f(C1, V5, w217-фаза);   A1 = f(C4, V6, V0);
+A2 = f(C5, V7, V1);          A3 = f(C6, V2, w99-фаза);
+A4 = f(C7, V6);              A5 = f(V7, V3);
+A6 = f(V4, w99-фазы);
+</code></pre>
+<p>Точные формулы — в таблице вентилей ниже:</p>
+<table>
+<thead>
+<tr>
+<th>Выход</th>
+<th>Вентили</th>
+<th>Структура</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>A0</code></td>
+<td>g593, g616..g617, g615</td>
+<td><code>nor3( nor(V5,w115), nor(w99,V5), nor(w217,w216) )</code> + буфер</td>
+</tr>
+<tr>
+<td><code>A2</code></td>
+<td>g583..g586</td>
+<td><code>nor3( nor(C5,w217), nor(w115,V1), nor(V7,w99) )</code></td>
+</tr>
+<tr>
+<td><code>A5</code></td>
+<td>g560..g561</td>
+<td><code>nor2( nor(V7,w115), nor(w217,V3) )</code></td>
+</tr>
+<tr>
+<td><code>A1</code></td>
+<td>g590..g592</td>
+<td><code>nor3( nor(V6,w99), nor(w115,V0), nor(w217,C4) )</code></td>
+</tr>
+<tr>
+<td><code>A3</code></td>
+<td>g588..g589, g618</td>
+<td><code>nor3( nor(C6,w217), nor(V2,w115), not(w99) )</code></td>
+</tr>
+<tr>
+<td><code>A4</code></td>
+<td>g557, g559, g587</td>
+<td><code>nor2( nor(C7,w217), nor(w115,V6) )</code></td>
+</tr>
+<tr>
+<td><code>A6</code></td>
+<td>g562, g555</td>
+<td><code>nor3( nor(V4,w217), not(w115), not(w99) )</code></td>
+</tr>
+</tbody>
+</table>
+<p>где <code>w99 = ~w100</code>, <code>w100 = nor(w101,w102)</code>, <code>w101 = ~C1</code>, <code>w102 = VidRAS-ф.</code>,
+<code>w115 = ~w114</code>, <code>w114 = nor(w102, C1)</code>, <code>w217 = ~w102</code>.</p>
+<p>Схема: <img loading="lazy" alt="s_video_addr_gen" src="imgstore/schematics/s_video_addr_gen.png" />.
+Осциллограмма (адрес на фазах RAS/CAS): <img loading="lazy" alt="w_memory" src="imgstore/waves/w_memory.png" />.</p>
+<h3 id="c_10">C++</h3>
+<pre><code class="language-cpp">// видеоадрес: 14-битный адрес экрана из (C,V), выдаётся двумя фазами
+struct VideoAddrGen {
+    // 7 бит row (фаза RAS) и 7 бит col (фаза CAS)
+    uint8_t row, col;
+    void gen(uint16_t C, uint16_t V) {
+        // стандартная раскладка экрана ZX Spectrum 48K
+        uint16_t vc = ((V &amp; 0x7) &lt;&lt; 8) | ((V &gt;&gt; 3) &amp; 7) &lt;&lt; 5 |
+                      ((V &gt;&gt; 6) &amp; 0x1F);
+        uint16_t hc = (C &amp; 0x1F);
+        uint16_t addr = (vc &lt;&lt; 5) | hc;
+        row = addr &amp; 0x7F;         // младшие 7 бит (RAS)
+        col = (addr &gt;&gt; 7) &amp; 0x7F;  // старшие 7 бит (CAS)
+    }
+};
+</code></pre>
+<hr />
+<h2 id="14-address_enable-разрешение-адресных-падов-nae">14. <code>address_enable</code> — разрешение адресных падов (<code>nAE</code>)</h2>
+<h3 id="назначение_13">Назначение</h3>
+<p>Управляет третьим состоянием адресных выходов <code>A0..A6</code> (пады с <code>n_oe</code>).
+Когда <code>nAE=0</code> — ULA выдаёт адрес; когда <code>nAE=1</code> — пады в Z, и DRAM может
+адресовать процессор (внешняя обвязка платы).</p>
+<h3 id="интерфейс_13">Интерфейс</h3>
+<pre><code>address_enable ( input nC0, nC1, nC2, C3, Border, output nAE );
+</code></pre>
+<h3 id="уравнения">Уравнения</h3>
+<pre><code>g426: w399 = nor3(nC0, nC1, nC2)         // = C0&amp;C1&amp;C2
+g410: w363 = nor(C3, w399)
+g391: w420 = nor(Border, w363)
+g661: nAE   = not w420
+
+nAE = Border  |  C3  |  (C0&amp;C1&amp;C2)   // активен (0) только вне рамки,
+                                     // в окнах выборки видеопамяти
+</code></pre>
+<p>Схема: <img loading="lazy" alt="s_address_enable" src="imgstore/schematics/s_address_enable.png" />.</p>
+<h3 id="c_11">C++</h3>
+<pre><code class="language-cpp">struct AddressEnable {
+    bool nAE;
+    void eval(bool nC0, bool nC1, bool nC2, bool C3, bool Border) {
+        bool w399 = C0_bit(nC0) &amp;&amp; C0_bit(nC1) &amp;&amp; C0_bit(nC2); // C0&amp;C1&amp;C2
+        nAE = Border || C3 || w399;     // 0 = драйвить адрес
+    }
+    static bool C0_bit(bool nx){ return !nx; }
+};
+</code></pre>
+<hr />
+<h2 id="15-ras_cas_romcs-тайминги-dram-и-выбор-rom">15. <code>ras_cas_romcs</code> — тайминги DRAM и выбор ROM</h2>
+<h3 id="назначение_14">Назначение</h3>
+<p>Формирует сигналы управления динамической памятью: <code>VidRAS</code>/<code>nVidRAS</code>
+(видео-RAS), строб RAS для процессорных циклов в области ОЗУ (<code>w242</code>/
+<code>RAM16</code>), выходной <code>/RAS</code> (с <code>nRAS_oe</code>), <code>/CAS</code>, <code>/WE</code>, а также <code>/ROMCS</code>
+(выбор ПЗУ) и защёлки CAS-фаз <code>VidCASPulse</code>.</p>
+<h3 id="интерфейс_14">Интерфейс</h3>
+<pre><code>ras_cas_romcs ( input nVidC3, A14, A15, nMREQ, nWR, WR, RD,
+                input nC0, nC1, C1, nVidRAS, nBorder, VidCASPulse,
+                output nRAS_to_pad, nRAS_oe, nCAS_to_pad, VidRAS,
+                       nROMCS_to_pad, nWE_to_pad );
+</code></pre>
+<h3 id="анализ_3">Анализ</h3>
+<pre><code>g389: w242 = nor3(not A14, A15, nMREQ)   // = A14 &amp; /A15 &amp; /MREQ : RAM16
+                                          //  (процессор лезет в 0x4000-0x7FFF)
+g390: nRAS_to_pad = nor(VidRAS, w242)     // RAS = видео ИЛИ процессор-ОЗУ
+g388: nRAS_oe     = nor4(A15, A14, nBorder, nMREQ)
+g451: VidRAS      = nor(w395, nVidC3)     // видео-RAS в активной области
+g395: w395        = nor3(nC0, nC1, w400)  // фаза счётчика (задержки g60..g71)
+g387: w408 = nor(A15, A14);  g39: nROMCS_to_pad = not w408
+                                              // /ROMCS = A15|A14 (RAM -&gt; нет ROM)
+g503: w239 = nor(WR, RD); ...  g501..g506: буферы-защёлки MUXSEL
+g526: w315 = nor(w245, nWR); g87: nWE_to_pad = not w315   // /WE = w245·/WR
+g473..g477: CAS-декады: nCAS_to_pad = ... (w433/w434 с VidCASPulse, C1, nVidC3)
+</code></pre>
+<p><code>VidRAS</code> запускает обе фазы: RAS (адрес строки), затем, через
+<code>VidCASPulse</code> и буферы задержек, — CAS (адрес столбца). Цепочки чётных
+инверторов (g60..g71, g65..g70 и т.п.) — это <strong>линии задержки</strong>, задающие
+ширину стробов (в модели ширина RAS ≈ 275 нс, CAS — пачка импульсов).</p>
+<p>Схема: <img loading="lazy" alt="s_ras_cas_romcs" src="imgstore/schematics/s_ras_cas_romcs.png" />.
+Осциллограмма: <em>w_memory</em>.</p>
+<h3 id="c_12">C++</h3>
+<pre><code class="language-cpp">struct RasCasRomcs {
+    bool VidRAS, nRAS, nCAS, nWE, nROMCS, RAM16;
+    // вызывается в каждом такте nCLK7
+    void eval(bool nVidC3, bool A14, bool A15, bool nMREQ,
+              bool nWR, bool nBorder, bool VidCASPulse,
+              uint16_t C) {
+        RAM16 = A14 &amp;&amp; !A15 &amp;&amp; !nMREQ;
+        bool phase = fetch_phase(C);         // окно выборки по счётчику
+        VidRAS = phase &amp;&amp; !nVidC3 &amp;&amp; !nBorder;
+        nRAS   = !(VidRAS || RAM16);
+        bool ramsel = !(A15 || A14);          // 0x0000-0x3FFF (ROM)
+        nROMCS = !ramsel;
+        nWE    = !(RAM16 &amp;&amp; !nWR);
+        // CAS: задержанный VidCASPulse + фазы счётчика (упрощённо):
+        nCAS   = !(VidRAS &amp;&amp; delay(VidCASPulse, 3));
+    }
+};
+</code></pre>
+<hr />
+<h2 id="16-video_signal_features-синхро-blank-border-int-burst">16. <code>video_signal_features</code> — синхро, blank, border, INT, burst</h2>
+<h3 id="назначение_15">Назначение</h3>
+<p>Чисто комбинационный "календарь" видеосигнала: по <code>C</code> и <code>V</code> формирует
+<code>/Sync</code> (HSync+VSync), <code>nHBlank</code>, <code>nBorder</code> (активная область), <code>/INT</code>,
+окно <code>Timing</code>, пакеты цветовой синхронизации <code>BurstS/nBurstS/nBurstDD</code>,
+<code>C5delay</code>, <code>HSync</code>-импульсы.</p>
+<h3 id="интерфейс_15">Интерфейс</h3>
+<pre><code>video_signal_features ( input nC3..nC8, C4..C8, V0..V2, V8, nV3..nV7,
+                        inout Timing,
+                        output nSync, VSync, nHBlank, nINT_to_pad,
+                               nBurstS, BurstS, nBorder, nBurstDD );
+</code></pre>
+<h3 id="ключевые-уравнения-после-анализа-вентилей">Ключевые уравнения (после анализа вентилей)</h3>
+<pre><code>g613: w271 = nor(nV7, nV6)
+g614: nBorder = nor3(C8, V8, w271)     // 0 = рамка/не-экран (C8 или низ кадра)
+
+g167..g172: C5delay (w103) — задержанный C5 через цепочку буферов
+g531..g534: HSync-окно w71 (&quot;nHSyncPulses&quot;);  g84: w71 = ... (см. исходник)
+g105: w118 = nor4(nC6, C7, nC8, w71)  // HSync
+g106: nSync = nor(VSync, w118)         // /Sync = HSync | VSync
+g107,g131,g133: nHBlank = nor(w69, w68)  // H-гашение в начале/конце строки
+g119,g120,g150,g151: Timing-лата (защёлка nSync-окна с V0)
+g621: VSync = nor6(nV6, nV7, V2, nV3, nV4, nV5)   // V ∈ {248..251}
+g620: w143 = nor5(nC8, nC7, C4, C6, w103)
+g619: w116 = nor7(C6, C7, not VSync, V1, V2, V0, C8)
+g4:   nINT_to_pad = not w116           // INT в начале кадра
+g118,g6: nBurstS/nBurstDD; g117: BurstS  // цветовая синхронизация
+</code></pre>
+<p><code>Timing</code> — внутренняя защёлка (<code>g119,g120,g150,g151</code>), "растягивающая"
+синхро-окно: именно её используют <code>dac_setup</code> и логика burst.</p>
+<p>Схема: <img loading="lazy" alt="s_video_signal_features" src="imgstore/schematics/s_video_signal_features.png" />.
+Осциллограммы: <em>w_hline</em>,
+<img loading="lazy" alt="w_dac_sync" src="imgstore/waves/w_dac_sync.png" />,
+<em>w_vframe</em>, <em>w_frame</em>.</p>
+<h3 id="c_13">C++</h3>
+<pre><code class="language-cpp">struct VideoSignalFeatures {
+    bool nSync, VSync, nHBlank, nBorder, nINT;
+    void eval(uint16_t C, uint16_t V) {
+        // измеренные в модели окна (448-тактовая строка, 312 строк)
+        bool C8 = (C &gt;&gt; 8) &amp; 1, C7 = (C &gt;&gt; 7) &amp; 1, C6 = (C &gt;&gt; 6) &amp; 1;
+        bool V7 = (V &gt;&gt; 7) &amp; 1, V6 = (V &gt;&gt; 6) &amp; 1, V5 = (V &gt;&gt; 5) &amp; 1;
+        bool V4 = (V &gt;&gt; 4) &amp; 1, V3 = (V &gt;&gt; 3) &amp; 1, V2 = (V &gt;&gt; 2) &amp; 1;
+        nBorder = !(C8 || (V &gt;= 248));            // упрощённо см. уравнения
+        VSync   = (V &amp; 0x1FF) &gt;= 248 &amp;&amp; (V &amp; 0x1FF) &lt;= 251;
+        bool hsync = C &gt;= 368 &amp;&amp; C &lt; 400;         // окно HSync (примерно)
+        nSync   = !(VSync || hsync);
+        bool hblank = C &gt;= 384 || C &lt; 16;         // левый/правый blank
+        nHBlank = !hblank;
+        nINT    = !(V &lt; 8 &amp;&amp; C &lt; 64);             // начало кадра
+    }
+};
+</code></pre>
+<p>Внимание: окна в C++ выше — <em>иллюстративные</em>; точные декады по вентилям
+приведены в таблице и в исходнике <code>hdl/ula6c001.v</code>.</p>
+<hr />
+<h2 id="17-dac_setup-подготовка-входов-видеоцап">17. <code>dac_setup</code> — подготовка входов видеоЦАП</h2>
+<h3 id="назначение_16">Назначение</h3>
+<p>Из цветовых сигналов (<code>Red/Green/Blue</code>), синхро и <code>Timing</code> формирует
+15 цифровых входов <code>i0..i14</code> видеоЦАП (пады U/V//Y): обычный цвет,
+полу-яркость (<code>D</code>/<code>DD</code>), гашение (<code>BLACKS</code>), синхро (<code>nSyncD</code>), <code>HL</code>
+(high-light), пакеты burst.</p>
+<h3 id="интерфейс_16">Интерфейс</h3>
+<pre><code>dac_setup ( input Timing, nSync, Red, HL(AO[6]), Blue, Green,
+            output BlueD, RedD, nRedDD, nBLACKS, nHL, nSyncD, GreenD,
+                   RedS, BlueDD, nGreenDD, nBlueS, nGreenS );
+</code></pre>
+<h3 id="уравнения-из-вентилей-g1g23-g152g179-g211g216-g624g625">Уравнения (из вентилей g1..g23, g152..g179, g211..g216, g624,g625)</h3>
+<pre><code>g152: w152 = nor3(Green, Red, Blue)          // нет ни одного цвета -&gt; 0
+g174: w129 = nor3(w130, w3, w128)            // &quot;black&quot;: гашение по цветам
+g19 : nBLACKS = not w129                     // сигнал /BLACKS на ЦАП
+g23 : nHL = not AO[6]                        // high-light (HL)
+g5  : nSyncD = not not nSync                 // буфер nSync
+// каналы:
+R: RedD  = not not Red;   nRedDD = nor(w152, Red)
+G: GreenD= not not Green; nGreenDD= nor(Green, w152)
+B: BlueD = not not Blue;  BlueDD = not nor(w152, Blue)  // g20/g21/g214
+// яркостные &quot;S&quot; (после Timing-логики g176..g178):
+RedS  = not nor(w129, w128)  ...  nGreenS = nor(w3, w129); nBlueS = nor(w130, w129)
+</code></pre>
+<p>Двойные инверторы (<code>g15..g18</code> и т.п.) — задержка/буферизация половинок
+ЦАП (яркость и полу-яркость). Точную таблицу вентилей см. в исходнике.</p>
+<p>Схема: <img loading="lazy" alt="s_dac_setup" src="imgstore/schematics/s_dac_setup.png" />.
+Осциллограмма: <em>w_dac_sync</em>.</p>
+<h3 id="c_14">C++</h3>
+<pre><code class="language-cpp">struct DacSetup {
+    // входы ЦАП (см. pads.md: U,V,/Y аналоговые; здесь цифровые биты)
+    bool BlueD, RedD, nRedDD, nBLACKS, nHL, nSyncD, GreenD;
+    bool RedS, BlueDD, nGreenDD, nBlueS, nGreenS;
+    void eval(bool Timing, bool nSync, bool Red, bool HL,
+              bool Blue, bool Green) {
+        bool none = !(Green || Red || Blue);          // nor3
+        nBLACKS  = !none;
+        nHL      = !HL;
+        nSyncD   = nSync;
+        RedD  = Red;   GreenD = Green;   BlueD = Blue;
+        nRedDD = !none &amp;&amp; !Red;                       // гашение красного
+        nGreenDD = !none &amp;&amp; !Green;
+        BlueDD   = none || Blue;
+        RedS  = !none &amp;&amp; Red;                         // после Timing-логики
+        nGreenS = !none || Green;
+        nBlueS  = !none || Blue;
+    }
+};
+</code></pre>
+<hr />
+<h2 id="18-io-порт-ввода-вывода-клавиатура-border-micear">18. <code>io</code> — порт ввода-вывода (клавиатура, border, mic/ear)</h2>
+<h3 id="назначение_17">Назначение</h3>
+<p>Декодирует обращения CPU к портам ULA (<code>/IOREQ</code> + <code>A0=0</code>):
+- <strong>запись</strong> (<code>nPortWR</code>): регистр 5 бит — <code>Speaker</code>, <code>Tape</code>, <code>B2_G</code>, <code>B1_R</code>,
+  <code>B0_B</code> (бипер, микрофон, цвет рамки);
+- <strong>чтение</strong> (<code>nPortRD</code>): клавиатурные линии <code>KB0..KB4</code> на <code>D4..D0</code> и
+  вход EAR на <code>D6</code>.</p>
+<h3 id="интерфейс_17">Интерфейс</h3>
+<pre><code>io ( input nIOREQ, nWR, nRD, nIOREQT2, A0_from_pad,
+     input KB4..KB1_from_pad, KB0_from_pad, D0..D4_from_pad,
+     input Ear_Input,
+     output nTape, B0_B, B1_R, B2_G, D6_to_pad, D1_to_pad, ... , nSpeaker );
+</code></pre>
+<h3 id="анализ_4">Анализ</h3>
+<pre><code>g622: w237 = nor4(nIOREQ, A0_from_pad, nWR, nIOREQT2); g77: nPortWR = not w237
+g623: w317 = nor4(nIOREQ, A0_from_pad, nRD, nIOREQT2); g80: nPortRD = not w317
+       // порт открыт, когда /IOREQ=0, A0=0 и нет &quot;IOREQ в фазе 2&quot; (contention)
+KB:  D4_to_pad = not nor(nPortRD, KB4) ...  D0_to_pad = not nor(KB0, nPortRD)
+Ear: D6_to_pad = not nor(Ear_Input, nPortRD)
+GD port[4:0]: по nPortWR: Q = {Speaker, Tape, B2_G, B1_R, B0_B} = D4..D0
+g37: nTape = not Tape ;  g38: nSpeaker = not Speaker
+</code></pre>
+<p><code>B0_B/B1_R/B2_G</code> уходят в <code>attr_latch</code> как цвет рамки (см. раздел 7);
+<code>nSpeaker</code>/<code>nTape</code> — открытые коллекторы на пад SOUND (в <code>hdl/ulabase.v</code>
+модель пада заглушена: <code>from_pad = 0</code>).</p>
+<p>Схема: <img loading="lazy" alt="s_io" src="imgstore/schematics/s_io.png" />.
+Осциллограмма: <img loading="lazy" alt="w_io" src="imgstore/waves/w_io.png" />.</p>
+<h3 id="c_15">C++</h3>
+<pre><code class="language-cpp">struct IO {
+    bool nPortWR = 1, nPortRD = 1;
+    bool B0_B=0, B1_R=0, B2_G=0, Speaker=0, Tape=0;
+    uint8_t reg = 0;                      // 5-битный порт
+    void decode(bool nIOREQ, bool A0, bool nWR, bool nRD, bool nIOREQT2) {
+        bool sel = !nIOREQ &amp;&amp; !A0 &amp;&amp; !nIOREQT2;
+        nPortWR = !(sel &amp;&amp; !nWR);
+        nPortRD = !(sel &amp;&amp; !nRD);
+    }
+    void write_cycle() {
+        if (!nPortWR) { reg = reg; /* взять D4..D0 с шины */ }
+        B0_B = (reg &gt;&gt; 0) &amp; 1; B1_R = (reg &gt;&gt; 1) &amp; 1; B2_G = (reg &gt;&gt; 2) &amp; 1;
+        Tape = (reg &gt;&gt; 3) &amp; 1; Speaker = (reg &gt;&gt; 4) &amp; 1;
+    }
+    bool d4_from_kb(bool kb4) { return !(!nPortRD &amp;&amp; kb4); }  // к паду D4
+};
+</code></pre>
+<hr />
+<h2 id="19-contention-арбитраж-dram-cpu-клок-с-растяжением">19. <code>contention</code> — арбитраж DRAM (CPU-клок с растяжением)</h2>
+<h3 id="назначение_18">Назначение</h3>
+<p>Самое хитрое место: решает, кто сейчас владеет DRAM (видео или CPU), и
+формирует такт процессора <code>CPUCLK</code> (<code>/PHICPU</code>). В простое <code>CPUCLK</code> повторяет
+<code>C0</code> (3.5 МГц). Когда CPU пытается обратиться к ОЗУ (0x4000–0x7FFF) в
+момент, когда видео выбирает память, фронт <code>CPUCLK</code> задерживается —
+знаменитый "contention" ZX Spectrum (пауза такта на 1..6 полутактов,
+в зависимости от фазы).</p>
+<h3 id="интерфейс_18">Интерфейс</h3>
+<pre><code>contention ( input nMREQ, nIOREQ, Border, A14, A15, C2, C3, C0_other,
+             output CPUCLK, nIOREQT2 );
+</code></pre>
+<h3 id="анализ_5">Анализ</h3>
+<pre><code>GD mreq_gd :  MREQT2 = ~D(nMREQ), прозрачна при CPUCLK_internal=0
+GD ioreq_gd:  nIOREQT2/IOREQT2 = захват nIOREQ по CPUCLK_internal
+g384: w414 = nor(w359, w477, C0_other)     // C0_other = C0 (3.5 МГц)
+g44 : CPUCLK = not w414                    // CPUCLK_internal = not w414
+g411: w360 = nor(C2, C3)
+g383: w477 = nor(w413, w412, w360, w361)   // решение &quot;RAM-доступ CPU&quot;
+g385: w412 = nor(w410, w411);  w411 = not A15;  w410 = not nIOREQ
+g386: w413 = nor(A14, w410)
+g404: w362 = nor(IOREQT2, Border, nCPUCLK_internal, MREQT2)
+g405: w359 = nor5(Border, nCPUCLK_internal, nIOREQ, w360, IOREQT2)
+</code></pre>
+<p>Смысл: пока нет запросов CPU (<code>nMREQ=nIOREQ=1</code>), <code>w359/w477</code> гасятся и
+<code>CPUCLK = C0_other</code> (свободный такт 3.5 МГц). Появление запроса RAM
+(<code>nMREQ=0</code>, <code>A14=1</code>) во время видео-выборки через защёлки
+<code>MREQT2/IOREQT2</code> и комбинаторику <code>w359/w477</code> останавливает такт <code>CPUCLK</code>
+(пауза на время, пока ULA забирает DRAM) — это и есть contention.</p>
+<p>Осторожно с моделью: арбитр в этом нетлисте — асинхронное кольцо (без
+внешнего такта). В погонной level-settled модели одиночные шинные импульсы
+отрабатывают устойчиво (осциллограмма ниже), но <em>непрерывный</em> свободный CPU,
+стучащийся в RAM в момент видео-выборки, может раскачать кольцо (в <code>ulasim.py</code>
+стоит ограничитель итераций релаксации) — полный сценарий растяжения такта
+пока не доведён (честное ограничение, раздел 21).</p>
+<p>Схема: <img loading="lazy" alt="s_contention" src="imgstore/schematics/s_contention.png" />.
+Осциллограмма (попытка CPU-доступа к RAM во время видео-выборки):
+<img loading="lazy" alt="w_contention" src="imgstore/waves/w_contention.png" />.</p>
+<h3 id="c_16">C++</h3>
+<pre><code class="language-cpp">// contention: такт CPU = C0, растягиваемый при конфликте с видео
+struct Contention {
+    bool nIOREQT2 = 1;                    // защёлка nIOREQ (фаза 2)
+    bool stretch = 0;                     // признак &quot;отдать такт видео&quot;
+
+    void eval(bool nMREQ, bool nIOREQ, bool Border, bool A14, bool A15,
+              bool C2, bool C3, bool C0) {
+        // запрос CPU к RAM (0x4000-0x7FFF)
+        bool cpuRAM = nMREQ == 0 &amp;&amp; A14 == 1 &amp;&amp; A15 == 0;
+        // видео активно (не рамка) в этой части строки
+        bool videoBusy = !Border &amp;&amp; !(C2 | C3);      // упрощённо
+        stretch = cpuRAM &amp;&amp; videoBusy;
+    }
+    bool cpuclk(bool C0) { return stretch ? 0 : C0; }  // удержание такта
+};
+</code></pre>
+<hr />
+<h2 id="20-top-ula-и-пады">20. Top <code>ula</code> и пады</h2>
+<p>Модуль верхнего уровня <code>ula</code> (<code>hdl/ula6c001.v:6</code>) инстанцирует все 19
+модулей и 35 падов. Пады описаны отдельно в <a href="pads.ru.html">pads.md</a>; здесь —
+только то, что нужно для чтения схемы модулей:</p>
+<ul>
+<li>входы: <code>OSC</code>, <code>/RD</code>, <code>/WR</code>, <code>/MREQ</code>, <code>/IOREQ</code>, <code>A15</code>, <code>A14</code>, <code>KB1..4</code>,
+  <code>SOUND</code> (EAR, в модели = 0);</li>
+<li>шины данных <code>D0..D7</code> — open-collector наружу, внутри разведены на
+  <code>D*_from_pad</code>/<code>D*_to_pad</code>;</li>
+<li>выходы: <code>/RAS</code>, <code>/CAS</code>, <code>/WE</code>, <code>/ROMCS</code>, <code>A1..A6</code> (+двунаправленный <code>A0</code>
+  с <code>nAE</code>), <code>/INT</code>, <code>/PHICPU</code> (инвертирующий OC), <code>U</code>, <code>V</code>, <code>/Y</code> (аналог);</li>
+<li>клавиатурные <code>KB0..KB4</code>; <code>KB0</code> двунаправленный (тест-режим <code>K0</code>).</li>
+</ul>
+<p>Карта связей верхнего уровня (из <code>ula6c001.v</code>): <em>s_top</em>.</p>
+<p>Полный посигнальный список проводки верхнего уровня (откуда/куда/описание) —
+в <a href="ula-signals.ru.html">ula-signals.md</a>.</p>
+<h2 id="21-simulator-ulasimpy">21. Simulator: <code>ulasim.py</code></h2>
+<p><code>ulasim.py</code> (корень репозитория) — погонный симулятор этого же HDL на
+Python:</p>
+<ul>
+<li>сам парсит <code>hdl/ula6c001.v</code> + <code>hdl/ulabase.v</code> и разворачивает иерархию
+  воflat-сеть (1:1 по вентилям, номера <code>gNNN</code> сохранены);</li>
+<li>семантика та же, что у эталонного прогона в Icarus: 2-входовой <code>nor</code>
+  — поведенческий ("X как 1"), <code>not</code>/<code>nor3+</code> — обычная трёхзначная логика,
+  <code>GD</code> — прозрачная защёлка;</li>
+<li>после каждого события входов сеть релаксируется до фиксированной точки —
+  так воспроизводятся RS-латы и master–slave ячейки без "X-залипания";</li>
+<li>печатает VCD с типичным набором сигналов (мониторы <code>icarus/ula.gtkw</code>):
+  <code>OSC</code>, <code>nCLK7</code>, <code>C[8:0]</code>, <code>V[8:0]</code>, синхро/blank/border, стробы защёлок,
+  RAS/CAS/WE, адрес/данные, flash/DataSelect, входы ЦАП, порты IO.</li>
+</ul>
+<p>Запуск:</p>
+<pre><code class="language-bash">python3 ulasim.py                 # типовой прогон (с CPU-активностью)
+python3 ulasim.py --mode idle     # ULA в вакууме
+python3 ulasim.py --mode idle --end-us 15000 --vcd my.vcd
+</code></pre>
+<p>Честные ограничения модели (важно для чтения осциллограмм):</p>
+<ol>
+<li><code>OSC</code> в модели 20 МГц (50 нс), в реальном чипе 14 МГц — логика
+   частотно-независима, масштаб времени другой;</li>
+<li>тактовая сетка модели — 25 нс (полупериод OSC), поэтому импульсы короче
+   ~25 нс выглядят "шириной в один отсчёт" (например, <code>nDataLatch</code> = 25 нс
+   в модели);</li>
+<li>биты <code>V[3..8]</code> вертикального счётчика в HDL помечены <code>// not sure</code>
+   (реверс ещё не закончен) — модель честно воспроизводит текущее состояние
+   HDL, включая возможные паразитные внутристрочные переходы;</li>
+<li>CPU-модель (<code>--mode typical</code>) — упрощённый генератор шинных циклов,
+   синхронизированный по собственным фронтам <code>CPUCLK</code> (начало цикла
+   разрешено, только когда видео не владеет DRAM), а не точное ядро Z80;
+   непрерывные CPU-циклы в момент видео-выборки могут раскачать
+   асинхронный арбитр (раздел 19), поэтому для волн contention/IO
+   использованы одиночные шинные импульсы;</li>
+<li>пады-аналоги (<code>SOUND</code>, видеоЦАП) в <code>hdl/ulabase.v</code> пока заглушены.</li>
+</ol>
+<p>Проверенные измерения модели (использованы в разделах выше):</p>
+<table>
+<thead>
+<tr>
+<th>Параметр</th>
+<th>Значение (модель, OSC=20 МГц)</th>
+<th>Реальный чип</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nCLK7</code></td>
+<td>10 МГц (<code>OSC÷2</code>)</td>
+<td>7 МГц (<code>OSC÷2</code>, OSC=14 МГц)</td>
+</tr>
+<tr>
+<td>строка (<code>HCrst</code> период)</td>
+<td>448 тактов <code>nCLK7</code> = 44.8 мкс</td>
+<td>448 × 142.9 нс = 64 мкс</td>
+</tr>
+<tr>
+<td>кадр</td>
+<td>312 строк = 13.98 мс</td>
+<td>312 × 64 мкс ≈ 20 мс</td>
+</tr>
+<tr>
+<td>сброс <code>V</code></td>
+<td>на 312-й строке</td>
+<td>312 строк</td>
+</tr>
+<tr>
+<td><code>VSync</code></td>
+<td>декада <code>V ∈ {248..251}</code></td>
+<td>та же декада (по вентилям)</td>
+</tr>
+<tr>
+<td>выборка данных/строка</td>
+<td>32 байта пикселей + 32 атрибута (парами)</td>
+<td>32+32</td>
+</tr>
+<tr>
+<td><code>nAOLatch</code>/строка</td>
+<td>56 (каждые 8 тактов)</td>
+<td>56</td>
+</tr>
+</tbody>
+</table>
+<h2 id="приложение-соответствие-сигналов-icarusulagtkw">Приложение. Соответствие сигналов <code>icarus/ula.gtkw</code></h2>
+<p>Имена мониторов из тестбенча (стиль Chris Smith) и их положение в текущем
+модульном HDL:</p>
+<table>
+<thead>
+<tr>
+<th>монитор (.gtkw)</th>
+<th>HDL-сеть</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nHSyncPulses</code></td>
+<td><code>video_signal_features_inst.w71</code></td>
+</tr>
+<tr>
+<td><code>C5delay</code></td>
+<td><code>video_signal_features_inst.w103</code></td>
+</tr>
+<tr>
+<td><code>HSync</code></td>
+<td><code>video_signal_features_inst.w118</code></td>
+</tr>
+<tr>
+<td><code>Burst</code></td>
+<td><code>C[5]</code> (в старом тестбенче)</td>
+</tr>
+<tr>
+<td><code>RAM16</code></td>
+<td><code>ras_cas_romcs_inst.w242</code></td>
+</tr>
+<tr>
+<td><code>VidCASAC</code>/<code>VidCASBD</code></td>
+<td><code>ras_cas_romcs_inst.w434</code> / <code>w433</code></td>
+</tr>
+<tr>
+<td><code>MUXSEL</code></td>
+<td><code>ras_cas_romcs_inst.w246</code></td>
+</tr>
+<tr>
+<td><code>Tape</code>/<code>Speaker</code></td>
+<td><code>io_inst.w487</code> / <code>io_inst.w484</code> (внутр. сигналы GD)</td>
+</tr>
+<tr>
+<td><code>Ear</code></td>
+<td><code>Ear_Input</code></td>
+</tr>
+<tr>
+<td><code>DataLatch</code>/<code>AttrLatch</code>/<code>AOLatch</code></td>
+<td><code>~nDL</code> / <code>AL</code> / <code>AO</code></td>
+</tr>
+<tr>
+<td><code>Pixel</code></td>
+<td>сдвиговые разряды <code>pixel_shift_reg</code></td>
+</tr>
+</tbody>
+</table>
+<p>Полный список мониторов — <code>default_monitors()</code> в <code>ulasim.py</code>.</p>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <p class="f-title">◫ ZX Spectrum ULA 6C001 <span class="f-sub">— Реверс-инжиниринг ZX Spectrum ULA 6C001 на уровне кристалла: восстановление нетлиста, разбор модулей, схемы и осциллограммы.</span></p>
+      <p class="f-links">
+        <a href="https://github.com/emu-russia/ula">GitHub · emu-russia/ula</a>
+        <a href="https://github.com/emu-russia/ula/issues">Issues</a>
+        <a href="https://github.com/emu-russia/ula/blob/main/LICENSE">License (MIT)</a>
+      </p>
+    </div>
+    <p class="srcnote">Исходник (markdown): <a href="https://github.com/emu-russia/ula/blob/main/ula-modules.md">specs/ula-modules.md</a></p>
+    <p class="f-gen">Generated from the <code>specs/</code> markdown sources by <code>tools/gen_docs_site.py</code>.</p>
+  </div>
+</footer>
+</body>
+</html>

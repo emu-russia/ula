@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>ULA 6C001 modules · ZX Spectrum ULA 6C001</title>
+<meta name="description" content="Description of every module of the recovered modular HDL of the ZX Spectrum ULA 6C001: purpose, gate analysis, schematic, typical waveforms, C++ model.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23111'/%3E%3Crect x='3' y='3' width='3' height='10' fill='%23e5484d'/%3E%3Crect x='7' y='3' width='3' height='10' fill='%2330a46c'/%3E%3Crect x='11' y='3' width='2' height='10' fill='%233e63dd'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">◫ ZX Spectrum ULA 6C001</a>
+    <nav class="site-nav" aria-label="main">
+      <a class="active" href="ula-modules.html">ULA modules</a><a href="ula-signals.html">Internal signals</a><a href="pads.html">Pads</a><a href="topo.html">Topology</a><a href="hdl-vs-netlist-verification.html">Verification</a>
+      <a class="lang-switch" href="ula-modules.ru.html">Русский</a>
+      
+      <button class="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle color theme">
+        <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <article class="doc">
+<h1 id="ula-6c001-modules">ULA 6C001 modules</h1>
+<details class="page-toc"><summary>Contents</summary><ul>
+<li><a href="#how-this-section-is-organised">How this section is organised</a></li>
+<li><a href="#0-overview-the-20-modules-and-their-connections">0. Overview: the 20 modules and their connections</a></li>
+<li><a href="#1-clkgen-clock-generator-2-7-mhz">1. clkgen — clock generator (÷2, 7 MHz)</a><ul>
+<li><a href="#purpose">Purpose</a></li>
+<li><a href="#interface">Interface</a></li>
+<li><a href="#structure-reconstruction-from-gates-g52-g54-g423g432">Structure (reconstruction from gates g52, g54, g423..g432)</a></li>
+<li><a href="#behaviour-verified-in-the-model">Behaviour (verified in the model)</a></li>
+<li><a href="#c-emulator">C++ (emulator)</a></li>
+</ul>
+</li>
+<li><a href="#2-tclk-bus-cycle-decoding">2. tclk — bus-cycle decoding</a><ul>
+<li><a href="#purpose_1">Purpose</a></li>
+<li><a href="#interface_1">Interface</a></li>
+<li><a href="#gates-and-equations">Gates and equations</a></li>
+<li><a href="#c">C++</a></li>
+</ul>
+</li>
+<li><a href="#3-hcounter-horizontal-counter-448-clock-ticks-per-scanline">3. hcounter — horizontal counter (448 clock ticks per scanline)</a><ul>
+<li><a href="#purpose_2">Purpose</a></li>
+<li><a href="#interface_2">Interface</a></li>
+<li><a href="#gate-analysis">Gate analysis</a></li>
+<li><a href="#measured-behaviour">Measured behaviour</a></li>
+<li><a href="#c_1">C++</a></li>
+</ul>
+</li>
+<li><a href="#4-vcounter-vertical-counter-312-lines-per-frame">4. vcounter — vertical counter (312 lines per frame)</a><ul>
+<li><a href="#purpose_3">Purpose</a></li>
+<li><a href="#interface_3">Interface</a></li>
+<li><a href="#gate-analysis_1">Gate analysis</a></li>
+<li><a href="#c_2">C++</a></li>
+</ul>
+</li>
+<li><a href="#5-latch_control-latch-strobes-and-video-mode">5. latch_control — latch strobes and video mode</a><ul>
+<li><a href="#purpose_4">Purpose</a></li>
+<li><a href="#interface_4">Interface</a></li>
+<li><a href="#gates-and-equations_1">Gates and equations</a></li>
+<li><a href="#c_3">C++</a></li>
+</ul>
+</li>
+<li><a href="#6-data_latch-pixel-byte-latch">6. data_latch — pixel byte latch</a><ul>
+<li><a href="#purpose_5">Purpose</a></li>
+<li><a href="#interface_5">Interface</a></li>
+<li><a href="#gates-and-c">Gates and C++</a></li>
+</ul>
+</li>
+<li><a href="#7-attr_latch-attribute-latch-inkpaper-selection">7. attr_latch — attribute latch + ink/paper selection</a><ul>
+<li><a href="#purpose_6">Purpose</a></li>
+<li><a href="#interface_6">Interface</a></li>
+<li><a href="#gates-after-reduction">Gates (after reduction)</a></li>
+<li><a href="#c_4">C++</a></li>
+</ul>
+</li>
+<li><a href="#8-ao_latch-object-latch-inkpaperborder-for-the-dac">8. ao_latch — object latch (ink/paper/border for the DAC)</a><ul>
+<li><a href="#purpose_7">Purpose</a></li>
+<li><a href="#interface_7">Interface</a></li>
+<li><a href="#structure">Structure</a></li>
+<li><a href="#c_5">C++</a></li>
+</ul>
+</li>
+<li><a href="#9-pixel_shift_reg-pixel-shift-register">9. pixel_shift_reg — pixel shift register</a><ul>
+<li><a href="#purpose_8">Purpose</a></li>
+<li><a href="#interface_8">Interface</a></li>
+<li><a href="#analysis">Analysis</a></li>
+<li><a href="#c_6">C++</a></li>
+</ul>
+</li>
+<li><a href="#10-flash_clock-flash-rate-divider">10. flash_clock — flash-rate divider</a><ul>
+<li><a href="#purpose_9">Purpose</a></li>
+<li><a href="#interface_9">Interface</a></li>
+<li><a href="#analysis_1">Analysis</a></li>
+<li><a href="#c_7">C++</a></li>
+</ul>
+</li>
+<li><a href="#11-flash_xnor-per-pixel-inkpaper-selection-and-flash">11. flash_xnor — per-pixel ink/paper selection and flash</a><ul>
+<li><a href="#purpose_10">Purpose</a></li>
+<li><a href="#interface_10">Interface</a></li>
+<li><a href="#gates">Gates</a></li>
+<li><a href="#c_8">C++</a></li>
+</ul>
+</li>
+<li><a href="#12-color_mux-rgb-assembly">12. color_mux — R/G/B assembly</a><ul>
+<li><a href="#purpose_11">Purpose</a></li>
+<li><a href="#interface_11">Interface</a></li>
+<li><a href="#equations-after-reduction-assign-in-hdl">Equations (after reduction, assign in HDL)</a></li>
+<li><a href="#c_9">C++</a></li>
+</ul>
+</li>
+<li><a href="#13-video_addr_gen-video-memory-address-rowcol">13. video_addr_gen — video-memory address (row/col)</a><ul>
+<li><a href="#purpose_12">Purpose</a></li>
+<li><a href="#interface_12">Interface</a></li>
+<li><a href="#analysis_2">Analysis</a></li>
+<li><a href="#c_10">C++</a></li>
+</ul>
+</li>
+<li><a href="#14-address_enable-address-pad-enable-nae">14. address_enable — address pad enable (nAE)</a><ul>
+<li><a href="#purpose_13">Purpose</a></li>
+<li><a href="#interface_13">Interface</a></li>
+<li><a href="#equations">Equations</a></li>
+<li><a href="#c_11">C++</a></li>
+</ul>
+</li>
+<li><a href="#15-ras_cas_romcs-dram-timing-and-rom-select">15. ras_cas_romcs — DRAM timing and ROM select</a><ul>
+<li><a href="#purpose_14">Purpose</a></li>
+<li><a href="#interface_14">Interface</a></li>
+<li><a href="#analysis_3">Analysis</a></li>
+<li><a href="#c_12">C++</a></li>
+</ul>
+</li>
+<li><a href="#16-video_signal_features-sync-blank-border-int-burst">16. video_signal_features — sync, blank, border, INT, burst</a><ul>
+<li><a href="#purpose_15">Purpose</a></li>
+<li><a href="#interface_15">Interface</a></li>
+<li><a href="#key-equations-after-gate-analysis">Key equations (after gate analysis)</a></li>
+<li><a href="#c_13">C++</a></li>
+</ul>
+</li>
+<li><a href="#17-dac_setup-video-dac-input-preparation">17. dac_setup — video DAC input preparation</a><ul>
+<li><a href="#purpose_16">Purpose</a></li>
+<li><a href="#interface_16">Interface</a></li>
+<li><a href="#equations-from-gates-g1g23-g152g179-g211g216-g624g625">Equations (from gates g1..g23, g152..g179, g211..g216, g624,g625)</a></li>
+<li><a href="#c_14">C++</a></li>
+</ul>
+</li>
+<li><a href="#18-io-io-port-keyboard-border-micear">18. io — I/O port (keyboard, border, mic/ear)</a><ul>
+<li><a href="#purpose_17">Purpose</a></li>
+<li><a href="#interface_17">Interface</a></li>
+<li><a href="#analysis_4">Analysis</a></li>
+<li><a href="#c_15">C++</a></li>
+</ul>
+</li>
+<li><a href="#19-contention-dram-arbitration-cpu-clock-stretching">19. contention — DRAM arbitration (CPU clock stretching)</a><ul>
+<li><a href="#purpose_18">Purpose</a></li>
+<li><a href="#interface_18">Interface</a></li>
+<li><a href="#analysis_5">Analysis</a></li>
+<li><a href="#c_16">C++</a></li>
+</ul>
+</li>
+<li><a href="#20-top-ula-and-pads">20. Top ula and pads</a></li>
+<li><a href="#21-simulator-ulasimpy">21. Simulator: ulasim.py</a></li>
+<li><a href="#appendix-mapping-to-the-icarusulagtkw-signals">Appendix. Mapping to the icarus/ula.gtkw signals</a></li>
+</ul></details>
+<div class="callout warning"><p><strong>Attention!</strong> Neural networks and agents still work very poorly with HDL
+netlists: the module schematic and waveform pictures below turned out
+“crooked” and are essentially <strong>placeholders</strong>. The trustworthy information
+is in the text, gate tables and equations; treat the figures as an
+illustration of the structure rather than exact documentation. Please be
+understanding.</p></div>
+<blockquote>
+<p>Section for issue <a href="https://github.com/emu-russia/ula/issues/4">emu-russia/ula#4</a>:
+description of <em>each</em> module of the recovered modular HDL
+(<code>hdl/ula6c001.v</code>), its schematic, typical waveforms and model C++ code.</p>
+<p>Russian version: <a href="ula-modules.ru.html">ula-modules.md</a></p>
+</blockquote>
+<h2 id="how-this-section-is-organised">How this section is organised</h2>
+<p><code>hdl/ula6c001.v</code> is a “sheet” netlist (661 cells) that has been split over
+modules. Cross-coupled NOR pairs forming RS flip-flops are folded into the
+<code>GD</code> primitives (transparent latches), and where the sequential logic still
+lives at the gate level (counters, clock divider, shift register) we <strong>do not</strong>
+draw it “as a NOR mess”: for each module below the <em>recovered structure</em> is
+shown — latches/flip-flops are drawn with proper symbols, and the combinational
+trees through their boolean functions (obtained by an honest gate analysis,
+not by redrawing someone else's schematic).</p>
+<p>Naming conventions:</p>
+<ul>
+<li>signal <code>/X</code> (or <code>nX</code>) is active low;</li>
+<li><code>GD</code> — a latch with an inverted enable (<code>nE</code>): <code>Q = D</code> while <code>nE=0</code>,
+  otherwise the state is held (in <code>hdl/ulabase.v</code> this is
+  <code>reg val; always @(*) if (~nE) val = D;</code>), <code>nQ = ~Q</code>;</li>
+<li>logic gates are numbered as in the source (<code>gNNN</code>) — the cell numbers match
+  the flat netlist <code>netlist/ula6c001.v</code> (see the issue-#2 report);</li>
+<li>bus names: <code>C[8:0]</code> — the horizontal counter, <code>V[8:0]</code> — the vertical one.</li>
+</ul>
+<p>All waveforms in <code>imgstore/waves/*.png</code> are an <strong>honest model output</strong>:
+<code>ulasim.py</code> (see the last section) reproduces the same HDL tick by tick with
+gate accuracy and dumps a VCD with the signal set of the <code>icarus/ula.gtkw</code>
+monitors. In the model the clock input <code>OSC</code> is 20 MHz (period 50 ns, as in
+<code>icarus/run_ula.v</code>), therefore <code>nCLK7 = OSC/2 = 10 MHz</code>, a scanline =
+448 <code>nCLK7</code> ticks = 44.8 µs, a frame = 312 scanlines = 13.98 ms. On the real
+chip <code>OSC = 14 MHz</code> (<a href="pads.html">pads.md</a>, <code>/PHICPU = OSC÷4</code>), i.e. a scanline
+corresponds to 64 µs and a frame to ~20 ms; all the logic is frequency
+independent.</p>
+<hr />
+<h2 id="0-overview-the-20-modules-and-their-connections">0. Overview: the 20 modules and their connections</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Module</th>
+<th>Purpose</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>clkgen</code></td>
+<td><code>OSC÷2</code> divider → <code>nCLK7</code> (7 MHz)</td>
+<td><code>hdl/ula6c001.v:453</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>tclk</code></td>
+<td>CPU bus-cycle decode → <code>TCLK</code>/<code>K0</code></td>
+<td><code>:796</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>hcounter</code></td>
+<td>horizontal counter <code>C[8:0]</code>, 448 ticks/line</td>
+<td><code>:474</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>vcounter</code></td>
+<td>vertical counter <code>V[8:0]</code>, 312 lines/frame</td>
+<td><code>:613</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>latch_control</code></td>
+<td>data/attribute latch strobes, border/video-enable</td>
+<td><code>:807</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>data_latch</code></td>
+<td>pixel byte latch (8× <code>GD</code>)</td>
+<td><code>:853</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>attr_latch</code></td>
+<td>attribute byte latch + ink/paper→bright logic</td>
+<td><code>:860</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>ao_latch</code></td>
+<td>“object” latch (ink/paper/border), 8× <code>GD</code></td>
+<td><code>:906</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>pixel_shift_reg</code></td>
+<td>pixel shift register (8-bit load, serial out)</td>
+<td><code>:913</code></td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>flash_clock</code></td>
+<td>flash-rate divider</td>
+<td><code>:1053</code></td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>flash_xnor</code></td>
+<td>flash XNOR with the pixel stream → ink/paper select</td>
+<td><code>:1123</code></td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>color_mux</code></td>
+<td>R/G/B colour assembly from ink/paper + blank/sync</td>
+<td><code>:1138</code></td>
+</tr>
+<tr>
+<td>13</td>
+<td><code>video_addr_gen</code></td>
+<td>video memory address mux (row/col from C,V)</td>
+<td><code>:1148</code></td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>address_enable</code></td>
+<td>address pad output enable <code>A[6:0]</code> (<code>nAE</code>)</td>
+<td><code>:1245</code></td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>ras_cas_romcs</code></td>
+<td>DRAM timing (<code>/RAS</code>, <code>/CAS</code>, <code>/WE</code>), ROM select</td>
+<td><code>:1256</code></td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>video_signal_features</code></td>
+<td>sync/blank/border/INT/colour burst</td>
+<td><code>:1331</code></td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>dac_setup</code></td>
+<td>video DAC input forming (U,V,/Y)</td>
+<td><code>:1400</code></td>
+</tr>
+<tr>
+<td>18</td>
+<td><code>io</code></td>
+<td>I/O port (keyboard, border, mic/ear)</td>
+<td><code>:1464</code></td>
+</tr>
+<tr>
+<td>19</td>
+<td><code>contention</code></td>
+<td>DRAM arbitration: CPU clock with stretching (contention)</td>
+<td><code>:1514</code></td>
+</tr>
+<tr>
+<td>—</td>
+<td><code>ula</code> (top)</td>
+<td>ties the modules and pads together (<code>hdl/ula6c001.v:6</code>, pads — <code>pads.md</code>)</td>
+<td><code>:6</code></td>
+</tr>
+</tbody>
+</table>
+<p>Full structural diagram of the module-to-module and pad connections: <img alt="s_top" src="imgstore/schematics/s_top.png" />.</p>
+<p>A name-by-name table of <strong>all internal signals</strong> (name → from → to →
+description) is in <a href="ula-signals.html">ula-signals.en.md</a> (issue
+<a href="https://github.com/emu-russia/ula/issues/10">#10</a>).</p>
+<p>Model-measured timings referenced by the sections:</p>
+<ul>
+<li>scanline: <code>HCrst</code>→<code>HCrst</code> = <strong>448</strong> <code>nCLK7</code> ticks (44.8 µs in the model);</li>
+<li>frame: <strong>312</strong> scanlines = 13.98 ms in the model; <code>V</code> resets on the 312th scanline;</li>
+<li><code>VSync</code>: decade <code>V ∈ {248..251}</code> (<code>nor6</code> over <code>nV6,nV7,V2,nV3..nV5</code>);</li>
+<li>data fetches: <strong>32 pixel bytes + 32 attributes</strong> per scanline (in pairs,
+  the attribute right after the pixel byte), <code>nAOLatch</code> reloads every 8
+  <code>nCLK7</code> ticks (56 per scanline — including the border);</li>
+<li><code>nINT</code>: a pulse at the beginning of the frame.</li>
+</ul>
+<hr />
+<h2 id="1-clkgen-clock-generator-2-7-mhz">1. <code>clkgen</code> — clock generator (<code>÷2</code>, 7 MHz)</h2>
+<h3 id="purpose">Purpose</h3>
+<p>The only truly asynchronous node: it divides the input <code>OSC</code> (14 MHz on the
+board, see <a href="pads.html">pads.md</a>) by two and produces the main video-path clock
+<code>nCLK7</code> (~7 MHz). The chip has no external reset: the divider "arms" itself
+right after power-on.</p>
+<h3 id="interface">Interface</h3>
+<pre><code>clkgen (
+  input  osc_from_pad,   // from the OSC pad
+  output nCLK7           // CLK7 = OSC/2
+);
+</code></pre>
+<h3 id="structure-reconstruction-from-gates-g52-g54-g423g432">Structure (reconstruction from gates g52, g54, g423..g432)</h3>
+<p>The divider proper is two cascaded RS latches (<code>// FD</code> in the source), i.e.
+a "master–slave" D flip-flop wired as a counting ring (<code>nQ → D</code>):</p>
+<table>
+<thead>
+<tr>
+<th>gates</th>
+<th>function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>g52</code></td>
+<td>buffer-inverter <code>w441 = /OSC</code></td>
+</tr>
+<tr>
+<td><code>g423,g424,g425</code></td>
+<td>master RS latch (<code>w442</code>, <code>w443</code>)</td>
+</tr>
+<tr>
+<td><code>g430,g431,g432</code></td>
+<td>slave RS latch (<code>w444..w446</code>, <code>w449</code>)</td>
+</tr>
+<tr>
+<td><code>g54</code></td>
+<td>buffer-inverter <code>nCLK7 = /w446</code></td>
+</tr>
+</tbody>
+</table>
+<p>Here the RS latches are <strong>not</strong> shown as a NOR pair — this is a classic
+divide-by-2 D flip-flop; that is exactly how it works (divides by 2):</p>
+<pre><code>   OSC ──┬─► buffer ──► [D flip-flop ÷2] ──► buffer ──► nCLK7
+         └──────────────── nQ ────────────────────┘  (feedback)
+</code></pre>
+<p>Diagram: <img loading="lazy" alt="s_clkgen" src="imgstore/schematics/s_clkgen.png" />.
+Oscillogram (OSC, nCLK7, /PHICPU): <img loading="lazy" alt="w_clockgen" src="imgstore/waves/w_clockgen.png" />.</p>
+<h3 id="behaviour-verified-in-the-model">Behaviour (verified in the model)</h3>
+<p><code>nCLK7</code> toggles once per <strong>period</strong> of <code>OSC</code> (÷2): in the
+model with <code>OSC=20 MHz</code> the <code>nCLK7</code> period is 100 ns. <code>nCLK7</code> clocks the
+h-counter, the data latches and the pixel shift register. <code>/PHICPU</code> (CPU
+clock) is not generated here but in <code>contention</code> from the low bits of <code>C</code> —
+essentially a <code>C0</code>-like signal (3.5 MHz) that gets stretched during
+contention (see section 19).</p>
+<h3 id="c-emulator">C++ (emulator)</h3>
+<pre><code class="language-cpp">// clkgen: OSC/2 -&gt; nCLK7
+struct ClkGen {
+    bool master = 0, slave = 0;          // two D-flip-flop stages
+    bool nCLK7   = 0;
+
+    // called on every OSC change (14 MHz on the board)
+    void eval(bool osc) {
+        bool d = osc;                    // input buffer/inverter keeps the phase
+        if (!osc) { master = d; }        // master transparent while OSC=0
+        else      { slave = master; }    // slave copies while OSC=1
+        nCLK7 = !slave;                  // output buffer-inverter
+    }
+};
+</code></pre>
+<hr />
+<h2 id="2-tclk-bus-cycle-decoding">2. <code>tclk</code> — bus-cycle decoding</h2>
+<h3 id="purpose_1">Purpose</h3>
+<p>From the <code>/MREQ</code>, <code>/IOREQ</code>, <code>/RD</code>, <code>/WR</code> signals from the processor it forms
+two internal strobes <code>nTCLKA</code>/<code>nTCLKB</code> (active when <em>both</em> requests
+<code>/MREQ</code>+<code>/IOREQ</code> are low — i.e. in fact "bus busy"), plus the output <code>K0</code>
+(test mode/keyboard scanline 0).</p>
+<h3 id="interface_1">Interface</h3>
+<pre><code>tclk ( nMREQ, nIOREQ, nRD, nWR, WR(inout), RD(inout),
+       output nTCLKA, nTCLKB(inout), K0, input nV8 );
+</code></pre>
+<p><code>WR = /nWR</code>, <code>RD = /nRD</code> — just inverter-buffers (<code>g81</code>, <code>g82</code>).</p>
+<h3 id="gates-and-equations">Gates and equations</h3>
+<pre><code>g527:  nTCLKA = nor4(nMREQ, nIOREQ, WR, nRD)   = 1, only if all 4 inputs are 0
+g525:  nTCLKB = nor4(RD, nWR, nMREQ, nIOREQ)   = 1, only if all 4 inputs are 0
+g83:   w313   = not nTCLKB
+g528:  K0     = nor(nV8, w313)                 // test-mode output to KB0
+</code></pre>
+<p><code>K0</code> (goes to pad <code>KB0</code>) is active when <code>nV8=0</code> and <code>nTCLKB=1</code> — i.e.
+<code>K0 = nV8 · nTCLKB</code>. On the real board <code>KB0</code> is the only bidirectional
+keyboard pin that the ULA can pull to zero.</p>
+<p>Diagram: <img loading="lazy" alt="s_tclk" src="imgstore/schematics/s_tclk.png" />.</p>
+<h3 id="c">C++</h3>
+<pre><code class="language-cpp">struct TClk {
+    bool nMREQ, nIOREQ, nRD, nWR, nV8;
+    bool nTCLKA, nTCLKB, K0;
+    void eval() {
+        bool WR = !nWR, RD = !nRD;
+        nTCLKA = !( nMREQ || nIOREQ || WR || nRD );   // nor4
+        nTCLKB = !( RD   || nWR   || nMREQ|| nIOREQ); // nor4
+        K0     = !( nV8 || nTCLKB );                  // nV8 &amp; nTCLKB
+    }
+};
+</code></pre>
+<hr />
+<h2 id="3-hcounter-horizontal-counter-448-clock-ticks-per-scanline">3. <code>hcounter</code> — horizontal counter (448 clock ticks per scanline)</h2>
+<h3 id="purpose_2">Purpose</h3>
+<p>Counts the position within a scanline. Clocked from <code>nCLK7</code> (through internal
+phases), it outputs <code>C[8:0]</code>/<code>nC[8:0]</code> to all consumers (video-memory
+address, sync/blank logic, RAS/CAS decoders, arbitration). It is reset once
+per scanline by the <code>HCrst</code> signal — <strong>the count period is exactly 448 clock
+ticks</strong> (measured in the model: <code>HCrst</code>→<code>HCrst</code> = 448 periods of <code>nCLK7</code>).</p>
+<h3 id="interface_2">Interface</h3>
+<pre><code>hcounter ( input nCLK7, nTCLKA,
+           output [8:0] nC, C, output HCrst, CLKHC6 );
+</code></pre>
+<h3 id="gate-analysis">Gate analysis</h3>
+<p>The counter is built from <strong>identical bit cells</strong>; each cell in the raw
+netlist is 5-6 NORs (a "master–slave" RS latch with carry combinatorics),
+shown here as an ordinary enabled T flip-flop:</p>
+<ul>
+<li>bit 0 (<code>g444..g455</code>): counts on the edges of <code>CLK7 = /nCLK7</code>;</li>
+<li>bits 1..5 (<code>g447..g522</code> etc.): the clock input is a combination of the
+  phase and the low bits (carry cascade);</li>
+<li>bits 6..8 (<code>g98..g129</code>): additionally have the reset <code>HCrst</code>;</li>
+<li><code>g518</code>: <code>CLKHC6 = nor(nTCLKA, nC[5])</code> — the clock of the vertical counter (see <code>vcounter</code>);</li>
+<li><code>g104</code>: <code>HCrst = nor(nC[8], nC[7]) = C8 · C7</code> — the reset decade.</li>
+</ul>
+<p>Key finding of the analysis: the reset happens not on the value 448 as such,
+but on the decade <code>C8·C7</code> (count 384..447), combined with the clocking phase
+of the high bits — the resulting scanline period is exactly <strong>448</strong>, which
+corresponds to a 64 µs scanline at the real 7 MHz frequency.</p>
+<p>Schematic: <img loading="lazy" alt="s_hcounter" src="imgstore/schematics/s_hcounter.png" />.
+Oscillograms: whole scanline <img loading="lazy" alt="w_hline" src="imgstore/waves/w_hline.png" />,
+low bits/phases <em>w_clockgen</em>.</p>
+<h3 id="measured-behaviour">Measured behaviour</h3>
+<ul>
+<li><code>C0</code> toggles every 2 <code>nCLK7</code> clock ticks (3.5 MHz on the real chip);</li>
+<li><code>HCrst</code> — one pulse per scanline (see [w_hline]).</li>
+<li><code>CLKHC6</code> is used by the vertical counter: in idle (no bus activity,
+  <code>nTCLKA=0</code>) <code>CLKHC6 = C5</code>.</li>
+</ul>
+<h3 id="c_1">C++</h3>
+<pre><code class="language-cpp">// hcounter: 9-bit scanline counter, period 448, counting on nCLK7
+struct HCounter {
+    uint16_t C = 0;              // C[8:0]
+    bool HCrst = 0;
+
+    void tick(bool nCLK7) {      // active nCLK7 edge
+        if (!nCLK7) {
+            C = (C + 1) % 448;   // equivalent of the C8·C7 reset decade
+        }
+        HCrst = (C &gt;= 384);      // nor(nC8,nC7) — reset decade
+    }
+    int  count() const { return C; }
+};
+</code></pre>
+<p>Note: in the emulator the integer counter with modulus 448 gives the same
+result as the gate-level decade, but without the 448-tick "tail"
+(intermediate carry states are not needed in the emulator).</p>
+<hr />
+<h2 id="4-vcounter-vertical-counter-312-lines-per-frame">4. <code>vcounter</code> — vertical counter (312 lines per frame)</h2>
+<h3 id="purpose_3">Purpose</h3>
+<p>Counts the frame lines: <code>V[8:0]</code>/<code>nV[8:0]</code> go to the border/sync logic,
+to the video memory address generator and to INT. Increment — once per line
+(measured in the model: <code>V = V+1</code> on each <code>HCrst</code>), reset — on line 312
+(frame = 312 lines, 20 ms at 7 MHz).</p>
+<h3 id="interface_3">Interface</h3>
+<pre><code>vcounter ( input HCrst, CLKHC6, nC5,
+           output [8:0] nV, V );
+</code></pre>
+<h3 id="gate-analysis_1">Gate analysis</h3>
+<p>The counter bits are broken down in <a href="https://github.com/emu-russia/ula/blob/main/vcounter.md">vcounter.md</a> into standard cells:
+- bits 0..2 — <code>TCE</code> (toggle with clock enable), clocked by <code>CLKHC6</code>;
+- bits 3..5 — <code>TRCE</code> (TCE + reset); the additional internal reset <code>vrst</code>
+  is produced in <code>g567</code> (reuses the inverter <code>g89</code> of bit 3);
+- bits 6,7 — again <code>TCE</code>;
+- bit 8 — <code>TRE</code> (TRCE without carry out; the redundant NOR is dropped, since the carry
+  is not needed further on).</p>
+<p>In <code>hdl/ula6c001.v</code> bits 3..8 are still marked <code>// not sure</code> — this is the zone
+of the least confidence in the reverse-engineering (see <code>vcounter.md</code>, task #2 report),
+so in the waveforms on the upper bits of <code>V</code> possible "within-line"
+transitions — the model honestly shows the current state of the HDL.</p>
+<p>Schematic: <img loading="lazy" alt="s_vcounter" src="imgstore/schematics/s_vcounter.png" />.
+Waveforms: vertical frame sweep <img loading="lazy" alt="w_vframe" src="imgstore/waves/w_vframe.png" />,
+<img loading="lazy" alt="entire frame w_frame" src="imgstore/waves/w_frame.png" />.</p>
+<h3 id="c_2">C++</h3>
+<pre><code class="language-cpp">// vcounter: frame line counter; modulus 312
+struct VCounter {
+    uint16_t V = 0;              // V[8:0]
+    void line() {                // once per line (on HCrst)
+        V++;
+        if (V &gt;= 312) V = 0;     // 312 lines/frame
+    }
+};
+</code></pre>
+<hr />
+<h2 id="5-latch_control-latch-strobes-and-video-mode">5. <code>latch_control</code> — latch strobes and video mode</h2>
+<h3 id="purpose_4">Purpose</h3>
+<p>The most "controlling" module: it produces the active strobes of the data latch
+(<code>nDataLatch</code>), attribute latch (<code>nAttrLatch</code>), object latch (<code>nAOLatch</code>),
+the parallel load signal of the shift register (<code>SLoad</code>), the
+"video-active area" flag (<code>VidEn</code>, <code>nVidEn</code>), as well as the auxiliary
+<code>nVidC3</code>, <code>VidCASPulse</code>, <code>C0_other</code>, <code>Border</code>.</p>
+<h3 id="interface_4">Interface</h3>
+<pre><code>latch_control ( input nCLK7, nBorder, nC0..nC3, C1,
+                inout Border,
+                output nAttrLatch, nDataLatch, nAOLatch,
+                       nVidC3, C0_other, SLoad, nSLoad, VidEn,
+                       VidCASPulse );
+</code></pre>
+<h3 id="gates-and-equations_1">Gates and equations</h3>
+<pre><code>g49:  Border = /nBorder                      // &quot;border&quot; as a positive signal
+g422: w349   = nor(nC3, Border);  g50: nVidC3 = /w349
+        // nVidC3 = 0 (video) in the window: C3=0 and not border  -&gt; &quot;video-phase C3&quot;
+g55..g59: chain of buffer-inverters from nCLK7 (2-gate delay)
+g449: VidCASPulse = nor(w394, nC0)            // pulse at the start of the line
+g427: w396 = nor4(C1, nC0, VidCASPulse, nVidC3)
+g408,g409: w398 = not not w396 (2 inverters); g51: nDataLatch = /w398
+g443: SLoad = nor4(C1, nC2, nVidEn, C0_other); g339: nSLoad = /SLoad
+g406: w339 = nor3(C1, nC0, nC2); g46: nAOLatch = /w339
+g407: w419 = nor4(nC0, nVidC3, nC1, VidCASPulse); g47: nAttrLatch = /w419
+GD viden_gd: VidEn/nVidEn — latch by nC3: at nC3=0 VidEn = /nBorder
+</code></pre>
+<p>Meaning: while <code>C</code> passes through the screen area (decodes on <code>C1..C3</code>), the latches
+open in turn: <code>nAOLatch</code> — every 8 clocks (at the character-cell boundary),
+<code>nDataLatch</code>/<code>nAttrLatch</code> — at the moment the pixel byte and the attribute following
+it are fetched (in the model: 32 pairs per line, attribute ~200 ns later than the byte).</p>
+<p>Schematic: <img loading="lazy" alt="s_latch_control" src="imgstore/schematics/s_latch_control.png" />.
+Waveform: <img loading="lazy" alt="w_latch_control" src="imgstore/waves/w_latch_control.png" />.</p>
+<h3 id="c_3">C++</h3>
+<pre><code class="language-cpp">// strobes per formulas (per gates g422..g449, g406..g443)
+struct LatchControl {
+    bool nCLK7, nBorder;
+    bool nC0, nC1, nC2, nC3, C1;
+    bool nAttrLatch, nDataLatch, nAOLatch, nVidC3, VidCASPulse;
+    bool C0_other, SLoad, nSLoad, VidEn;
+    bool VidCASPulse_d1;                    // delay (g55..g59)
+
+    void eval() {
+        bool Border = !nBorder;
+        bool w349 = !(nC3 | Border);        // g422
+        nVidC3    = !w349;                  // g50
+        VidCASPulse = !(VidCASPulse_d1 | nC0);  // g449 (g55..g59 delay)
+        VidCASPulse_d1 = nCLK7;                  // (simplified: buffer chain)
+        // nDataLatch = !(C1|nC0|VidCASPulse|nVidC3)  after 2 inverters (g408/9)
+        bool w396 = !(C1 || nC0 || VidCASPulse || nVidC3);
+        nDataLatch = !w396;                 // g51
+        C0_other   = !nC0;                  // g57
+        bool w339 = !(C1 || nC0 || nC2);    // g406
+        nAOLatch   = !w339;                 // g46
+        bool w419 = !(nC0 || nVidC3 || nC1 || VidCASPulse); // g407
+        nAttrLatch = !w419;                 // g47
+        SLoad = !(C1 || nC2 || nVidEn_out() || C0_other);   // g443
+        nSLoad = !SLoad;                    // g339
+    }
+};
+</code></pre>
+<hr />
+<h2 id="6-data_latch-pixel-byte-latch">6. <code>data_latch</code> — pixel byte latch</h2>
+<h3 id="purpose_5">Purpose</h3>
+<p>A transparent 8-bit latch (<code>GD dl[7:0]</code>): during the <code>nDataLatch</code> strobe
+it captures the data byte <code>D7..D0</code> from the data bus (ULA video memory read) and
+stores it until the next character cell. The outputs are inverted <code>nDL[7:0]</code>
+(it uses the latches' <code>nQ</code>), because the shift register downstream is built on NOR.</p>
+<h3 id="interface_5">Interface</h3>
+<pre><code>data_latch ( input [7:0] DI,   // DI = {D7..D0}_from_pad (most significant bit first)
+             input nDataLatch,
+             output [7:0] nDL );    // nDL[i] = nQ of latch i
+</code></pre>
+<h3 id="gates-and-c">Gates and C++</h3>
+<pre><code class="language-cpp">struct DataLatch {
+    uint8_t dl = 0;
+    void eval(bool nDataLatch, uint8_t D) {
+        if (!nDataLatch) dl = D;         // transparent latch
+    }
+    uint8_t nDL() const { return ~dl; }  // nQ outputs
+};
+</code></pre>
+<p>Schematic: <img loading="lazy" alt="s_data_latch" src="imgstore/schematics/s_data_latch.png" /> (8× <code>GD</code>).</p>
+<hr />
+<h2 id="7-attr_latch-attribute-latch-inkpaper-selection">7. <code>attr_latch</code> — attribute latch + ink/paper selection</h2>
+<h3 id="purpose_6">Purpose</h3>
+<p>Latches the attribute byte (ink/paper colour, brightness, flash) during
+<code>nAttrLatch</code>, then, taking <code>VidEn</code> into account, drives the composite signals
+into the object latch: the ready ink/paper colour for each component
+(<code>PB0_B</code>,<code>PB1_R</code>,<code>PB2_G</code>) and the half-bright <code>AL[6]=HL</code>, <code>AL[7]=FL</code>.</p>
+<p>The attribute bits (ZX Spectrum): <code>D7=FLASH</code>, <code>D6=BRIGHT</code>, <code>D5..D3=PAPER</code>,
+<code>D2..D0=INK</code>. The logic with <code>VidEn</code> does the following: when the video-active
+area is disabled (<code>VidEn=0</code>), the border colour (<code>B0_B..B2_G</code> from <code>io</code>) is
+substituted into ink/paper, i.e. a "paper/border" multiplexer operates
+(comment <code>// +paper/border mux</code> in the source).</p>
+<h3 id="interface_6">Interface</h3>
+<pre><code>attr_latch ( input nAttrLatch, B0_B, B1_R, B2_G, VidEn,
+             input D7..D0_from_pad,
+             output [7:0] AL, PB0_B, PB1_R, PB2_G );
+</code></pre>
+<h3 id="gates-after-reduction">Gates (after reduction)</h3>
+<pre><code>GD al[7:0]: AL(capture) by nAttrLatch, al_7..al_0 = D7..D0
+g34/g309: AL[6] = nor(~al_6, nVidEn) = al_6 · VidEn     // HL
+g35/g326: AL[7] = al_7 · VidEn                          // FL
+B:  PB0_B = nor( nor(AL[3], nVidEn), nor(B0_B, VidEn) ) // paper/border blue
+R:  PB1_R = same with AL[4] and B1_R
+G:  PB2_G = same with AL[5] and B2_G
+</code></pre>
+<p><code>al_6</code> (attribute <code>D6</code>, BRIGHT) passes to <code>AL[6]</code> only in the video-active
+area (<code>VidEn</code>); likewise for <code>al_7</code> (D7, FLASH). The paper bit of the B
+channel (<code>AL[3]</code>) is replaced in <code>PB0_B</code> by the border colour <code>B0_B</code> when
+<code>VidEn=0</code>, and so on — this is the "paper/border" multiplexer.</p>
+<p>Schematic: <img loading="lazy" alt="s_attr_latch" src="imgstore/schematics/s_attr_latch.png" />.</p>
+<h3 id="c_4">C++</h3>
+<pre><code class="language-cpp">struct AttrLatch {
+    uint8_t al = 0;                       // latched attribute byte
+    bool B0_B, B1_R, B2_G, VidEn;
+    void latch(bool nAttrLatch, uint8_t d) { if (!nAttrLatch) al = d; }
+    void eval() {
+        bool nVidEn = !VidEn;
+        AL6_HL = nVidEn || !bit(al,6);    // nor g309
+        AL7_FL = nVidEn || !bit(al,7);
+        PB0_B  = !( (nVidEn &amp;&amp; !bit(al,3)) || (B0_B &amp;&amp; VidEn) );
+        PB1_R  = !( (nVidEn &amp;&amp; !bit(al,4)) || (B1_R &amp;&amp; VidEn) );
+        PB2_G  = !( (nVidEn &amp;&amp; !bit(al,5)) || (B2_G &amp;&amp; VidEn) );
+    }
+};
+</code></pre>
+<hr />
+<h2 id="8-ao_latch-object-latch-inkpaperborder-for-the-dac">8. <code>ao_latch</code> — object latch (ink/paper/border for the DAC)</h2>
+<h3 id="purpose_7">Purpose</h3>
+<p>Holds the 8-bit "object" that determines the pixel colour at each moment.
+It is reloaded every 8 <code>nCLK7</code> cycles (at the character-cell boundary,
+<code>nAOLatch</code>), including in the border area, when the inputs carry the border
+colour (<code>PB*</code> from <code>io</code>/<code>attr_latch</code>). Output <code>AO</code> is read by <code>color_mux</code>,
+<code>dac_setup</code> (HL) and <code>flash_xnor</code> (FL). The bits of <code>AO</code> are shuffled so that
+the (paper, ink) pairs go by colour channels (see below in this section).</p>
+<h3 id="interface_7">Interface</h3>
+<pre><code>ao_latch ( input nAOLatch, input [7:0] AL, PB0_B, PB1_R, PB2_G,
+           output [7:0] AO );
+</code></pre>
+<h3 id="structure">Structure</h3>
+<pre><code>GD ao[7:0]: D = { AL[7], AL[6], PB2_G, AL[2], PB1_R, AL[1], PB0_B, AL[0] }
+              Q = AO            // AO[i] = D[i] (i = 0..7)
+</code></pre>
+<p>I.e. the shuffling: <code>AO[7]=FL</code>, <code>AO[6]=HL</code>, <code>AO[5]=PB2_G</code> (paper green),
+<code>AO[4]=AL[2]</code> (ink green), <code>AO[3]=PB1_R</code> (paper red), <code>AO[2]=AL[1]</code> (ink red),
+<code>AO[1]=PB0_B</code> (paper blue), <code>AO[0]=AL[0]</code> (ink blue). The border colour for
+the "video off" case is already folded into <code>PB*</code> from <code>attr_latch</code>, so AO
+always contains the correct colour of the current object.</p>
+<p>Schematic: <img loading="lazy" alt="s_ao_latch" src="imgstore/schematics/s_ao_latch.png" />.</p>
+<h3 id="c_5">C++</h3>
+<pre><code class="language-cpp">struct AOLatch {
+    uint8_t ao = 0;
+    // AO = { AL7, AL6, PB2_G, AL2, PB1_R, AL1, PB0_B, AL0 }
+    void eval(bool nAOLatch, uint8_t AL,
+              bool PB0_B, bool PB1_R, bool PB2_G) {
+        if (!nAOLatch) {
+            ao = ((AL &gt;&gt; 7) &amp; 1) &lt;&lt; 7 | ((AL &gt;&gt; 6) &amp; 1) &lt;&lt; 6 |
+                 (PB2_G &amp; 1) &lt;&lt; 5 | ((AL &gt;&gt; 2) &amp; 1) &lt;&lt; 4 |
+                 (PB1_R &amp; 1) &lt;&lt; 3 | ((AL &gt;&gt; 1) &amp; 1) &lt;&lt; 2 |
+                 (PB0_B &amp; 1) &lt;&lt; 1 | (AL &amp; 1);
+        }
+    }
+};
+</code></pre>
+<hr />
+<h2 id="9-pixel_shift_reg-pixel-shift-register">9. <code>pixel_shift_reg</code> — pixel shift register</h2>
+<h3 id="purpose_8">Purpose</h3>
+<p>Converts the pixel byte <code>nDL[7:0]</code> (from <code>data_latch</code>) into a serial
+<code>SerialData</code> stream at one bit per <code>nCLK7</code> cycle. Parallel load happens on
+<code>SLoad</code> (at the start of every character cell), shifting — on the edges of
+<code>nCLK7</code>.</p>
+<h3 id="interface_8">Interface</h3>
+<pre><code>pixel_shift_reg ( input nCLK7, SLoad, nSLoad,
+                  input [7:0] nDL,
+                  inout SerialData );
+</code></pre>
+<h3 id="analysis">Analysis</h3>
+<p>Each of the 8 stages is a master–slave cell (in raw form 6-8 NORs per bit,
+here — a D flip-flop with a load circuit):</p>
+<pre><code>gr. g482..g486  : bit 0
+gr. g461..g465  : bit 1
+gr. g456..g460  : bit 2
+...
+gr. g398..g401  : bit 7; SerialData output = MSB shifted out
+</code></pre>
+<p>Output order: bits shift from 7 down to 0; the MSB (first pixel of the
+character cell) leaves on <code>SerialData</code> first. <code>SLoad</code> enables the parallel
+input <code>nDL[i]</code> for ~8 cycles, then <code>nCLK7</code> cycles shift the byte. In
+<code>color_mux</code> the stream is compared with the attribute (see <code>flash_xnor</code>).</p>
+<p>Schematic: <img loading="lazy" alt="s_pixel_shift_reg" src="imgstore/schematics/s_pixel_shift_reg.png" />.
+Oscillogram (SLoad/SerialData/ink-paper selection): <img loading="lazy" alt="w_pixels" src="imgstore/waves/w_pixels.png" />.</p>
+<h3 id="c_6">C++</h3>
+<pre><code class="language-cpp">struct PixelShiftReg {
+    uint8_t reg = 0;
+    bool SerialData = 0;
+    // parallel load on SLoad (active high), shift on nCLK7
+    void tick(bool nCLK7, bool SLoad, uint8_t nDL) {
+        if (SLoad) { reg = ~nDL; SerialData = (reg &gt;&gt; 7) &amp; 1; return; }
+        if (!nCLK7) {                 // output the MSB on every tick
+            SerialData = (reg &gt;&gt; 7) &amp; 1;
+            reg = (reg &lt;&lt; 1);         // MSB first, LSBs filled with zero
+        }
+    }
+};
+</code></pre>
+<hr />
+<h2 id="10-flash_clock-flash-rate-divider">10. <code>flash_clock</code> — flash-rate divider</h2>
+<h3 id="purpose_9">Purpose</h3>
+<p>Divides the reference clock (in the model — packets at <code>nV8</code>/<code>nTCLKB</code> edges) down
+to ~1.5–3 Hz — the flash rate of the <code>FLASH</code> attribute. The <code>FlashClock</code> output
+controls ink/paper inversion in <code>flash_xnor</code>.</p>
+<h3 id="interface_9">Interface</h3>
+<pre><code>flash_clock ( input nTCLKB, nV8, inout FlashClock );
+</code></pre>
+<h3 id="analysis_1">Analysis</h3>
+<p>Five cascaded counter cells (grp. g180..g209), each ÷2, i.e. ÷32 total from the
+input packet:</p>
+<pre><code>g529: w33 = nor(nTCLKB, nV8)            // input pulses (bus or frame)
+bit0: g180/g181/g207..g210
+bit1: g182/g183/g203..g206
+bit2: g184/g185/g199..g202
+bit3: g186/g187/g195..g198
+bit4: g188..g194 → FlashClock
+</code></pre>
+<p>On a real Spectrum board flash is counted from CPU activity (each <code>MREQ</code>),
+i.e. the rate is tied to the number of executed instructions; in the model with a
+"chip in a vacuum" the count comes from <code>nV8</code> (V-counter) edges.
+Diagram: <img loading="lazy" alt="s_flash_clock" src="imgstore/schematics/s_flash_clock.png" />.</p>
+<h3 id="c_7">C++</h3>
+<pre><code class="language-cpp">struct FlashClock {
+    uint16_t cnt = 0;
+    bool FlashClock = 0;
+    void pulse() {                       // edge of the input pulse train
+        cnt = (cnt + 1) &amp; 0x1F;          // 5 bits (÷32)
+        FlashClock = (cnt &gt;&gt; 4) &amp; 1;     // most significant bit
+    }
+};
+</code></pre>
+<hr />
+<h2 id="11-flash_xnor-per-pixel-inkpaper-selection-and-flash">11. <code>flash_xnor</code> — per-pixel ink/paper selection and flash</h2>
+<h3 id="purpose_10">Purpose</h3>
+<p>Compares the current bit of the <code>SerialData</code> pixel stream with the <code>FlashClock</code>
+flash bit (attribute <code>FL</code>) and produces <code>nDataSelect</code> — the "ink or paper"
+selector for the colour mux:</p>
+<ul>
+<li>pixel = 0 → paper, pixel = 1 → ink;</li>
+<li>if <code>FL=1</code> and <code>FlashClock=1</code> — inversion (flash).</li>
+</ul>
+<h3 id="interface_10">Interface</h3>
+<pre><code>flash_xnor ( input FL, FlashClock, SerialData, output nDataSelect );
+</code></pre>
+<h3 id="gates">Gates</h3>
+<pre><code>g79 : w195 = not FL
+g516: w64 = nor(w199, w196);  g517: w196 = nor(w195, FlashClock)
+g487: w65 = nor(SerialData, w199); g488: w199 = nor(w196, SerialData)
+g190: nDataSelect = nor(w64, w65)
+</code></pre>
+<p>After reduction (the cross-coupled pairs are an XNOR equivalent):</p>
+<pre><code>nDataSelect = ~( (FL ^ FlashClock) == SerialData )
+</code></pre>
+<p>Schematic: <img loading="lazy" alt="s_flash_xnor" src="imgstore/schematics/s_flash_xnor.png" />.</p>
+<h3 id="c_8">C++</h3>
+<pre><code class="language-cpp">struct FlashXnor {
+    bool nDataSelect;
+    void eval(bool FL, bool FlashClock, bool SerialData) {
+        bool dataSel = (FL ^ FlashClock) == SerialData;  // 1 -&gt; ink
+        nDataSelect = !dataSel;
+    }
+};
+</code></pre>
+<hr />
+<h2 id="12-color_mux-rgb-assembly">12. <code>color_mux</code> — R/G/B assembly</h2>
+<h3 id="purpose_11">Purpose</h3>
+<p>Assembles the three video signals <code>Red</code>, <code>Green</code>, <code>Blue</code> from <code>AO</code> (object
+colour) and <code>nDataSelect</code> (ink/paper), taking blanking into account: in
+<code>HBlank</code>/<code>VSync</code> the colour = 0.</p>
+<h3 id="interface_11">Interface</h3>
+<pre><code>color_mux ( input nHBlank, VSync, nDataSelect, input [7:0] AO,
+            output Red, Green, Blue );
+</code></pre>
+<h3 id="equations-after-reduction-assign-in-hdl">Equations (after reduction, <code>assign</code> in HDL)</h3>
+<pre><code>HBlank = ~nHBlank;  DataSelect = ~nDataSelect;
+
+Green = ~( ~(AO[5]|DataSelect) | ~(AO[4]|nDataSelect) | HBlank | VSync );
+Red   = ~( ~(AO[3]|DataSelect) | ~(AO[2]|nDataSelect) | HBlank | VSync );
+Blue  = ~( ~(AO[1]|DataSelect) | ~(AO[0]|nDataSelect) | HBlank | VSync );
+</code></pre>
+<p>Channel pairs: Blue — <code>(AO[1],AO[0])</code>, Red — <code>(AO[3],AO[2])</code>,
+Green — <code>(AO[5],AO[4])</code>; the left bit of a pair is paper, the right one is ink
+(the bit permutation was already done in <code>ao_latch</code>). Active <code>DataSelect=1</code>
+selects the ink component of a pair, otherwise — paper.</p>
+<p>Schematic: <img loading="lazy" alt="s_color_mux" src="imgstore/schematics/s_color_mux.png" />.
+Oscillogram: <em>w_pixels</em> (Red/Green/Blue rows).</p>
+<h3 id="c_9">C++</h3>
+<pre><code class="language-cpp">struct ColorMux {
+    bool Red, Green, Blue;
+    void eval(bool nHBlank, bool VSync, bool nDataSelect, uint8_t AO) {
+        bool blank = !nHBlank || VSync;
+        bool ds = !nDataSelect;
+        if (blank) { Red = Green = Blue = 0; return; }
+        auto ch = [&amp;](bool paper, bool ink) {   // paper/ink = AO bits
+            return ds ? ink : paper;
+        };
+        Blue  = ch((AO &gt;&gt; 1) &amp; 1, AO &amp; 1);
+        Red   = ch((AO &gt;&gt; 3) &amp; 1, (AO &gt;&gt; 2) &amp; 1);
+        Green = ch((AO &gt;&gt; 5) &amp; 1, (AO &gt;&gt; 4) &amp; 1);
+    }
+};
+</code></pre>
+<hr />
+<h2 id="13-video_addr_gen-video-memory-address-rowcol">13. <code>video_addr_gen</code> — video-memory address (row/col)</h2>
+<h3 id="purpose_12">Purpose</h3>
+<p>Forms the 7-bit row and column addresses for the DRAM from the <code>C</code> and <code>V</code>
+counters (7 lines <code>A0..A6</code> each on the RAS/CAS phases). Implements the
+"scrambled" ZX Spectrum screen addressing (character cell → three screen thirds
+and 8 rows of a character cell). Also outputs <code>nVidRAS</code> (the inverse of
+<code>VidRAS</code>).</p>
+<h3 id="interface_12">Interface</h3>
+<pre><code>video_addr_gen ( input C1,C2,C4..C7, V0..V7, VidRAS,
+                 output nVidRAS, A0_to_pad..A6_to_pad );
+</code></pre>
+<h3 id="analysis_2">Analysis</h3>
+<p>The combinational logic (grp. g7..g96, g530..g618) is folded into a "row/col"
+mux: the internal buses <code>w99/w100/w101/w102</code>, <code>w115</code> and <code>w217</code> are the RAS
+phases (<code>w102 = VidRAS-delayed</code> and its inverses), while <code>g530..g582</code> is a
+buffer chain (an even number of inverters) that equalises the delay of <code>w217</code>.
+Output functions:</p>
+<pre><code>A0 = f(C1, V5, w217 phase);  A1 = f(C4, V6, V0);
+A2 = f(C5, V7, V1);          A3 = f(C6, V2, w99 phase);
+A4 = f(C7, V6);              A5 = f(V7, V3);
+A6 = f(V4, w99 phases);
+</code></pre>
+<p>Exact formulas are in the gate table below:</p>
+<table>
+<thead>
+<tr>
+<th>Output</th>
+<th>Gates</th>
+<th>Structure</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>A0</code></td>
+<td>g593, g616..g617, g615</td>
+<td><code>nor3( nor(V5,w115), nor(w99,V5), nor(w217,w216) )</code> + buffer</td>
+</tr>
+<tr>
+<td><code>A2</code></td>
+<td>g583..g586</td>
+<td><code>nor3( nor(C5,w217), nor(w115,V1), nor(V7,w99) )</code></td>
+</tr>
+<tr>
+<td><code>A5</code></td>
+<td>g560..g561</td>
+<td><code>nor2( nor(V7,w115), nor(w217,V3) )</code></td>
+</tr>
+<tr>
+<td><code>A1</code></td>
+<td>g590..g592</td>
+<td><code>nor3( nor(V6,w99), nor(w115,V0), nor(w217,C4) )</code></td>
+</tr>
+<tr>
+<td><code>A3</code></td>
+<td>g588..g589, g618</td>
+<td><code>nor3( nor(C6,w217), nor(V2,w115), not(w99) )</code></td>
+</tr>
+<tr>
+<td><code>A4</code></td>
+<td>g557, g559, g587</td>
+<td><code>nor2( nor(C7,w217), nor(w115,V6) )</code></td>
+</tr>
+<tr>
+<td><code>A6</code></td>
+<td>g562, g555</td>
+<td><code>nor3( nor(V4,w217), not(w115), not(w99) )</code></td>
+</tr>
+</tbody>
+</table>
+<p>where <code>w99 = ~w100</code>, <code>w100 = nor(w101,w102)</code>, <code>w101 = ~C1</code>, <code>w102 = VidRAS phase.</code>,
+<code>w115 = ~w114</code>, <code>w114 = nor(w102, C1)</code>, <code>w217 = ~w102</code>.</p>
+<p>Schematic: <img loading="lazy" alt="s_video_addr_gen" src="imgstore/schematics/s_video_addr_gen.png" />.
+Oscillogram (address on RAS/CAS phases): <img loading="lazy" alt="w_memory" src="imgstore/waves/w_memory.png" />.</p>
+<h3 id="c_10">C++</h3>
+<pre><code class="language-cpp">// video address: 14-bit screen address from (C,V), output in two phases
+struct VideoAddrGen {
+    // 7 row bits (RAS phase) and 7 column bits (CAS phase)
+    uint8_t row, col;
+    void gen(uint16_t C, uint16_t V) {
+        // standard ZX Spectrum 48K screen layout
+        uint16_t vc = ((V &amp; 0x7) &lt;&lt; 8) | ((V &gt;&gt; 3) &amp; 7) &lt;&lt; 5 |
+                      ((V &gt;&gt; 6) &amp; 0x1F);
+        uint16_t hc = (C &amp; 0x1F);
+        uint16_t addr = (vc &lt;&lt; 5) | hc;
+        row = addr &amp; 0x7F;         // lower 7 bits (RAS)
+        col = (addr &gt;&gt; 7) &amp; 0x7F;  // upper 7 bits (CAS)
+    }
+};
+</code></pre>
+<hr />
+<h2 id="14-address_enable-address-pad-enable-nae">14. <code>address_enable</code> — address pad enable (<code>nAE</code>)</h2>
+<h3 id="purpose_13">Purpose</h3>
+<p>Controls the third state of the address outputs <code>A0..A6</code> (pads with <code>n_oe</code>).
+When <code>nAE=0</code> the ULA drives the address; when <code>nAE=1</code> the pads are in Z, and the
+DRAM can address the processor (external board glue).</p>
+<h3 id="interface_13">Interface</h3>
+<pre><code>address_enable ( input nC0, nC1, nC2, C3, Border, output nAE );
+</code></pre>
+<h3 id="equations">Equations</h3>
+<pre><code>g426: w399 = nor3(nC0, nC1, nC2)         // = C0&amp;C1&amp;C2
+g410: w363 = nor(C3, w399)
+g391: w420 = nor(Border, w363)
+g661: nAE   = not w420
+
+nAE = Border  |  C3  |  (C0&amp;C1&amp;C2)   // active (0) only outside the border,
+                                     // in video-memory fetch windows
+</code></pre>
+<p>Schematic: <img loading="lazy" alt="s_address_enable" src="imgstore/schematics/s_address_enable.png" />.</p>
+<h3 id="c_11">C++</h3>
+<pre><code class="language-cpp">struct AddressEnable {
+    bool nAE;
+    void eval(bool nC0, bool nC1, bool nC2, bool C3, bool Border) {
+        bool w399 = C0_bit(nC0) &amp;&amp; C0_bit(nC1) &amp;&amp; C0_bit(nC2); // C0&amp;C1&amp;C2
+        nAE = Border || C3 || w399;     // 0 = drive address
+    }
+    static bool C0_bit(bool nx){ return !nx; }
+};
+</code></pre>
+<hr />
+<h2 id="15-ras_cas_romcs-dram-timing-and-rom-select">15. <code>ras_cas_romcs</code> — DRAM timing and ROM select</h2>
+<h3 id="purpose_14">Purpose</h3>
+<p>Generates the dynamic-memory control signals: <code>VidRAS</code>/<code>nVidRAS</code>
+(video RAS), the RAS strobe for processor cycles in the RAM area (<code>w242</code>/
+<code>RAM16</code>), the output <code>/RAS</code> (with <code>nRAS_oe</code>), <code>/CAS</code>, <code>/WE</code>, plus <code>/ROMCS</code>
+(ROM select) and the CAS-phase latches <code>VidCASPulse</code>.</p>
+<h3 id="interface_14">Interface</h3>
+<pre><code>ras_cas_romcs ( input nVidC3, A14, A15, nMREQ, nWR, WR, RD,
+                input nC0, nC1, C1, nVidRAS, nBorder, VidCASPulse,
+                output nRAS_to_pad, nRAS_oe, nCAS_to_pad, VidRAS,
+                       nROMCS_to_pad, nWE_to_pad );
+</code></pre>
+<h3 id="analysis_3">Analysis</h3>
+<pre><code>g389: w242 = nor3(not A14, A15, nMREQ)   // = A14 &amp; /A15 &amp; /MREQ : RAM16
+                                          //  (processor accesses 0x4000-0x7FFF)
+g390: nRAS_to_pad = nor(VidRAS, w242)     // RAS = video OR processor-RAM
+g388: nRAS_oe     = nor4(A15, A14, nBorder, nMREQ)
+g451: VidRAS      = nor(w395, nVidC3)     // video RAS in the active area
+g395: w395        = nor3(nC0, nC1, w400)  // counter phase (delays g60..g71)
+g387: w408 = nor(A15, A14);  g39: nROMCS_to_pad = not w408
+                                              // /ROMCS = A15|A14 (RAM -&gt; no ROM)
+g503: w239 = nor(WR, RD); ...  g501..g506: MUXSEL latch buffers
+g526: w315 = nor(w245, nWR); g87: nWE_to_pad = not w315   // /WE = w245·/WR
+g473..g477: CAS decades: nCAS_to_pad = ... (w433/w434 with VidCASPulse, C1, nVidC3)
+</code></pre>
+<p><code>VidRAS</code> starts both phases: RAS (row address), then, through
+<code>VidCASPulse</code> and the delay buffers, CAS (column address). The chains of even
+inverters (g60..g71, g65..g70, etc.) are <strong>delay lines</strong> that set the strobe
+widths (in the model the RAS width is ≈ 275 ns; CAS is a burst of pulses).</p>
+<p>Schematic: <img loading="lazy" alt="s_ras_cas_romcs" src="imgstore/schematics/s_ras_cas_romcs.png" />.
+Oscillogram: <em>w_memory</em>.</p>
+<h3 id="c_12">C++</h3>
+<pre><code class="language-cpp">struct RasCasRomcs {
+    bool VidRAS, nRAS, nCAS, nWE, nROMCS, RAM16;
+    // called every nCLK7 cycle
+    void eval(bool nVidC3, bool A14, bool A15, bool nMREQ,
+              bool nWR, bool nBorder, bool VidCASPulse,
+              uint16_t C) {
+        RAM16 = A14 &amp;&amp; !A15 &amp;&amp; !nMREQ;
+        bool phase = fetch_phase(C);         // fetch window per the counter
+        VidRAS = phase &amp;&amp; !nVidC3 &amp;&amp; !nBorder;
+        nRAS   = !(VidRAS || RAM16);
+        bool ramsel = !(A15 || A14);          // 0x0000-0x3FFF (ROM)
+        nROMCS = !ramsel;
+        nWE    = !(RAM16 &amp;&amp; !nWR);
+        // CAS: delayed VidCASPulse + counter phases (simplified):
+        nCAS   = !(VidRAS &amp;&amp; delay(VidCASPulse, 3));
+    }
+};
+</code></pre>
+<hr />
+<h2 id="16-video_signal_features-sync-blank-border-int-burst">16. <code>video_signal_features</code> — sync, blank, border, INT, burst</h2>
+<h3 id="purpose_15">Purpose</h3>
+<p>A purely combinational "calendar" of the video signal: from <code>C</code> and <code>V</code> it
+forms <code>/Sync</code> (HSync+VSync), <code>nHBlank</code>, <code>nBorder</code> (active area), <code>/INT</code>, the
+<code>Timing</code> window, the colour-burst packets <code>BurstS/nBurstS/nBurstDD</code>,
+<code>C5delay</code>, and <code>HSync</code> pulses.</p>
+<h3 id="interface_15">Interface</h3>
+<pre><code>video_signal_features ( input nC3..nC8, C4..C8, V0..V2, V8, nV3..nV7,
+                        inout Timing,
+                        output nSync, VSync, nHBlank, nINT_to_pad,
+                               nBurstS, BurstS, nBorder, nBurstDD );
+</code></pre>
+<h3 id="key-equations-after-gate-analysis">Key equations (after gate analysis)</h3>
+<pre><code>g613: w271 = nor(nV7, nV6)
+g614: nBorder = nor3(C8, V8, w271)     // 0 = border/non-screen (C8 or bottom of frame)
+
+g167..g172: C5delay (w103) — delayed C5 through the buffer chain
+g531..g534: HSync window w71 (&quot;nHSyncPulses&quot;);  g84: w71 = ... (see the source)
+g105: w118 = nor4(nC6, C7, nC8, w71)  // HSync
+g106: nSync = nor(VSync, w118)         // /Sync = HSync | VSync
+g107,g131,g133: nHBlank = nor(w69, w68)  // H blanking at line start/end
+g119,g120,g150,g151: Timing latch (nSync-window latch with V0)
+g621: VSync = nor6(nV6, nV7, V2, nV3, nV4, nV5)   // V ∈ {248..251}
+g620: w143 = nor5(nC8, nC7, C4, C6, w103)
+g619: w116 = nor7(C6, C7, not VSync, V1, V2, V0, C8)
+g4:   nINT_to_pad = not w116           // INT at the start of the frame
+g118,g6: nBurstS/nBurstDD; g117: BurstS  // colour burst
+</code></pre>
+<p><code>Timing</code> is an internal latch (<code>g119,g120,g150,g151</code>) that "stretches" the
+sync window; it is exactly what <code>dac_setup</code> and the burst logic use.</p>
+<p>Schematic: <img loading="lazy" alt="s_video_signal_features" src="imgstore/schematics/s_video_signal_features.png" />.
+Oscillograms: <em>w_hline</em>,
+<img loading="lazy" alt="w_dac_sync" src="imgstore/waves/w_dac_sync.png" />,
+<em>w_vframe</em>, <em>w_frame</em>.</p>
+<h3 id="c_13">C++</h3>
+<pre><code class="language-cpp">struct VideoSignalFeatures {
+    bool nSync, VSync, nHBlank, nBorder, nINT;
+    void eval(uint16_t C, uint16_t V) {
+        // windows measured in the model (448-cycle line, 312 lines)
+        bool C8 = (C &gt;&gt; 8) &amp; 1, C7 = (C &gt;&gt; 7) &amp; 1, C6 = (C &gt;&gt; 6) &amp; 1;
+        bool V7 = (V &gt;&gt; 7) &amp; 1, V6 = (V &gt;&gt; 6) &amp; 1, V5 = (V &gt;&gt; 5) &amp; 1;
+        bool V4 = (V &gt;&gt; 4) &amp; 1, V3 = (V &gt;&gt; 3) &amp; 1, V2 = (V &gt;&gt; 2) &amp; 1;
+        nBorder = !(C8 || (V &gt;= 248));            // simplified, see equations
+        VSync   = (V &amp; 0x1FF) &gt;= 248 &amp;&amp; (V &amp; 0x1FF) &lt;= 251;
+        bool hsync = C &gt;= 368 &amp;&amp; C &lt; 400;         // HSync window (approximately)
+        nSync   = !(VSync || hsync);
+        bool hblank = C &gt;= 384 || C &lt; 16;         // left/right blank
+        nHBlank = !hblank;
+        nINT    = !(V &lt; 8 &amp;&amp; C &lt; 64);             // start of frame
+    }
+};
+</code></pre>
+<p>Note: the windows in the C++ above are <em>illustrative</em>; the exact gate-level
+decades are given in the table and in the source <code>hdl/ula6c001.v</code>.</p>
+<hr />
+<h2 id="17-dac_setup-video-dac-input-preparation">17. <code>dac_setup</code> — video DAC input preparation</h2>
+<h3 id="purpose_16">Purpose</h3>
+<p>From the color signals (<code>Red/Green/Blue</code>), sync, and <code>Timing</code>, forms the
+15 digital inputs <code>i0..i14</code> of the video DAC (pads U/V//Y): normal color,
+half brightness (<code>D</code>/<code>DD</code>), blanking (<code>BLACKS</code>), sync (<code>nSyncD</code>), <code>HL</code>
+(high-light), burst packets.</p>
+<h3 id="interface_16">Interface</h3>
+<pre><code>dac_setup ( input Timing, nSync, Red, HL(AO[6]), Blue, Green,
+            output BlueD, RedD, nRedDD, nBLACKS, nHL, nSyncD, GreenD,
+                   RedS, BlueDD, nGreenDD, nBlueS, nGreenS );
+</code></pre>
+<h3 id="equations-from-gates-g1g23-g152g179-g211g216-g624g625">Equations (from gates g1..g23, g152..g179, g211..g216, g624,g625)</h3>
+<pre><code>g152: w152 = nor3(Green, Red, Blue)          // no colour set -&gt; 0
+g174: w129 = nor3(w130, w3, w128)            // &quot;black&quot;: colour blanking
+g19 : nBLACKS = not w129                     // /BLACKS signal to the DAC
+g23 : nHL = not AO[6]                        // high-light (HL)
+g5  : nSyncD = not not nSync                 // nSync buffer
+// channels:
+R: RedD  = not not Red;   nRedDD = nor(w152, Red)
+G: GreenD= not not Green; nGreenDD= nor(Green, w152)
+B: BlueD = not not Blue;  BlueDD = not nor(w152, Blue)  // g20/g21/g214
+// luminance &quot;S&quot; signals (after the Timing logic g176..g178):
+RedS  = not nor(w129, w128)  ...  nGreenS = nor(w3, w129); nBlueS = nor(w130, w129)
+</code></pre>
+<p>Double inverters (<code>g15..g18</code> and the like) provide delay/buffering of the
+DAC halves (brightness and half brightness). See the source for the exact
+gate table.</p>
+<p>Schematic: <img loading="lazy" alt="s_dac_setup" src="imgstore/schematics/s_dac_setup.png" />.
+Waveform: <em>w_dac_sync</em>.</p>
+<h3 id="c_14">C++</h3>
+<pre><code class="language-cpp">struct DacSetup {
+    // DAC inputs (see pads.md: U,V,/Y are analogue; here the digital bits)
+    bool BlueD, RedD, nRedDD, nBLACKS, nHL, nSyncD, GreenD;
+    bool RedS, BlueDD, nGreenDD, nBlueS, nGreenS;
+    void eval(bool Timing, bool nSync, bool Red, bool HL,
+              bool Blue, bool Green) {
+        bool none = !(Green || Red || Blue);          // nor3
+        nBLACKS  = !none;
+        nHL      = !HL;
+        nSyncD   = nSync;
+        RedD  = Red;   GreenD = Green;   BlueD = Blue;
+        nRedDD = !none &amp;&amp; !Red;                       // red blanking
+        nGreenDD = !none &amp;&amp; !Green;
+        BlueDD   = none || Blue;
+        RedS  = !none &amp;&amp; Red;                         // after the Timing logic
+        nGreenS = !none || Green;
+        nBlueS  = !none || Blue;
+    }
+};
+</code></pre>
+<hr />
+<h2 id="18-io-io-port-keyboard-border-micear">18. <code>io</code> — I/O port (keyboard, border, mic/ear)</h2>
+<h3 id="purpose_17">Purpose</h3>
+<p>Decodes CPU accesses to the ULA ports (<code>/IOREQ</code> + <code>A0=0</code>):
+- <strong>write</strong> (<code>nPortWR</code>): 5-bit register — <code>Speaker</code>, <code>Tape</code>, <code>B2_G</code>, <code>B1_R</code>,
+  <code>B0_B</code> (beep, mic, border color);
+- <strong>read</strong> (<code>nPortRD</code>): keyboard lines <code>KB0..KB4</code> onto <code>D4..D0</code> and the
+  EAR input onto <code>D6</code>.</p>
+<h3 id="interface_17">Interface</h3>
+<pre><code>io ( input nIOREQ, nWR, nRD, nIOREQT2, A0_from_pad,
+     input KB4..KB1_from_pad, KB0_from_pad, D0..D4_from_pad,
+     input Ear_Input,
+     output nTape, B0_B, B1_R, B2_G, D6_to_pad, D1_to_pad, ... , nSpeaker );
+</code></pre>
+<h3 id="analysis_4">Analysis</h3>
+<pre><code>g622: w237 = nor4(nIOREQ, A0_from_pad, nWR, nIOREQT2); g77: nPortWR = not w237
+g623: w317 = nor4(nIOREQ, A0_from_pad, nRD, nIOREQT2); g80: nPortRD = not w317
+       // port is open when /IOREQ=0, A0=0 and there is no &quot;IOREQ phase 2&quot; (contention)
+KB:  D4_to_pad = not nor(nPortRD, KB4) ...  D0_to_pad = not nor(KB0, nPortRD)
+Ear: D6_to_pad = not nor(Ear_Input, nPortRD)
+GD port[4:0]: on nPortWR: Q = {Speaker, Tape, B2_G, B1_R, B0_B} = D4..D0
+g37: nTape = not Tape ;  g38: nSpeaker = not Speaker
+</code></pre>
+<p><code>B0_B/B1_R/B2_G</code> go to <code>attr_latch</code> as the border color (see section 7);
+<code>nSpeaker</code>/<code>nTape</code> are open collectors on the SOUND pad (in <code>hdl/ulabase.v</code>
+the pad model is stubbed out: <code>from_pad = 0</code>).</p>
+<p>Schematic: <img loading="lazy" alt="s_io" src="imgstore/schematics/s_io.png" />.
+Waveform: <img loading="lazy" alt="w_io" src="imgstore/waves/w_io.png" />.</p>
+<h3 id="c_15">C++</h3>
+<pre><code class="language-cpp">struct IO {
+    bool nPortWR = 1, nPortRD = 1;
+    bool B0_B=0, B1_R=0, B2_G=0, Speaker=0, Tape=0;
+    uint8_t reg = 0;                      // 5-bit port
+    void decode(bool nIOREQ, bool A0, bool nWR, bool nRD, bool nIOREQT2) {
+        bool sel = !nIOREQ &amp;&amp; !A0 &amp;&amp; !nIOREQT2;
+        nPortWR = !(sel &amp;&amp; !nWR);
+        nPortRD = !(sel &amp;&amp; !nRD);
+    }
+    void write_cycle() {
+        if (!nPortWR) { reg = reg; /* take D4..D0 from the bus */ }
+        B0_B = (reg &gt;&gt; 0) &amp; 1; B1_R = (reg &gt;&gt; 1) &amp; 1; B2_G = (reg &gt;&gt; 2) &amp; 1;
+        Tape = (reg &gt;&gt; 3) &amp; 1; Speaker = (reg &gt;&gt; 4) &amp; 1;
+    }
+    bool d4_from_kb(bool kb4) { return !(!nPortRD &amp;&amp; kb4); }  // to the D4 pad
+};
+</code></pre>
+<hr />
+<h2 id="19-contention-dram-arbitration-cpu-clock-stretching">19. <code>contention</code> — DRAM arbitration (CPU clock stretching)</h2>
+<h3 id="purpose_18">Purpose</h3>
+<p>The trickiest place: it decides who currently owns the DRAM (video or CPU)
+and forms the processor clock <code>CPUCLK</code> (<code>/PHICPU</code>). In idle, <code>CPUCLK</code> repeats
+<code>C0</code> (3.5 MHz). When the CPU tries to reach the RAM (0x4000–0x7FFF) at the
+moment the video is fetching memory, the <code>CPUCLK</code> edge is delayed — the famous
+ZX Spectrum “contention” (a clock pause of 1..6 half-ticks, depending on the
+phase).</p>
+<h3 id="interface_18">Interface</h3>
+<pre><code>contention ( input nMREQ, nIOREQ, Border, A14, A15, C2, C3, C0_other,
+             output CPUCLK, nIOREQT2 );
+</code></pre>
+<h3 id="analysis_5">Analysis</h3>
+<pre><code>GD mreq_gd :  MREQT2 = ~D(nMREQ), transparent when CPUCLK_internal=0
+GD ioreq_gd:  nIOREQT2/IOREQT2 = captures nIOREQ on CPUCLK_internal
+g384: w414 = nor(w359, w477, C0_other)     // C0_other = C0 (3.5 MHz)
+g44 : CPUCLK = not w414                    // CPUCLK_internal = not w414
+g411: w360 = nor(C2, C3)
+g383: w477 = nor(w413, w412, w360, w361)   // decides &quot;CPU RAM access&quot;
+g385: w412 = nor(w410, w411);  w411 = not A15;  w410 = not nIOREQ
+g386: w413 = nor(A14, w410)
+g404: w362 = nor(IOREQT2, Border, nCPUCLK_internal, MREQT2)
+g405: w359 = nor5(Border, nCPUCLK_internal, nIOREQ, w360, IOREQT2)
+</code></pre>
+<p>Meaning: while there are no CPU requests (<code>nMREQ=nIOREQ=1</code>), <code>w359/w477</code> are
+suppressed and <code>CPUCLK = C0_other</code> (a free 3.5 MHz clock). The appearance of a
+RAM request (<code>nMREQ=0</code>, <code>A14=1</code>) during a video fetch stops the <code>CPUCLK</code> tick
+through the <code>MREQT2/IOREQT2</code> latches and the <code>w359/w477</code> logic (a pause for
+the time the ULA takes the DRAM) — that is exactly the contention.</p>
+<p>A word of caution about the model: the arbiter in this netlist is an
+asynchronous ring (no external clock). In the tick-by-tick level-settled
+model single bus pulses behave stably (waveform below), but a <em>continuous</em>
+free-running CPU knocking on the RAM during a video fetch can excite the ring
+(<code>ulasim.py</code> has a relaxation-iteration guard) — the full clock-stretching
+scenario is not yet worked out (honest limitation, section 21).</p>
+<p>Schematic: <img loading="lazy" alt="s_contention" src="imgstore/schematics/s_contention.png" />.
+Waveform (a CPU RAM-access attempt during a video fetch):
+<img loading="lazy" alt="w_contention" src="imgstore/waves/w_contention.png" />.</p>
+<h3 id="c_16">C++</h3>
+<pre><code class="language-cpp">// contention: CPU clock = C0, stretched when conflicting with video
+struct Contention {
+    bool nIOREQT2 = 1;                    // nIOREQ latch (phase 2)
+    bool stretch = 0;                     // flag &quot;give the tick to video&quot;
+
+    void eval(bool nMREQ, bool nIOREQ, bool Border, bool A14, bool A15,
+              bool C2, bool C3, bool C0) {
+        // CPU RAM request (0x4000-0x7FFF)
+        bool cpuRAM = nMREQ == 0 &amp;&amp; A14 == 1 &amp;&amp; A15 == 0;
+        // video is active (not border) in this part of the line
+        bool videoBusy = !Border &amp;&amp; !(C2 | C3);      // simplified
+        stretch = cpuRAM &amp;&amp; videoBusy;
+    }
+    bool cpuclk(bool C0) { return stretch ? 0 : C0; }  // holding the tick
+};
+</code></pre>
+<hr />
+<h2 id="20-top-ula-and-pads">20. Top <code>ula</code> and pads</h2>
+<p>The top-level module <code>ula</code> (<code>hdl/ula6c001.v:6</code>) instantiates all 19 modules
+and 35 pads. The pads are described separately in <a href="pads.html">pads.md</a>; here —
+only what is needed to read the module schematics:</p>
+<ul>
+<li>inputs: <code>OSC</code>, <code>/RD</code>, <code>/WR</code>, <code>/MREQ</code>, <code>/IOREQ</code>, <code>A15</code>, <code>A14</code>, <code>KB1..4</code>,
+  <code>SOUND</code> (EAR, 0 in the model);</li>
+<li>data buses <code>D0..D7</code> — open-collector to the outside, split internally into
+  <code>D*_from_pad</code>/<code>D*_to_pad</code>;</li>
+<li>outputs: <code>/RAS</code>, <code>/CAS</code>, <code>/WE</code>, <code>/ROMCS</code>, <code>A1..A6</code> (+ bidirectional <code>A0</code>
+  with <code>nAE</code>), <code>/INT</code>, <code>/PHICPU</code> (inverting OC), <code>U</code>, <code>V</code>, <code>/Y</code> (analogue);</li>
+<li>keyboard lines <code>KB0..KB4</code>; <code>KB0</code> is bidirectional (test mode <code>K0</code>).</li>
+</ul>
+<p>Top-level connection map (from <code>ula6c001.v</code>): <em>s_top</em>.</p>
+<p>The full signal-by-signal list of the top-level wiring (from/to/description) is
+in <a href="ula-signals.html">ula-signals.en.md</a>.</p>
+<h2 id="21-simulator-ulasimpy">21. Simulator: <code>ulasim.py</code></h2>
+<p><code>ulasim.py</code> (repository root) — a tick-by-tick simulator of this same HDL in
+Python:</p>
+<ul>
+<li>it parses <code>hdl/ula6c001.v</code> + <code>hdl/ulabase.v</code> itself and unfolds the
+  hierarchy into a flat network (1:1 at the gate level, <code>gNNN</code> numbers kept);</li>
+<li>the semantics is the same as in the reference Icarus run: the 2-input <code>nor</code>
+  is behavioural (“X treated as 1”), <code>not</code>/<code>nor3+</code> — ordinary three-valued
+  logic, <code>GD</code> — a transparent latch;</li>
+<li>after every input event the network is relaxed to a fixed point — this is
+  how the RS latches and master–slave cells are reproduced without
+  “X-sticking”;</li>
+<li>it prints a VCD with the typical signal set (the <code>icarus/ula.gtkw</code>
+  monitors): <code>OSC</code>, <code>nCLK7</code>, <code>C[8:0]</code>, <code>V[8:0]</code>, sync/blank/border, latch
+  strobes, RAS/CAS/WE, address/data, flash/DataSelect, DAC inputs, IO ports.</li>
+</ul>
+<p>Running:</p>
+<pre><code class="language-bash">python3 ulasim.py                 # typical run (with CPU activity)
+python3 ulasim.py --mode idle     # ULA in vacuum
+python3 ulasim.py --mode idle --end-us 15000 --vcd my.vcd
+</code></pre>
+<p>Honest model limitations (important when reading the waveforms):</p>
+<ol>
+<li><code>OSC</code> is 20 MHz (50 ns) in the model vs 14 MHz on the real chip — the
+   logic is frequency independent, only the time scale differs;</li>
+<li>the model's time grid is 25 ns (half period of OSC), so pulses shorter
+   than ~25 ns look “one sample wide” (e.g. <code>nDataLatch</code> = 25 ns in the
+   model);</li>
+<li>bits <code>V[3..8]</code> of the vertical counter are marked <code>// not sure</code> in the HDL
+   (the reverse engineering is unfinished) — the model honestly reproduces
+   the current HDL state, including possible parasitic within-line
+   transitions;</li>
+<li>the CPU model (<code>--mode typical</code>) is a simplified bus-cycle generator
+   synchronised to its own <code>CPUCLK</code> edges (a cycle may start only when the
+   video does not own the DRAM), not a cycle-true Z80 core; continuous CPU
+   cycles at the moment of a video fetch can excite the asynchronous arbiter
+   (section 19), so single bus pulses were used for the contention/IO
+   waveforms;</li>
+<li>the analogue pads (<code>SOUND</code>, the video DAC) are still stubs in
+   <code>hdl/ulabase.v</code>.</li>
+</ol>
+<p>Verified model measurements (used in the sections above):</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value (model, OSC=20 MHz)</th>
+<th>Real chip</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nCLK7</code></td>
+<td>10 MHz (<code>OSC÷2</code>)</td>
+<td>7 MHz (<code>OSC÷2</code>, OSC=14 MHz)</td>
+</tr>
+<tr>
+<td>scanline (<code>HCrst</code> period)</td>
+<td>448 <code>nCLK7</code> ticks = 44.8 µs</td>
+<td>448 × 142.9 ns = 64 µs</td>
+</tr>
+<tr>
+<td>frame</td>
+<td>312 scanlines = 13.98 ms</td>
+<td>312 × 64 µs ≈ 20 ms</td>
+</tr>
+<tr>
+<td><code>V</code> reset</td>
+<td>on the 312th scanline</td>
+<td>312 scanlines</td>
+</tr>
+<tr>
+<td><code>VSync</code></td>
+<td>decade <code>V ∈ {248..251}</code></td>
+<td>the same decade (from the gates)</td>
+</tr>
+<tr>
+<td>data fetches/scanline</td>
+<td>32 pixel bytes + 32 attributes (in pairs)</td>
+<td>32+32</td>
+</tr>
+<tr>
+<td><code>nAOLatch</code>/scanline</td>
+<td>56 (every 8 ticks)</td>
+<td>56</td>
+</tr>
+</tbody>
+</table>
+<h2 id="appendix-mapping-to-the-icarusulagtkw-signals">Appendix. Mapping to the <code>icarus/ula.gtkw</code> signals</h2>
+<p>The monitor names from the testbench (Chris Smith style) and their location in
+the current modular HDL:</p>
+<table>
+<thead>
+<tr>
+<th>monitor (.gtkw)</th>
+<th>HDL net</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nHSyncPulses</code></td>
+<td><code>video_signal_features_inst.w71</code></td>
+</tr>
+<tr>
+<td><code>C5delay</code></td>
+<td><code>video_signal_features_inst.w103</code></td>
+</tr>
+<tr>
+<td><code>HSync</code></td>
+<td><code>video_signal_features_inst.w118</code></td>
+</tr>
+<tr>
+<td><code>Burst</code></td>
+<td><code>C[5]</code> (in the old testbench)</td>
+</tr>
+<tr>
+<td><code>RAM16</code></td>
+<td><code>ras_cas_romcs_inst.w242</code></td>
+</tr>
+<tr>
+<td><code>VidCASAC</code>/<code>VidCASBD</code></td>
+<td><code>ras_cas_romcs_inst.w434</code> / <code>w433</code></td>
+</tr>
+<tr>
+<td><code>MUXSEL</code></td>
+<td><code>ras_cas_romcs_inst.w246</code></td>
+</tr>
+<tr>
+<td><code>Tape</code>/<code>Speaker</code></td>
+<td><code>io_inst.w487</code> / <code>io_inst.w484</code> (internal GD signals)</td>
+</tr>
+<tr>
+<td><code>Ear</code></td>
+<td><code>Ear_Input</code></td>
+</tr>
+<tr>
+<td><code>DataLatch</code>/<code>AttrLatch</code>/<code>AOLatch</code></td>
+<td><code>~nDL</code> / <code>AL</code> / <code>AO</code></td>
+</tr>
+<tr>
+<td><code>Pixel</code></td>
+<td>shift stages of <code>pixel_shift_reg</code></td>
+</tr>
+</tbody>
+</table>
+<p>The full monitor list — <code>default_monitors()</code> in <code>ulasim.py</code>.</p>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <p class="f-title">◫ ZX Spectrum ULA 6C001 <span class="f-sub">— Chip-level reverse engineering of the ZX Spectrum ULA 6C001: netlist recovery, module analysis, schematics and waveforms.</span></p>
+      <p class="f-links">
+        <a href="https://github.com/emu-russia/ula">GitHub · emu-russia/ula</a>
+        <a href="https://github.com/emu-russia/ula/issues">Issues</a>
+        <a href="https://github.com/emu-russia/ula/blob/main/LICENSE">License (MIT)</a>
+      </p>
+    </div>
+    <p class="srcnote">Source (markdown): <a href="https://github.com/emu-russia/ula/blob/main/ula-modules.en.md">specs/ula-modules.en.md</a></p>
+    <p class="f-gen">Generated from the <code>specs/</code> markdown sources by <code>tools/gen_docs_site.py</code>.</p>
+  </div>
+</footer>
+</body>
+</html>

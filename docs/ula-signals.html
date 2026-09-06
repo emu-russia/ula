@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>ULA 6C001 internal signals · ZX Spectrum ULA 6C001</title>
+<meta name="description" content="Table of every internal signal of the ULA 6C001: name, where it comes from, where it goes and what it does.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23111'/%3E%3Crect x='3' y='3' width='3' height='10' fill='%23e5484d'/%3E%3Crect x='7' y='3' width='3' height='10' fill='%2330a46c'/%3E%3Crect x='11' y='3' width='2' height='10' fill='%233e63dd'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">◫ ZX Spectrum ULA 6C001</a>
+    <nav class="site-nav" aria-label="main">
+      <a href="ula-modules.html">ULA modules</a><a class="active" href="ula-signals.html">Internal signals</a><a href="pads.html">Pads</a><a href="topo.html">Topology</a><a href="hdl-vs-netlist-verification.html">Verification</a>
+      <a class="lang-switch" href="ula-signals.ru.html">Русский</a>
+      
+      <button class="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle color theme">
+        <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <article class="doc">
+<h1 id="ula-6c001-internal-signals">ULA 6C001 internal signals</h1>
+<details class="page-toc"><summary>Contents</summary><ul>
+<li><a href="#what-is-covered">What is covered</a></li>
+<li><a href="#conventions">Conventions</a></li>
+<li><a href="#1-clocking">1. Clocking</a></li>
+<li><a href="#2-counters-buses-c-nc-v-nv">2. Counters: buses C, nC, V, nV</a></li>
+<li><a href="#3-cpu-bus-and-cycle-decode-tclk">3. CPU bus and cycle decode (tclk)</a></li>
+<li><a href="#4-latch-strobes-and-video-mode-latch_control">4. Latch strobes and video mode (latch_control)</a></li>
+<li><a href="#5-data-bus-pads-d0d7-latches">5. Data bus (pads D0..D7 → latches)</a></li>
+<li><a href="#6-io-port-keyboard-ear-border-io">6. I/O port: keyboard, EAR, border (io)</a></li>
+<li><a href="#7-data-attribute-and-object-latches">7. Data, attribute and object latches</a></li>
+<li><a href="#8-pixel-stream-and-flash">8. Pixel stream and flash</a></li>
+<li><a href="#9-video-signal-sync-border-colour">9. Video signal: sync, border, colour</a></li>
+<li><a href="#10-video-dac-inputs-pads-u-v-y">10. Video DAC inputs (pads U, V, /Y)</a></li>
+<li><a href="#11-video-memory-address-and-dram-control">11. Video memory address and DRAM control</a></li>
+<li><a href="#bus-bit-reference">Bus bit reference</a></li>
+<li><a href="#appendix-named-signals-inside-modules">Appendix. Named signals inside modules</a></li>
+</ul></details>
+<blockquote>
+<p>Section for issue <a href="https://github.com/emu-russia/ula/issues/10">emu-russia/ula#10</a>:
+a table of <strong>all internal signals</strong> of the ULA — name, where the signal comes
+from, where it goes and what it does.</p>
+<p>Russian version: <a href="ula-signals.ru.html">ula-signals.md</a>.</p>
+<p>Module descriptions, schematics and waveforms — in
+<a href="ula-modules.html">ula-modules.en.md</a>; chip pins/pads — in
+<a href="pads.html">pads.md</a>.</p>
+</blockquote>
+<h2 id="what-is-covered">What is covered</h2>
+<p>The table covers the whole internal wiring of the chip as recovered in the
+modular HDL <code>hdl/ula6c001.v</code>: <strong>every net that crosses a module or pad
+boundary</strong> (the wire declarations of the top-level <code>ula</code> module, lines 46–153).
+The buses <code>C</code>, <code>nC</code>, <code>V</code>, <code>nV</code>, <code>nDL</code>, <code>AL</code>, <code>AO</code> are given as one row per
+bus, but their bits are separate nets of the flat netlist
+(<code>netlist/ula6c001.v</code>); the bit-to-net (<code>wNNN</code>) mapping is at the end of the
+section (“Bus bit reference”).</p>
+<p>Unnamed intra-module nets (<code>wNNN</code>) are not listed: they are covered by the
+module sections (<code>specs/ula-modules.md</code>) and by the flat netlist. Named signals
+living <em>inside</em> modules (<code>nVidEn</code>, <code>nPortRD</code>, …) are collected in an appendix
+at the end.</p>
+<h2 id="conventions">Conventions</h2>
+<ul>
+<li>A signal <code>/X</code> (or <code>nX</code>) is active low. The table uses the HDL names
+  (<code>nBorder</code> = <code>/Border</code> in the schematics).</li>
+<li><strong>From</strong> — the module/pad and its output port that drives the net (for pads:
+  the <code>from_pad</code> output, i.e. a signal coming from the pin into the chip).</li>
+<li><strong>To</strong> — the modules/pads whose inputs are driven by the net.</li>
+<li>Module instance names are <code>&lt;module&gt;_inst</code> (as in <code>hdl/ula6c001.v</code>); pads are
+  the <code>gNNN</code> instances; the <code>gNNN</code> gate numbers match the flat netlist.</li>
+<li>A <code>wNNN</code> number in brackets after the name is the net number in the flat
+  netlist (taken from the source comments), where known.</li>
+<li>Structural diagram of module-to-module and pad connections:
+  <code>imgstore/schematics/s_top.png</code> (see section 0 of <code>ula-modules.md</code>).</li>
+</ul>
+<hr />
+<h2 id="1-clocking">1. Clocking</h2>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>From</th>
+<th>To</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>osc_from_pad</code></td>
+<td>pad <code>g630</code> (pin <code>OSC</code>), output <code>from_pad</code></td>
+<td><code>clkgen_inst.osc_from_pad</code></td>
+<td>Chip clock from the OSC pin: 14 MHz on a real Spectrum board (20 MHz in the <code>ulasim.py</code> model). The only external clock source; divided down to <code>nCLK7</code> in <code>clkgen</code>.</td>
+</tr>
+<tr>
+<td><code>nCLK7</code></td>
+<td><code>clkgen_inst.nCLK7</code> (OSC÷2 divider, g52..g432)</td>
+<td><code>hcounter_inst.nCLK7</code>, <code>latch_control_inst.nCLK7</code>, <code>pixel_shift_reg_inst.nCLK7</code></td>
+<td>Main video-timing clock: <code>OSC÷2</code> (7 MHz on the real chip, 10 MHz in the model). Clocks the horizontal counter, the latch strobe delay lines and the pixel shift register.</td>
+</tr>
+<tr>
+<td><code>HCrst</code> (w81)</td>
+<td><code>hcounter_inst.HCrst</code> (g104: the <code>C7·C8</code> decade)</td>
+<td><code>vcounter_inst.HCrst</code></td>
+<td>Horizontal counter reset pulse — once per scanline; the period is exactly 448 <code>nCLK7</code> ticks. On it the vertical counter increments.</td>
+</tr>
+<tr>
+<td><code>CLKHC6</code> (w34)</td>
+<td><code>hcounter_inst.CLKHC6</code> (g518)</td>
+<td><code>vcounter_inst.CLKHC6</code></td>
+<td>Clock/strobe grid of the vertical counter: <code>CLKHC6 = ~nTCLKA · C5</code>. In idle (no bus activity, <code>nTCLKA=0</code>) it repeats <code>C5</code>.</td>
+</tr>
+<tr>
+<td><code>C0_other</code> (w367)</td>
+<td><code>latch_control_inst.C0_other</code> (g57: <code>= ~nC[0]</code>)</td>
+<td><code>contention_inst.C0_other</code></td>
+<td>The “other” C0: a free-running signal of the least significant horizontal counter bit (3.5 MHz on the real chip). Reference clock from which the <code>contention</code> arbiter builds <code>CPUCLK</code>.</td>
+</tr>
+<tr>
+<td><code>CPUCLK</code></td>
+<td><code>contention_inst.CPUCLK</code> (g44)</td>
+<td>pad <code>g637</code> (pin <code>/PHICPU</code>)</td>
+<td>CPU clock, 3.5 MHz: follows <code>C0_other</code>, stretched when the CPU and video contend for the DRAM. Reaches the pin through an inverting open-collector pad.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-counters-buses-c-nc-v-nv">2. Counters: buses <code>C</code>, <code>nC</code>, <code>V</code>, <code>nV</code></h2>
+<p>Bit-to-netlist-net mapping — see the <a href="#bus-bit-reference">bus bit reference</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>From</th>
+<th>To</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>C[8:0]</code></td>
+<td><code>hcounter_inst.C</code></td>
+<td>bits: <code>C[1]</code> → <code>latch_control_inst.C1</code>, <code>video_addr_gen_inst.C1</code>, <code>ras_cas_romcs_inst.C1</code>; <code>C[2]</code> → <code>video_addr_gen_inst.C2</code>, <code>contention_inst.C2</code>; <code>C[3]</code> → <code>address_enable_inst.C3</code>, <code>contention_inst.C3</code>; <code>C[4..7]</code> → <code>video_addr_gen_inst</code>, <code>video_signal_features_inst</code>; <code>C[8]</code> → <code>video_signal_features_inst.C8</code></td>
+<td>Horizontal position counter: 0..447 (a scanline = 448 <code>nCLK7</code> ticks). <code>C0</code> does not leave the counter (used internally and as <code>C0_other</code>); the upper bits <code>C7·C8</code> (g104) form the <code>HCrst</code> reset decade (count 384..447).</td>
+</tr>
+<tr>
+<td><code>nC[8:0]</code></td>
+<td><code>hcounter_inst.nC</code></td>
+<td>bits: <code>nC[0]</code> → <code>latch_control_inst.nC0</code>, <code>address_enable_inst.nC0</code>, <code>ras_cas_romcs_inst.nC0</code>; <code>nC[1]</code> → <code>latch_control_inst.nC1</code>, <code>address_enable_inst.nC1</code>, <code>ras_cas_romcs_inst.nC1</code>; <code>nC[2]</code> → <code>latch_control_inst.nC2</code>, <code>address_enable_inst.nC2</code>; <code>nC[3]</code> → <code>latch_control_inst.nC3</code>, <code>video_signal_features_inst.nC3</code>; <code>nC[4]</code> → <code>video_signal_features_inst.nC4</code>; <code>nC[5]</code> → <code>vcounter_inst.nC5</code>, <code>video_signal_features_inst.nC5</code>; <code>nC[6..8]</code> → <code>video_signal_features_inst</code></td>
+<td>Inverted bits of the horizontal counter. Used by the strobe/sync/blank/address logic wherever counter zeros are needed.</td>
+</tr>
+<tr>
+<td><code>V[8:0]</code></td>
+<td><code>vcounter_inst.V</code></td>
+<td>bits: <code>V[0..2]</code> → <code>video_addr_gen_inst</code>, <code>video_signal_features_inst</code>; <code>V[3..7]</code> → <code>video_addr_gen_inst</code>; <code>V[8]</code> → <code>video_signal_features_inst.V8</code></td>
+<td>Vertical frame counter: 0..311 (a frame = 312 scanlines, reset on the 312th). <code>V0..V7</code> feed the video address generator (the third/character-row layout); <code>V0..V2</code>, <code>V8</code> and <code>nV3..nV7</code> — the border/sync/INT logic.</td>
+</tr>
+<tr>
+<td><code>nV[8:0]</code></td>
+<td><code>vcounter_inst.nV</code></td>
+<td>bits: <code>nV[3]</code> → <code>video_signal_features_inst.nV3</code>; <code>nV[4]</code> → <code>video_signal_features_inst.nV4</code>; <code>nV[5]</code> → <code>video_signal_features_inst.nV5</code>; <code>nV[6]</code> → <code>video_signal_features_inst.nV6</code>; <code>nV[7]</code> → <code>video_signal_features_inst.nV7</code>; <code>nV[8]</code> → <code>tclk_inst.nV8</code>, <code>flash_clock_inst.nV8</code></td>
+<td>Inverted bits of the vertical counter. <code>nV[3..7]</code> feed the VSync/border/INT logic (<code>nor6</code> over <code>nV6,nV7,V2,nV3..nV5</code> yields the 248..251 decade); <code>nV8</code> — “not the lower part of the frame” flag for <code>K0</code> and the flash counter.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-cpu-bus-and-cycle-decode-tclk">3. CPU bus and cycle decode (<code>tclk</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>From</th>
+<th>To</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nMREQ_from_pad</code> (w314)</td>
+<td>pad <code>g631</code> (pin <code>/MREQ</code>), output <code>from_pad</code></td>
+<td><code>tclk_inst.nMREQ</code>, <code>ras_cas_romcs_inst.nMREQ</code>, <code>contention_inst.nMREQ</code></td>
+<td>CPU memory request (active low). Used by the cycle decoder (<code>tclk</code>), the DRAM timing and the contention arbiter.</td>
+</tr>
+<tr>
+<td><code>nIOREQ_from_pad</code> (w259)</td>
+<td>pad <code>g636</code> (pin <code>/IOREQ</code>), output <code>from_pad</code></td>
+<td><code>tclk_inst.nIOREQ</code>, <code>io_inst.nIOREQ</code>, <code>contention_inst.nIOREQ</code></td>
+<td>CPU I/O request (active low). Opens the ULA port in <code>io</code> (together with <code>A0=0</code>), feeds the cycle decoder and contention.</td>
+</tr>
+<tr>
+<td><code>nRD</code> (w309)</td>
+<td>pad <code>g627</code> (pin <code>/RD</code>), output <code>from_pad</code></td>
+<td><code>tclk_inst.nRD</code>, <code>io_inst.nRD</code></td>
+<td>CPU read strobe (active low).</td>
+</tr>
+<tr>
+<td><code>nWR</code> (w244)</td>
+<td>pad <code>g628</code> (pin <code>/WR</code>), output <code>from_pad</code></td>
+<td><code>tclk_inst.nWR</code>, <code>ras_cas_romcs_inst.nWR</code>, <code>io_inst.nWR</code></td>
+<td>CPU write strobe (active low); participates in the DRAM <code>/WE</code> generation.</td>
+</tr>
+<tr>
+<td><code>RD</code> (w238)</td>
+<td><code>tclk_inst.RD</code> (g82: <code>= ~nRD</code>)</td>
+<td><code>ras_cas_romcs_inst.RD</code></td>
+<td>Positive read phase (buffer of <code>nRD</code>).</td>
+</tr>
+<tr>
+<td><code>WR</code> (w318)</td>
+<td><code>tclk_inst.WR</code> (g81: <code>= ~nWR</code>)</td>
+<td><code>ras_cas_romcs_inst.WR</code></td>
+<td>Positive write phase (buffer of <code>nWR</code>).</td>
+</tr>
+<tr>
+<td><code>nTCLKA</code> (w228)</td>
+<td><code>tclk_inst.nTCLKA</code> (g527: <code>nor4</code>)</td>
+<td><code>hcounter_inst.nTCLKA</code></td>
+<td>Bus-activity flag (decoded from <code>/MREQ</code>,<code>/IOREQ</code>,<code>/RD</code>,<code>/WR</code>). Via <code>g518</code> it gates the vertical counter clock <code>CLKHC6</code>.</td>
+</tr>
+<tr>
+<td><code>nTCLKB</code> (w235)</td>
+<td><code>tclk_inst.nTCLKB</code> (g525: <code>nor4</code>)</td>
+<td><code>flash_clock_inst.nTCLKB</code></td>
+<td>Second “bus busy” strobe; together with <code>nV[8]</code> it produces the count pulses of the <code>flash_clock</code> divider.</td>
+</tr>
+<tr>
+<td><code>K0_topad</code> (w276)</td>
+<td><code>tclk_inst.K0</code> (g528: <code>= nV8 · nTCLKB</code>)</td>
+<td>pad <code>g650</code> (<code>KB0</code>, input <code>to_pad</code>)</td>
+<td>Test output on the bidirectional <code>KB0</code> pin: pulls it low when <code>nV8=0</code> and the bus is active (test mode / keyboard row 0).</td>
+</tr>
+<tr>
+<td><code>nIOREQT2</code> (w243)</td>
+<td><code>contention_inst.nIOREQT2</code> (GD <code>ioreq_gd</code>, Q)</td>
+<td><code>io_inst.nIOREQT2</code></td>
+<td>“IOREQ in phase 2”: a copy of <code>/IOREQ</code> latched by <code>CPUCLK</code>. The <code>io</code> port opens only when <code>nIOREQT2=0</code>, i.e. when <code>/IOREQ</code> is confirmed in the right phase of the CPU clock (protects against double decode on a stretched clock).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-latch-strobes-and-video-mode-latch_control">4. Latch strobes and video mode (<code>latch_control</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>From</th>
+<th>To</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Border</code> (w348)</td>
+<td><code>latch_control_inst.Border</code> (g49: <code>= ~nBorder</code>)</td>
+<td><code>address_enable_inst.Border</code>, <code>contention_inst.Border</code></td>
+<td>Positive “border / not screen” flag: <code>1</code> when the video is outside the active area (right part of the scanline, top/bottom of the frame). Disables video memory driving: <code>nAE</code> and the contention arbiter treat it as “video inactive”.</td>
+</tr>
+<tr>
+<td><code>nVidC3</code> (w330)</td>
+<td><code>latch_control_inst.nVidC3</code> (g422/g50)</td>
+<td><code>ras_cas_romcs_inst.nVidC3</code></td>
+<td>“Video phase C3” (active low): <code>0</code> inside the video fetch window (<code>C3=0</code>, not border). In <code>ras_cas_romcs</code> it takes part in <code>VidRAS</code> and CAS pulse generation.</td>
+</tr>
+<tr>
+<td><code>VidEn</code> (w351)</td>
+<td><code>latch_control_inst.VidEn</code> (GD <code>viden_gd</code>, Q)</td>
+<td><code>attr_latch_inst.VidEn</code></td>
+<td>“Video active area”: latch (by <code>nC3</code>) of the <code>~nBorder</code> value. When <code>VidEn=1</code>, <code>attr_latch</code> outputs the real attribute colour; when <code>0</code> — the border colour (<code>B0_B..B2_G</code>).</td>
+</tr>
+<tr>
+<td><code>nDataLatch</code></td>
+<td><code>latch_control_inst.nDataLatch</code> (g427..g51)</td>
+<td><code>data_latch_inst.nDataLatch</code></td>
+<td>Strobe (active low) of the pixel byte latch from the data bus: 32 times per scanline, one byte per character cell.</td>
+</tr>
+<tr>
+<td><code>nAttrLatch</code> (w418)</td>
+<td><code>latch_control_inst.nAttrLatch</code> (g407/g47)</td>
+<td><code>attr_latch_inst.nAttrLatch</code></td>
+<td>Strobe (active low) of the attribute byte latch — right after the pixel byte of the same pair (32 times per scanline).</td>
+</tr>
+<tr>
+<td><code>nAOLatch</code> (w340)</td>
+<td><code>latch_control_inst.nAOLatch</code> (g406/g46)</td>
+<td><code>ao_latch_inst.nAOLatch</code></td>
+<td>Reload of the “object” latch every 8 <code>nCLK7</code> ticks (character-cell boundary): 56 times per scanline, including the border.</td>
+</tr>
+<tr>
+<td><code>SLoad</code> (w357)</td>
+<td><code>latch_control_inst.SLoad</code> (g443)</td>
+<td><code>pixel_shift_reg_inst.SLoad</code></td>
+<td>Parallel load of the pixel shift register (a ~8-tick window per character cell).</td>
+</tr>
+<tr>
+<td><code>nSLoad</code> (w549)</td>
+<td><code>latch_control_inst.nSLoad</code> (g339: <code>= ~SLoad</code>)</td>
+<td><code>pixel_shift_reg_inst.nSLoad</code></td>
+<td>Inversion of <code>SLoad</code> — the NOR load logic of the shift register needs both phases.</td>
+</tr>
+<tr>
+<td><code>VidCASPulse</code> (w366)</td>
+<td><code>latch_control_inst.VidCASPulse</code> (g449 + delay lines g55..g59)</td>
+<td><code>ras_cas_romcs_inst.VidCASPulse</code></td>
+<td>Pulse that starts the CAS phase of a video cycle (delayed <code>nCLK7</code> by <code>nC0</code>); in <code>ras_cas_romcs</code> it opens the CAS decades.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-data-bus-pads-d0d7-latches">5. Data bus (pads <code>D0..D7</code> → latches)</h2>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>From</th>
+<th>To</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>D0_from_pad</code> (w7)</td>
+<td>pad <code>g651</code> (pin <code>D0</code>, bidir), output <code>from_pad</code></td>
+<td><code>data_latch_inst.DI[0]</code>, <code>attr_latch_inst.D0_from_pad</code>, <code>io_inst.D0_from_pad</code></td>
+<td>Data bus bit 0 (inbound). Feeds the pixel and attribute latches; in <code>io</code> it is the port write data (border bit <code>B0_B</code>).</td>
+</tr>
+<tr>
+<td><code>D1_from_pad</code> (w478)</td>
+<td>pad <code>g648</code> (pin <code>D1</code>, bidir), output <code>from_pad</code></td>
+<td><code>data_latch_inst.DI[1]</code>, <code>attr_latch_inst.D1_from_pad</code>, <code>io_inst.D1_from_pad</code></td>
+<td>Data bus bit 1 (inbound); in <code>io</code> — port register bit <code>B1_R</code>.</td>
+</tr>
+<tr>
+<td><code>D2_from_pad</code> (w512)</td>
+<td>pad <code>g647</code> (pin <code>D2</code>, bidir), output <code>from_pad</code></td>
+<td><code>data_latch_inst.DI[2]</code>, <code>attr_latch_inst.D2_from_pad</code>, <code>io_inst.D2_from_pad</code></td>
+<td>Data bus bit 2 (inbound); in <code>io</code> — port register bit <code>B2_G</code>.</td>
+</tr>
+<tr>
+<td><code>D3_from_pad</code> (w608)</td>
+<td>pad <code>g644</code> (pin <code>D3</code>, bidir), output <code>from_pad</code></td>
+<td><code>data_latch_inst.DI[3]</code>, <code>attr_latch_inst.D3_from_pad</code>, <code>io_inst.D3_from_pad</code></td>
+<td>Data bus bit 3 (inbound); in <code>io</code> — port register bit <code>Tape</code> (MIC).</td>
+</tr>
+<tr>
+<td><code>D4_from_pad</code> (w522)</td>
+<td>pad <code>g642</code> (pin <code>D4</code>, bidir), output <code>from_pad</code></td>
+<td><code>data_latch_inst.DI[4]</code>, <code>attr_latch_inst.D4_from_pad</code>, <code>io_inst.D4_from_pad</code></td>
+<td>Data bus bit 4 (inbound); in <code>io</code> — port register bit <code>Speaker</code> (beeper).</td>
+</tr>
+<tr>
+<td><code>D5_from_pad</code> (w416)</td>
+<td>pad <code>g640</code> (pin <code>D5</code>, input-only), output <code>from_pad</code></td>
+<td><code>data_latch_inst.DI[5]</code>, <code>attr_latch_inst.D5_from_pad</code></td>
+<td>Data bus bit 5 — input only (the CPU reads DRAM data; the ULA never writes D5).</td>
+</tr>
+<tr>
+<td><code>D6_from_pad</code> (w516)</td>
+<td>pad <code>g639</code> (pin <code>D6</code>, bidir), output <code>from_pad</code></td>
+<td><code>data_latch_inst.DI[6]</code>, <code>attr_latch_inst.D6_from_pad</code></td>
+<td>Data bus bit 6 (inbound); outward the ULA drives EAR state onto <code>D6</code> when the port is read (<code>D6_to_pad</code>).</td>
+</tr>
+<tr>
+<td><code>D7_from_pad</code> (w417)</td>
+<td>pad <code>g638</code> (pin <code>D7</code>, input-only), output <code>from_pad</code></td>
+<td><code>data_latch_inst.DI[7]</code>, <code>attr_latch_inst.D7_from_pad</code></td>
+<td>Data bus bit 7 — input only (never driven by the chip).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-io-port-keyboard-ear-border-io">6. I/O port: keyboard, EAR, border (<code>io</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>From</th>
+<th>To</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>KB0_from_pad</code> (w13)</td>
+<td>pad <code>g650</code> (pin <code>KB0</code>, bidir), output <code>from_pad</code></td>
+<td><code>io_inst.KB0_from_pad</code></td>
+<td>Keyboard line 0 (bidirectional: the test output <code>K0_topad</code> shares the pin). On a port read (<code>nPortRD</code>) it is driven onto <code>D0</code>.</td>
+</tr>
+<tr>
+<td><code>KB1_from_pad</code> (w9)</td>
+<td>pad <code>g649</code> (pin <code>KB1</code>), output <code>from_pad</code></td>
+<td><code>io_inst.KB1_from_pad</code></td>
+<td>Keyboard line 1 → <code>D1</code> on a port read.</td>
+</tr>
+<tr>
+<td><code>KB2_from_pad</code> (w645)</td>
+<td>pad <code>g646</code> (pin <code>KB2</code>), output <code>from_pad</code></td>
+<td><code>io_inst.KB2_from_pad</code></td>
+<td>Keyboard line 2 → <code>D2</code> on a port read.</td>
+</tr>
+<tr>
+<td><code>KB3_from_pad</code> (w581)</td>
+<td>pad <code>g645</code> (pin <code>KB3</code>), output <code>from_pad</code></td>
+<td><code>io_inst.KB3_from_pad</code></td>
+<td>Keyboard line 3 → <code>D3</code> on a port read.</td>
+</tr>
+<tr>
+<td><code>KB4_from_pad</code> (w647)</td>
+<td>pad <code>g643</code> (pin <code>KB4</code>), output <code>from_pad</code></td>
+<td><code>io_inst.KB4_from_pad</code></td>
+<td>Keyboard line 4 → <code>D4</code> on a port read.</td>
+</tr>
+<tr>
+<td><code>Ear_Input</code> (w513)</td>
+<td>pad <code>g641</code> (pin <code>SOUND</code>, EAR input), output <code>from_pad</code></td>
+<td><code>io_inst.Ear_Input</code></td>
+<td>Tape (EAR) input through the analogue SOUND pad; on a port read it is driven onto <code>D6</code>. In the model the pad is stubbed (<code>Ear=0</code>).</td>
+</tr>
+<tr>
+<td><code>D0_to_pad</code> (w10)</td>
+<td><code>io_inst.D0_to_pad</code> (g25: <code>~nor(KB0, nPortRD)</code>)</td>
+<td>pad <code>g651</code> (<code>D0</code>, input <code>to_pad</code>)</td>
+<td>Keyboard read outward: pulls <code>D0</code> low if <code>KB0</code> is pressed and the port is read (open collector).</td>
+</tr>
+<tr>
+<td><code>D1_to_pad</code> (w6)</td>
+<td><code>io_inst.D1_to_pad</code> (g24)</td>
+<td>pad <code>g648</code> (<code>D1</code>, input <code>to_pad</code>)</td>
+<td>Same for <code>KB1</code> → <code>D1</code>.</td>
+</tr>
+<tr>
+<td><code>D2_to_pad</code> (w644)</td>
+<td><code>io_inst.D2_to_pad</code> (g26)</td>
+<td>pad <code>g647</code> (<code>D2</code>, input <code>to_pad</code>)</td>
+<td>Same for <code>KB2</code> → <code>D2</code>.</td>
+</tr>
+<tr>
+<td><code>D3_to_pad</code> (w582)</td>
+<td><code>io_inst.D3_to_pad</code> (g29)</td>
+<td>pad <code>g644</code> (<code>D3</code>, input <code>to_pad</code>)</td>
+<td>Same for <code>KB3</code> → <code>D3</code>.</td>
+</tr>
+<tr>
+<td><code>D4_to_pad</code> (w536)</td>
+<td><code>io_inst.D4_to_pad</code> (g33)</td>
+<td>pad <code>g642</code> (<code>D4</code>, input <code>to_pad</code>)</td>
+<td>Same for <code>KB4</code> → <code>D4</code>.</td>
+</tr>
+<tr>
+<td><code>D6_to_pad</code> (w515)</td>
+<td><code>io_inst.D6_to_pad</code> (g36: <code>~nor(Ear_Input, nPortRD)</code>)</td>
+<td>pad <code>g639</code> (<code>D6</code>, input <code>to_pad</code>)</td>
+<td>Drives the EAR state onto <code>D6</code> on a port read (open collector).</td>
+</tr>
+<tr>
+<td><code>B0_B</code> (w510)</td>
+<td><code>io_inst.B0_B</code> (GD <code>port[0]</code>, Q)</td>
+<td><code>attr_latch_inst.B0_B</code></td>
+<td>Port register bit 0 — border colour, blue component (0xFE write). Outside the video active area it substitutes the blue paper colour.</td>
+</tr>
+<tr>
+<td><code>B1_R</code> (w610)</td>
+<td><code>io_inst.B1_R</code> (GD <code>port[1]</code>, Q)</td>
+<td><code>attr_latch_inst.B1_R</code></td>
+<td>Port register bit 1 — border colour, red component.</td>
+</tr>
+<tr>
+<td><code>B2_G</code> (w570)</td>
+<td><code>io_inst.B2_G</code> (GD <code>port[2]</code>, Q)</td>
+<td><code>attr_latch_inst.B2_G</code></td>
+<td>Port register bit 2 — border colour, green component.</td>
+</tr>
+<tr>
+<td><code>nTape</code> (w486)</td>
+<td><code>io_inst.nTape</code> (g37: <code>= ~Tape</code>, GD <code>port[3]</code>)</td>
+<td>pad <code>g641</code> (<code>SOUND</code>, input <code>to_pad1</code>)</td>
+<td>MIC output (tape recording), open collector on the analogue SOUND pad.</td>
+</tr>
+<tr>
+<td><code>nSpeaker</code> (w485)</td>
+<td><code>io_inst.nSpeaker</code> (g38: <code>= ~Speaker</code>, GD <code>port[4]</code>)</td>
+<td>pad <code>g641</code> (<code>SOUND</code>, input <code>to_pad2</code>)</td>
+<td>Beeper output, open collector on the analogue SOUND pad.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="7-data-attribute-and-object-latches">7. Data, attribute and object latches</h2>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>From</th>
+<th>To</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nDL[7:0]</code></td>
+<td><code>data_latch_inst.nDL</code> (8× GD, <code>nQ</code> outputs)</td>
+<td><code>pixel_shift_reg_inst.nDL</code></td>
+<td>Inverted outputs of the pixel byte latch: <code>nDL[i] = ~DI[i]</code>. Capture is by <code>nDataLatch</code> (32 times per scanline). The inversion is needed by the NOR-based shift register.</td>
+</tr>
+<tr>
+<td><code>AL[7:0]</code></td>
+<td><code>attr_latch_inst.AL</code></td>
+<td><code>ao_latch_inst.AL</code></td>
+<td>Latched attribute byte: <code>AL[5:0]</code> = <code>D5..D0</code> (INK <code>D2..D0</code>, PAPER <code>D5..D3</code>); <code>AL[6]</code> = HL (BRIGHT, <code>D6</code>) and <code>AL[7]</code> = FL (FLASH, <code>D7</code>) pass only when <code>VidEn=1</code> (g309/g326).</td>
+</tr>
+<tr>
+<td><code>PB0_B</code> (w622)</td>
+<td><code>attr_latch_inst.PB0_B</code> (g310/g257/g291)</td>
+<td><code>ao_latch_inst.PB0_B</code></td>
+<td>“Paper/border” blue: mux of paper (<code>AL[3]</code>) and border colour <code>B0_B</code> by <code>VidEn</code>. Lands in <code>AO[1]</code>.</td>
+</tr>
+<tr>
+<td><code>PB1_R</code> (w554)</td>
+<td><code>attr_latch_inst.PB1_R</code> (g324/g258/g325)</td>
+<td><code>ao_latch_inst.PB1_R</code></td>
+<td>“Paper/border” red (<code>AL[4]</code>/<code>B1_R</code>), lands in <code>AO[3]</code>.</td>
+</tr>
+<tr>
+<td><code>PB2_G</code> (w568)</td>
+<td><code>attr_latch_inst.PB2_G</code> (g340/g277/g292)</td>
+<td><code>ao_latch_inst.PB2_G</code></td>
+<td>“Paper/border” green (<code>AL[5]</code>/<code>B2_G</code>), lands in <code>AO[5]</code>.</td>
+</tr>
+<tr>
+<td><code>AO[7:0]</code></td>
+<td><code>ao_latch_inst.AO</code> (8× GD)</td>
+<td><code>color_mux_inst.AO</code> (whole byte), <code>dac_setup_inst.HL</code> = <code>AO[6]</code>, <code>flash_xnor_inst.FL</code> = <code>AO[7]</code></td>
+<td>The “object” — the colour of the current character cell, reloaded every 8 ticks by <code>nAOLatch</code>. Bit permutation: <code>AO[0]=ink B</code>, <code>AO[1]=paper B</code>, <code>AO[2]=ink R</code>, <code>AO[3]=paper R</code>, <code>AO[4]=ink G</code>, <code>AO[5]=paper G</code>, <code>AO[6]=HL</code>, <code>AO[7]=FL</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-pixel-stream-and-flash">8. Pixel stream and flash</h2>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>From</th>
+<th>To</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SerialData</code> (w197)</td>
+<td><code>pixel_shift_reg_inst.SerialData</code> (most-significant-stage output, g400)</td>
+<td><code>flash_xnor_inst.SerialData</code></td>
+<td>Serial pixel stream: one bit per <code>nCLK7</code> tick, MSB (the first pixel of the cell) first.</td>
+</tr>
+<tr>
+<td><code>FlashClock</code> (w168)</td>
+<td><code>flash_clock_inst.FlashClock</code> (÷32 divider, g188..g194)</td>
+<td><code>flash_xnor_inst.FlashClock</code></td>
+<td>Slow blink-rate divider (≈1.5–3 Hz on the board): toggles the ink/paper inversion of the FLASH attribute.</td>
+</tr>
+<tr>
+<td><code>nDataSelect</code> (w66)</td>
+<td><code>flash_xnor_inst.nDataSelect</code> (g190: XNOR of the pixel with <code>FL^FlashClock</code>)</td>
+<td><code>color_mux_inst.nDataSelect</code></td>
+<td>“ink/paper” selector for the colour mux (active low): pixel 1 → ink, 0 → paper; with <code>FL=1</code> and <code>FlashClock=1</code> it inverts (blinking).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="9-video-signal-sync-border-colour">9. Video signal: sync, border, colour</h2>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>From</th>
+<th>To</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nBorder</code> (w260)</td>
+<td><code>video_signal_features_inst.nBorder</code> (g613/g614)</td>
+<td><code>latch_control_inst.nBorder</code>, <code>ras_cas_romcs_inst.nBorder</code></td>
+<td>“Screen” (active low: <code>0</code> — border/off-screen, <code>C8</code> or lower part of the frame). Yields the positive <code>Border</code> in <code>latch_control</code> and takes part in the <code>/RAS</code> pad output enable (<code>nRAS_oe</code>).</td>
+</tr>
+<tr>
+<td><code>VSync</code> (w30)</td>
+<td><code>video_signal_features_inst.VSync</code> (nor6: <code>V ∈ {248..251}</code>)</td>
+<td><code>color_mux_inst.VSync</code></td>
+<td>Frame sync pulse: blanks colour in <code>color_mux</code>; inside <code>video_signal_features</code> it feeds <code>nSync</code> and <code>nINT</code>.</td>
+</tr>
+<tr>
+<td><code>nHBlank</code> (w67)</td>
+<td><code>video_signal_features_inst.nHBlank</code> (g107/g131/g133)</td>
+<td><code>color_mux_inst.nHBlank</code></td>
+<td>Horizontal blanking (active low): <code>0</code> near the start/end of the scanline — colour off.</td>
+</tr>
+<tr>
+<td><code>nSync</code> (w29)</td>
+<td><code>video_signal_features_inst.nSync</code> (g105/g106: <code>nor</code> of the HSync window and <code>VSync</code>)</td>
+<td><code>dac_setup_inst.nSync</code></td>
+<td>Composite sync <code>HSync|VSync</code> (active low); buffered in <code>dac_setup</code> to <code>nSyncD</code> for the DAC sync level.</td>
+</tr>
+<tr>
+<td><code>Timing</code> (w19)</td>
+<td><code>video_signal_features_inst.Timing</code> (RS latch g119/g120/g150/g151, inout)</td>
+<td><code>dac_setup_inst.Timing</code></td>
+<td>“Stretched” sync window: a latch holding the sync/colour-burst area flag after <code>nSync</code>; <code>dac_setup</code> gates its S components and burst on it.</td>
+</tr>
+<tr>
+<td><code>nINT_to_pad</code> (w117)</td>
+<td><code>video_signal_features_inst.nINT_to_pad</code> (g619/g4)</td>
+<td>pad <code>g660</code> (pin <code>/INT</code>)</td>
+<td>CPU interrupt: a pulse at the beginning of the frame (over <code>C6..C8</code>, <code>V0..V2</code>, <code>~VSync</code>), open collector.</td>
+</tr>
+<tr>
+<td><code>Red</code> (w51)</td>
+<td><code>color_mux_inst.Red</code> (assign)</td>
+<td><code>dac_setup_inst.Red</code></td>
+<td>Logical red of the current pixel (after ink/paper selection and blank/VSync gating).</td>
+</tr>
+<tr>
+<td><code>Green</code> (w56)</td>
+<td><code>color_mux_inst.Green</code> (assign)</td>
+<td><code>dac_setup_inst.Green</code></td>
+<td>Logical green of the current pixel.</td>
+</tr>
+<tr>
+<td><code>Blue</code> (w18)</td>
+<td><code>color_mux_inst.Blue</code> (assign)</td>
+<td><code>dac_setup_inst.Blue</code></td>
+<td>Logical blue of the current pixel.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="10-video-dac-inputs-pads-u-v-y">10. Video DAC inputs (pads <code>U</code>, <code>V</code>, <code>/Y</code>)</h2>
+<p>All signals of this table are the digital inputs <code>i14..i0</code> of the analogue pad
+<code>ula_VideoDAC</code> (g652); the analogue outputs <code>U</code>, <code>V</code>, <code>/Y</code> go to the pins (see
+<a href="pads.html">pads.md</a>). Purpose and gate equations of every signal — in
+sections 17 (<code>dac_setup</code>) and 16 (<code>video_signal_features</code>) of
+<a href="ula-modules.html">ula-modules.en.md</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>DAC input</th>
+<th>From</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>RedD</code></td>
+<td><code>i11</code></td>
+<td><code>dac_setup_inst.RedD</code> (buffer of <code>Red</code>, g15/g18)</td>
+<td>Red channel, “first” phase (<code>Red</code> after buffers).</td>
+</tr>
+<tr>
+<td><code>GreenD</code> (w154)</td>
+<td><code>i10</code></td>
+<td><code>dac_setup_inst.GreenD</code> (g16/g17)</td>
+<td>Green channel, “first” phase.</td>
+</tr>
+<tr>
+<td><code>BlueD</code></td>
+<td><code>i9</code></td>
+<td><code>dac_setup_inst.BlueD</code> (g20/g22)</td>
+<td>Blue channel, “first” phase.</td>
+</tr>
+<tr>
+<td><code>nRedDD</code></td>
+<td><code>i2</code></td>
+<td><code>dac_setup_inst.nRedDD</code> (g173/g624: <code>nor(w152, Red)</code>)</td>
+<td>“Second” (inverted) phase of red: active when red is off while another colour is on.</td>
+</tr>
+<tr>
+<td><code>nGreenDD</code> (w147)</td>
+<td><code>i1</code></td>
+<td><code>dac_setup_inst.nGreenDD</code> (g179)</td>
+<td>“Second” (inverted) phase of green (the <code>nRedDD</code> analogue).</td>
+</tr>
+<tr>
+<td><code>BlueDD</code> (w58)</td>
+<td><code>i0</code></td>
+<td><code>dac_setup_inst.BlueDD</code> (g21/g214: <code>Blue</code> OR “black”)</td>
+<td>“Second” phase of blue (non-inverted, unlike R/G).</td>
+</tr>
+<tr>
+<td><code>RedS</code> (w132)</td>
+<td><code>i6</code></td>
+<td><code>dac_setup_inst.RedS</code> (g1/g624)</td>
+<td>Red, S phase (combined with the <code>Timing</code> window / “black”).</td>
+</tr>
+<tr>
+<td><code>nGreenS</code> (w144)</td>
+<td><code>i8</code></td>
+<td><code>dac_setup_inst.nGreenS</code> (g153)</td>
+<td>Green, inverted S phase.</td>
+</tr>
+<tr>
+<td><code>nBlueS</code> (w145)</td>
+<td><code>i4</code></td>
+<td><code>dac_setup_inst.nBlueS</code> (g625)</td>
+<td>Blue, inverted S phase.</td>
+</tr>
+<tr>
+<td><code>nBLACKS</code> (w4)</td>
+<td><code>i14</code></td>
+<td><code>dac_setup_inst.nBLACKS</code> (g19)</td>
+<td>“Black”/blanking: controls the DAC black level when colour is absent/blanked.</td>
+</tr>
+<tr>
+<td><code>nHL</code> (w5)</td>
+<td><code>i13</code></td>
+<td><code>dac_setup_inst.nHL</code> (g23: <code>= ~AO[6]</code>)</td>
+<td>High-light: inversion of <code>HL</code> (the BRIGHT attribute) — brightness increment.</td>
+</tr>
+<tr>
+<td><code>nSyncD</code> (w124)</td>
+<td><code>i12</code></td>
+<td><code>dac_setup_inst.nSyncD</code> (buffer of <code>nSync</code>, g2/g5)</td>
+<td>Sync for the DAC: buffered <code>nSync</code> (sets the sync level of the output).</td>
+</tr>
+<tr>
+<td><code>BurstS</code> (w137)</td>
+<td><code>i5</code></td>
+<td><code>video_signal_features_inst.BurstS</code> (g117)</td>
+<td>Colour-burst packet, S phase.</td>
+</tr>
+<tr>
+<td><code>nBurstS</code> (w136)</td>
+<td><code>i7</code></td>
+<td><code>video_signal_features_inst.nBurstS</code> (g118/g6)</td>
+<td>Inverted burst, S phase.</td>
+</tr>
+<tr>
+<td><code>nBurstDD</code> (w146)</td>
+<td><code>i3</code></td>
+<td><code>video_signal_features_inst.nBurstDD</code> (g10)</td>
+<td>Burst, “second” (inverted) phase — trailing edge/level of the packet.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="11-video-memory-address-and-dram-control">11. Video memory address and DRAM control</h2>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>From</th>
+<th>To</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>VidRAS</code> (w427)</td>
+<td><code>ras_cas_romcs_inst.VidRAS</code> (g451)</td>
+<td><code>video_addr_gen_inst.VidRAS</code></td>
+<td>Video RAS: the row-address fetch strobe of the video memory cycle (over <code>nVidC3</code> and counter phases). In <code>video_addr_gen</code> it switches the row address; the CAS chain is tied to its inversion.</td>
+</tr>
+<tr>
+<td><code>nVidRAS</code> (w423)</td>
+<td><code>video_addr_gen_inst.nVidRAS</code> (g69: <code>= ~VidRAS</code>)</td>
+<td><code>ras_cas_romcs_inst.nVidRAS</code></td>
+<td>Inversion of <code>VidRAS</code> (video CAS phase); takes part in CAS pulse generation.</td>
+</tr>
+<tr>
+<td><code>A0_from_pad</code> (w310)</td>
+<td>pad <code>g653</code> (pin <code>A0</code>, bidir), output <code>from_pad</code></td>
+<td><code>io_inst.A0_from_pad</code></td>
+<td>External read-back of <code>A0</code> (the CPU addresses the ULA port with <code>A0=0</code>): the least significant address bit for <code>/IOREQ</code> decode.</td>
+</tr>
+<tr>
+<td><code>A14_from_pad</code> (w407)</td>
+<td>pad <code>g633</code> (pin <code>A14</code>), output <code>from_pad</code></td>
+<td><code>ras_cas_romcs_inst.A14</code>, <code>contention_inst.A14</code></td>
+<td>CPU address bit <code>A14</code>: with <code>A15</code>/<code>/MREQ</code> it selects RAM accesses <code>0x4000..0x7FFF</code> (RAS/contention) versus ROM.</td>
+</tr>
+<tr>
+<td><code>A15_from_pad</code> (w358)</td>
+<td>pad <code>g632</code> (pin <code>A15</code>), output <code>from_pad</code></td>
+<td><code>ras_cas_romcs_inst.A15</code>, <code>contention_inst.A15</code></td>
+<td>CPU address bit <code>A15</code>: participates in RAM/ROM decoding and in the contention arbiter.</td>
+</tr>
+<tr>
+<td><code>A0_to_pad</code> (w173)</td>
+<td><code>video_addr_gen_inst.A0_to_pad</code> (g593/g615..g617)</td>
+<td>pad <code>g653</code> (<code>A0</code>, input <code>to_pad</code>, <code>n_oe</code> = <code>nAE</code>)</td>
+<td>Video memory address bit 0 (row/col mux over the RAS/CAS phases). <code>A0</code> is a bidirectional pad: on CPU cycles the external bus drives it (<code>A0_from_pad</code>).</td>
+</tr>
+<tr>
+<td><code>A1_to_pad</code> (w191)</td>
+<td><code>video_addr_gen_inst.A1_to_pad</code> (g590..g592)</td>
+<td>pad <code>g654</code> (<code>A1</code>, input <code>to_pad</code>, <code>n_oe</code> = <code>nAE</code>)</td>
+<td>Video memory address bit 1 (row/col phases).</td>
+</tr>
+<tr>
+<td><code>A2_to_pad</code> (w327)</td>
+<td><code>video_addr_gen_inst.A2_to_pad</code> (g583..g586)</td>
+<td>pad <code>g655</code> (<code>A2</code>, input <code>to_pad</code>, <code>n_oe</code> = <code>nAE</code>)</td>
+<td>Video memory address bit 2.</td>
+</tr>
+<tr>
+<td><code>A3_to_pad</code> (w323)</td>
+<td><code>video_addr_gen_inst.A3_to_pad</code> (g588/g589/g618)</td>
+<td>pad <code>g656</code> (<code>A3</code>, input <code>to_pad</code>, <code>n_oe</code> = <code>nAE</code>)</td>
+<td>Video memory address bit 3.</td>
+</tr>
+<tr>
+<td><code>A4_to_pad</code> (w322)</td>
+<td><code>video_addr_gen_inst.A4_to_pad</code> (g557/g559/g587)</td>
+<td>pad <code>g657</code> (<code>A4</code>, input <code>to_pad</code>, <code>n_oe</code> = <code>nAE</code>)</td>
+<td>Video memory address bit 4.</td>
+</tr>
+<tr>
+<td><code>A5_to_pad</code> (w274)</td>
+<td><code>video_addr_gen_inst.A5_to_pad</code> (g560/g561)</td>
+<td>pad <code>g658</code> (<code>A5</code>, input <code>to_pad</code>, <code>n_oe</code> = <code>nAE</code>)</td>
+<td>Video memory address bit 5.</td>
+</tr>
+<tr>
+<td><code>A6_to_pad</code> (w275)</td>
+<td><code>video_addr_gen_inst.A6_to_pad</code> (g562/g555)</td>
+<td>pad <code>g659</code> (<code>A6</code>, input <code>to_pad</code>, <code>n_oe</code> = <code>nAE</code>)</td>
+<td>Video memory address bit 6.</td>
+</tr>
+<tr>
+<td><code>nAE</code></td>
+<td><code>address_enable_inst.nAE</code> (g661)</td>
+<td><code>n_oe</code> inputs of pads <code>g653..g659</code> (<code>A0..A6</code>)</td>
+<td>Address pad output enable (active low): <code>0</code> — the ULA drives the video address; <code>1</code> — pads in Z (the CPU owns the address bus). <code>nAE = Border | C3 | (C0·C1·C2)</code>.</td>
+</tr>
+<tr>
+<td><code>nRAS_to_pad</code> (w439)</td>
+<td><code>ras_cas_romcs_inst.nRAS_to_pad</code> (g390)</td>
+<td>pad <code>g634</code> (<code>/RAS</code>, input <code>to_pad</code>)</td>
+<td>DRAM <code>/RAS</code> strobe: video RAS (<code>VidRAS</code>) OR a CPU RAM access (<code>w242</code> = <code>A14·/A15·/MREQ</code>).</td>
+</tr>
+<tr>
+<td><code>nRAS_oe</code> (w438)</td>
+<td><code>ras_cas_romcs_inst.nRAS_oe</code> (g388)</td>
+<td>pad <code>g634</code> (<code>/RAS</code>, input <code>n_oe</code>)</td>
+<td>Output enable of the <code>/RAS</code> pad (tri-state): active when the ULA must drive RAS (RAM access outside the border).</td>
+</tr>
+<tr>
+<td><code>nCAS_to_pad</code> (w421)</td>
+<td><code>ras_cas_romcs_inst.nCAS_to_pad</code> (g476..g74)</td>
+<td>pad <code>g629</code> (<code>/CAS</code>, input <code>to_pad</code>)</td>
+<td>DRAM <code>/CAS</code> strobe (CAS decades over <code>VidCASPulse</code>, <code>C1</code>, <code>nVidC3</code> plus CPU cycles).</td>
+</tr>
+<tr>
+<td><code>nWE_to_pad</code> (w316)</td>
+<td><code>ras_cas_romcs_inst.nWE_to_pad</code> (g526/g87)</td>
+<td>pad <code>g626</code> (<code>/WE</code>, input <code>to_pad</code>)</td>
+<td>DRAM write strobe <code>/WE</code>: active on a CPU write to RAM (<code>w245·/WR</code>).</td>
+</tr>
+<tr>
+<td><code>nROMCS_to_pad</code> (w409)</td>
+<td><code>ras_cas_romcs_inst.nROMCS_to_pad</code> (g387/g39)</td>
+<td>pad <code>g635</code> (<code>/ROMCS</code>, input <code>to_pad</code>)</td>
+<td>ROM select: <code>0</code> when the CPU accesses <code>0x0000..0x3FFF</code> (<code>A15=A14=0</code>) — RAM is then not selected.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="bus-bit-reference">Bus bit reference</h2>
+<p>Every bus bit is a separate net; in brackets — its number in the flat netlist
+(<code>netlist/ula6c001.v</code>), from the comments in <code>hdl/ula6c001.v</code>:</p>
+<pre><code>C[8:0]  0=w338   1=w72    2=w208   3=w253   4=w113   5=w112   6=w17    7=w16    8=w31
+nC[8:0] 0=w336   1=w331   2=w234   3=w203   4=w227   5=w221   6=w70    7=w79    8=w78
+V[8:0]  0=w25    1=w86    2=w91    3=w279   4=w187   5=w179   6=w178   7=w272   8=w261
+nV[8:0] 0=w24    1=w140   2=w92    3=w293   4=w291   5=w286   6=w270   7=w269   8=w311
+nDL[7:0] 0=w479  1=w532   2=w596   3=w593   4=w524   5=w632   6=w501   7=w517   (nQ of the data_latch GDs)
+AL[7:0] 0=w506   1=w585   2=w575   3=w491   4=w527   5=w494   6=w550   7=w631   (AL6=HL, AL7=FL)
+AO[7:0] 0=w590   1=w624   2=w589   3=w558   4=w579   5=w564   6=HL(w14) 7=FL(w198)
+</code></pre>
+<h2 id="appendix-named-signals-inside-modules">Appendix. Named signals inside modules</h2>
+<p>Nets that never leave a module but have names (needed to read the waveforms and
+<code>icarus/ula.gtkw</code>; details — the appendix of <code>ula-modules.md</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Module (netlist net)</th>
+<th>From (inside)</th>
+<th>To (inside)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nVidEn</code></td>
+<td><code>latch_control</code> (w350)</td>
+<td>GD <code>viden_gd</code>, output <code>nQ</code></td>
+<td>gate <code>g443</code> (SLoad)</td>
+<td>Inversion of <code>VidEn</code>.</td>
+</tr>
+<tr>
+<td><code>nVidEn</code></td>
+<td><code>attr_latch</code> (w528)</td>
+<td>inverter of the <code>VidEn</code> input (<code>assign</code>)</td>
+<td><code>g309</code>/<code>g326</code> (HL/FL), <code>g310</code>, <code>g324</code>, <code>g340</code></td>
+<td>Local inversion of <code>VidEn</code> used to gate the attribute colour.</td>
+</tr>
+<tr>
+<td><code>al_6</code>, <code>al_7</code></td>
+<td><code>attr_latch</code> (w542, w543)</td>
+<td>GD <code>al[6]</code>, <code>al[7]</code> (Q: latched <code>D6</code>/<code>D7</code>)</td>
+<td><code>g34</code>/<code>g35</code> → <code>AL[6]</code>/<code>AL[7]</code></td>
+<td>Latched BRIGHT/FLASH attribute bits before the <code>VidEn</code> gating.</td>
+</tr>
+<tr>
+<td><code>nPortWR</code></td>
+<td><code>io</code></td>
+<td><code>g77</code> (<code>= ~w237</code>)</td>
+<td>GD <code>port</code> (nE)</td>
+<td>ULA port write strobe (active low): <code>/IOREQ</code>+<code>A0=0</code>+<code>/WR</code>, not in phase 2.</td>
+</tr>
+<tr>
+<td><code>nPortRD</code></td>
+<td><code>io</code></td>
+<td><code>g80</code> (<code>= ~w317</code>)</td>
+<td><code>g218</code> (KB0→<code>D0</code>), <code>g217</code> (KB1→<code>D1</code>), <code>g250</code> (KB2→<code>D2</code>), <code>g249</code> (KB3→<code>D3</code>), <code>g284</code> (KB4→<code>D4</code>), <code>g317</code> (EAR→<code>D6</code>)</td>
+<td>ULA port read strobe: drives the keyboard onto <code>D4..D0</code> and EAR onto <code>D6</code>.</td>
+</tr>
+<tr>
+<td><code>Speaker</code></td>
+<td><code>io</code> (w484)</td>
+<td>GD <code>port[4]</code> (Q)</td>
+<td><code>g38</code> → <code>nSpeaker</code></td>
+<td>Port register bit 4 (beeper), positive phase.</td>
+</tr>
+<tr>
+<td><code>Tape</code></td>
+<td><code>io</code> (w487)</td>
+<td>GD <code>port[3]</code> (Q)</td>
+<td><code>g37</code> → <code>nTape</code></td>
+<td>Port register bit 3 (MIC), positive phase.</td>
+</tr>
+<tr>
+<td><code>MREQT2</code></td>
+<td><code>contention</code> (w347)</td>
+<td>GD <code>mreq_gd</code> (nQ)</td>
+<td><code>g404</code></td>
+<td><code>/MREQ</code> latched by <code>CPUCLK</code> (phase-2 memory request).</td>
+</tr>
+<tr>
+<td><code>IOREQT2</code></td>
+<td><code>contention</code> (w426)</td>
+<td>GD <code>ioreq_gd</code> (nQ)</td>
+<td><code>g404</code>, <code>g405</code></td>
+<td>Inverted <code>/IOREQ</code> latch (positive copy for the arbiter logic).</td>
+</tr>
+<tr>
+<td><code>CPUCLK_internal</code></td>
+<td><code>contention</code> (w405)</td>
+<td><code>g43</code> (<code>= ~w414</code>)</td>
+<td>GD <code>mreq_gd</code>/<code>ioreq_gd</code> (nE), <code>g42</code></td>
+<td>CPU clock inside the arbiter (same logic as <code>CPUCLK</code>; fanned out to the latches).</td>
+</tr>
+<tr>
+<td><code>nCPUCLK_internal</code></td>
+<td><code>contention</code> (w404)</td>
+<td><code>g42</code> (<code>= ~CPUCLK_internal</code>)</td>
+<td><code>g404</code>, <code>g405</code></td>
+<td>Inversion of the internal clock for the arbiter logic.</td>
+</tr>
+</tbody>
+</table>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <p class="f-title">◫ ZX Spectrum ULA 6C001 <span class="f-sub">— Chip-level reverse engineering of the ZX Spectrum ULA 6C001: netlist recovery, module analysis, schematics and waveforms.</span></p>
+      <p class="f-links">
+        <a href="https://github.com/emu-russia/ula">GitHub · emu-russia/ula</a>
+        <a href="https://github.com/emu-russia/ula/issues">Issues</a>
+        <a href="https://github.com/emu-russia/ula/blob/main/LICENSE">License (MIT)</a>
+      </p>
+    </div>
+    <p class="srcnote">Source (markdown): <a href="https://github.com/emu-russia/ula/blob/main/ula-signals.en.md">specs/ula-signals.en.md</a></p>
+    <p class="f-gen">Generated from the <code>specs/</code> markdown sources by <code>tools/gen_docs_site.py</code>.</p>
+  </div>
+</footer>
+</body>
+</html>
