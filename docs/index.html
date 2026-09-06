@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>ZX Spectrum ULA 6C001 — documentation · ZX Spectrum ULA 6C001</title>
+<meta name="description" content="Chip-level reverse engineering of the ZX Spectrum ULA 6C001: netlist recovery, module analysis, schematics, waveforms.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23111'/%3E%3Crect x='3' y='3' width='3' height='10' fill='%23e5484d'/%3E%3Crect x='7' y='3' width='3' height='10' fill='%2330a46c'/%3E%3Crect x='11' y='3' width='2' height='10' fill='%233e63dd'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">◫ ZX Spectrum ULA 6C001</a>
+    <nav class="site-nav" aria-label="main">
+      <a href="ula-modules.html">ULA modules</a><a href="ula-signals.html">Internal signals</a><a href="pads.html">Pads</a><a href="topo.html">Topology</a><a href="hdl-vs-netlist-verification.html">Verification</a>
+      <a class="lang-switch" href="index.ru.html">Русский</a>
+      
+      <button class="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle color theme">
+        <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <article class="doc">
+<div class="hero-band">
+<h1>ZX Spectrum ULA 6C001</h1>
+<p class="lead">Chip-level reverse engineering: die photos → gate netlist → module analysis, schematics and waveforms.</p>
+</div>
+
+<p>The repository documents the reconstruction of the <strong>ZX Spectrum ULA 6C001</strong>
+(die revision <code>S-ULA6C001 6790-VII</code>) from die photographs. The recovered
+661-gate netlist was split into 19 modules and analysed gate by gate — with the
+module schematics, typical waveforms, a full internal-signal table and a
+gate-accurate simulator model.</p>
+
+<h2 id="docs">Documentation</h2>
+<div class="cards">
+  <a class="card" href="ula-modules.html">
+    <span class="card-t">ULA modules</span>
+    <span class="card-d">Every module of the recovered modular HDL
+      (<code>hdl/ula6c001.v</code>): purpose, gate analysis, schematic, typical
+      waveforms and the C++ model.</span>
+    <span class="card-b">issue #4</span>
+  </a>
+  <a class="card" href="ula-signals.html">
+    <span class="card-t">Internal signals</span>
+    <span class="card-d">The full signal table: name → where it comes from →
+      where it goes → description, for every net crossing a module/pad boundary.</span>
+    <span class="card-b">issue #10</span>
+  </a>
+  <a class="card" href="pads.html">
+    <span class="card-t">Chip pads</span>
+    <span class="card-d">All pads of the chip: direction, electrical type
+      (tri-state / open-collector / analog) and purpose.</span>
+  </a>
+  <a class="card" href="topo.html">
+    <span class="card-t">Topology notes</span>
+    <span class="card-d">Technology process, cell types and the routing grid of
+      the die (single metal layer m1).</span>
+  </a>
+  <a class="card" href="hdl-vs-netlist-verification.html">
+    <span class="card-t">HDL vs. netlist verification</span>
+    <span class="card-d">Structural and behavioural comparison of the high-level
+      HDL with the reference netlist (Icarus Verilog).</span>
+    <span class="card-b">issue #2</span>
+  </a>
+</div>
+
+<h2 id="chip">The chip at a glance</h2>
+<p>The annotated die photo below shows the recovered module placement:</p>
+<img class="hero" src="assets/ula6c001-annotated.jpg" alt="Annotated ULA 6C001 die photo with recovered module outlines">
+<ul class="facts">
+  <li><b>661 gates</b> in the flat netlist, decomposed into <b>19 modules</b></li>
+  <li>Board clock <code>OSC</code> = 14 MHz; video clock <code>nCLK7</code> = OSC ÷ 2 ≈ 7 MHz</li>
+  <li>Scanline = 448 <code>nCLK7</code> ticks (~64 µs); frame = 312 scanlines (~20 ms)</li>
+  <li>CPU clock <code>/PHICPU</code> = OSC ÷ 4, with DRAM access contention</li>
+  <li>Bipolar process, single metal layer (m1), logic + peripheral cells</li>
+  <li>Analog video output <code>U</code>, <code>V</code>, <code>/Y</code> straight from an on-chip DAC</li>
+</ul>
+
+<h2 id="modules">Recovered modules</h2>
+<p><code>clkgen · tclk · hcounter · vcounter · latch_control · data_latch ·
+attr_latch · ao_latch · pixel_shift_reg · flash_clock · flash_xnor ·
+color_mux · video_addr_gen · address_enable · ras_cas_romcs ·
+video_signal_features · dac_setup · io · contention</code></p>
+<p>See the <a href="ula-modules.html">ULA modules</a> page for the module-by-module
+breakdown.</p>
+
+<h2 id="datasets">Datasets</h2>
+<ul>
+  <li>Original die photographs were obtained from the Silicon Pr0n Discord;
+      the photos were taken by 4e71 and are used with the author's permission:
+      <a href="https://reversing.pl/storage/ZX_ULA.jpg">reversing.pl/storage/ZX_ULA.jpg</a>.</li>
+  <li>The source image was downscaled ×4 (topology does not need a high
+      resolution) and the masks were partially rebuilt to produce the master
+      image <code>ZX_ULA_sm.jpg</code> in <code>imgstore/</code> — mirror:
+      <a href="https://drive.google.com/file/d/1--3bO9DbVKPTjt3Om8gvpYQBYHB_Lc9T/view">Google Drive</a>.</li>
+</ul>
+
+<h2 id="process">Research workflow</h2>
+<ol>
+  <li>Source image (die photograph)</li>
+  <li>Vectorisation and identification of the primitive cells (<code>ulabase.v</code>)</li>
+  <li>Netlist extraction (Deroute)</li>
+  <li>Netlist export to Verilog (Deroute)</li>
+  <li>Netlist → chip schematic in a mainstream EDA (Xilinx PlanAhead)</li>
+  <li>Careful analysis; netlist split into sub-modules, signal naming; repeat from step 4 (optional)</li>
+</ol>
+
+<h2 id="repo">Repository layout</h2>
+<table>
+<thead><tr><th>Path</th><th>Content</th></tr></thead>
+<tbody>
+<tr><td><code>netlist/</code></td><td>flat reference netlist (<code>ula6c001.v</code>, 661 cells) + cell library <code>ulabase.v</code></td></tr>
+<tr><td><code>hdl/</code></td><td>the same gate set decomposed into 19 modules, plus the top schematic figure</td></tr>
+<tr><td><code>specs/</code></td><td>markdown sources of this site (modules, signals, pads, topology, verification report)</td></tr>
+<tr><td><code>docs/</code></td><td>this documentation site (GitHub Pages)</td></tr>
+<tr><td><code>imgstore/</code></td><td>images: die photos, module schematics, waveforms, pinout</td></tr>
+<tr><td><code>icarus/</code></td><td>Icarus Verilog testbenches and run scripts</td></tr>
+<tr><td><code>tools/</code></td><td>reproducible generators for the figures, waves and this site</td></tr>
+<tr><td><code>logisim/</code></td><td>Logisim evolution file</td></tr>
+<tr><td><code>ulasim.py</code></td><td>tick-by-tick gate-accurate simulator of the HDL</td></tr>
+</tbody>
+</table>
+
+<h2 id="status">Status</h2>
+<div class="callout warning">
+<p><strong>Attention!</strong> The module schematics and waveform pictures are
+essentially <strong>placeholders</strong> — the trustworthy information is in the
+text, gate tables and equations. Please read the warning on the
+<a href="ula-modules.html">ULA modules</a> page.</p>
+</div>
+
+<h2 id="refs">References</h2>
+<ul>
+  <li>Signal names follow Chris Smith's reverse engineering: <a href="http://www.zxdesign.info/schematics.shtml">zxdesign.info</a></li>
+  <li>"Display for a computer" — patent EP0107687B1 (Richard Francis Altwasser): <a href="https://patents.google.com/patent/EP0107687B1">Google Patents</a></li>
+</ul>
+
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <p class="f-title">◫ ZX Spectrum ULA 6C001 <span class="f-sub">— Chip-level reverse engineering of the ZX Spectrum ULA 6C001: netlist recovery, module analysis, schematics and waveforms.</span></p>
+      <p class="f-links">
+        <a href="https://github.com/emu-russia/ula">GitHub · emu-russia/ula</a>
+        <a href="https://github.com/emu-russia/ula/issues">Issues</a>
+        <a href="https://github.com/emu-russia/ula/blob/main/LICENSE">License (MIT)</a>
+      </p>
+    </div>
+    
+    <p class="f-gen">Generated from the <code>specs/</code> markdown sources by <code>tools/gen_docs_site.py</code>.</p>
+  </div>
+</footer>
+</body>
+</html>

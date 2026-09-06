@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>ZX Spectrum ULA 6C001 — документация · ZX Spectrum ULA 6C001</title>
+<meta name="description" content="Реверс-инжиниринг ZX Spectrum ULA 6C001 на уровне кристалла: восстановление нетлиста, разбор модулей, схемы и осциллограммы.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23111'/%3E%3Crect x='3' y='3' width='3' height='10' fill='%23e5484d'/%3E%3Crect x='7' y='3' width='3' height='10' fill='%2330a46c'/%3E%3Crect x='11' y='3' width='2' height='10' fill='%233e63dd'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.ru.html">◫ ZX Spectrum ULA 6C001</a>
+    <nav class="site-nav" aria-label="main">
+      <a href="ula-modules.ru.html">Модули ULA</a><a href="ula-signals.ru.html">Внутренние сигналы</a><a href="pads.ru.html">Пады</a><a href="topo.ru.html">Топология</a><a href="hdl-vs-netlist-verification.html">Верификация (EN)</a>
+      <a class="lang-switch" href="index.html">English</a>
+      
+      <button class="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle color theme">
+        <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <article class="doc">
+<div class="hero-band">
+<h1>ZX Spectrum ULA 6C001</h1>
+<p class="lead">Реверс-инжиниринг на уровне кристалла: фото кристалла → нетлист вентилей → разбор модулей, схемы и осциллограммы.</p>
+</div>
+
+<p>В репозитории задокументирована реконструкция <strong>ZX Spectrum ULA 6C001</strong>
+(ревизия кристалла <code>S-ULA6C001 6790-VII</code>) по фотографиям кристалла.
+Восстановленный нетлист из 661 вентиля разобран на 19 модулей и проанализирован
+погейтово — со схемами модулей, типовыми осциллограммами, полной таблицей
+внутренних сигналов и погонной моделью-симулятором.</p>
+
+<h2 id="docs">Документация</h2>
+<div class="cards">
+  <a class="card" href="ula-modules.ru.html">
+    <span class="card-t">Модули ULA</span>
+    <span class="card-d">Каждый модуль восстановленного модульного HDL
+      (<code>hdl/ula6c001.v</code>): назначение, анализ вентилей, схема, типовые
+      осциллограммы и модель на C++.</span>
+    <span class="card-b">задача #4</span>
+  </a>
+  <a class="card" href="ula-signals.ru.html">
+    <span class="card-t">Внутренние сигналы</span>
+    <span class="card-d">Полная таблица сигналов: название → откуда приходит →
+      куда уходит → описание, для каждой сети, пересекающей границу модуля/пада.</span>
+    <span class="card-b">задача #10</span>
+  </a>
+  <a class="card" href="pads.ru.html">
+    <span class="card-t">Пады</span>
+    <span class="card-d">Все пады чипа: направление, электрический тип
+      (tri-state / open-collector / аналоговые) и назначение.</span>
+  </a>
+  <a class="card" href="topo.ru.html">
+    <span class="card-t">Заметки по топологии</span>
+    <span class="card-d">Техпроцесс, типы ячеек и сетка трассировки кристалла
+      (один слой металла m1).</span>
+  </a>
+  <a class="card" href="hdl-vs-netlist-verification.html">
+    <span class="card-t">Верификация HDL vs. нетлист</span>
+    <span class="card-d">Структурное и поведенческое сравнение HDL верхнего уровня
+      с эталонным нетлистом (Icarus Verilog).</span>
+    <span class="card-b">задача #2</span>
+  </a>
+</div>
+
+<h2 id="chip">Кристалл в двух словах</h2>
+<p>На аннотированном фото ниже показано размещение восстановленных модулей:</p>
+<img class="hero" src="assets/ula6c001-annotated.jpg" alt="Аннотированное фото кристалла ULA 6C001 с границами модулей">
+<ul class="facts">
+  <li><b>661 вентиль</b> в плоском нетлисте, разбит на <b>19 модулей</b></li>
+  <li>Тактовая на плате <code>OSC</code> = 14 МГц; видеоклок <code>nCLK7</code> = OSC ÷ 2 ≈ 7 МГц</li>
+  <li>Строка = 448 тактов <code>nCLK7</code> (~64 мкс); кадр = 312 строк (~20 мс)</li>
+  <li>Клок процессора <code>/PHICPU</code> = OSC ÷ 4, с контеншном обращений к DRAM</li>
+  <li>Биполярный техпроцесс, один слой металла (m1), логические и периферийные ячейки</li>
+  <li>Аналоговый видеовыход <code>U</code>, <code>V</code>, <code>/Y</code> напрямую со встроенного ЦАП</li>
+</ul>
+
+<h2 id="modules">Восстановленные модули</h2>
+<p><code>clkgen · tclk · hcounter · vcounter · latch_control · data_latch ·
+attr_latch · ao_latch · pixel_shift_reg · flash_clock · flash_xnor ·
+color_mux · video_addr_gen · address_enable · ras_cas_romcs ·
+video_signal_features · dac_setup · io · contention</code></p>
+<p>Подробный разбор по модулям — на странице <a href="ula-modules.ru.html">Модули ULA</a>.</p>
+
+<h2 id="datasets">Датасеты</h2>
+<ul>
+  <li>Оригинальные датасеты получены из дискорда Silicon Pr0n; фотографии сделаны
+      4e71 и используются с разрешения автора:
+      <a href="https://reversing.pl/storage/ZX_ULA.jpg">reversing.pl/storage/ZX_ULA.jpg</a>.</li>
+  <li>Исходное изображение уменьшено в 4 раза (топология не требует большого
+      разрешения), маски частично восстановлены — получился мастер-файл
+      <code>ZX_ULA_sm.jpg</code> в <code>imgstore/</code>; зеркало:
+      <a href="https://drive.google.com/file/d/1--3bO9DbVKPTjt3Om8gvpYQBYHB_Lc9T/view">Google Drive</a>.</li>
+</ul>
+
+<h2 id="process">Процесс исследования</h2>
+<ol>
+  <li>Исходное изображение (фото кристалла)</li>
+  <li>Векторизация и определение базовых элементов (<code>ulabase.v</code>)</li>
+  <li>Получение нетлиста (утилита Deroute)</li>
+  <li>Экспорт нетлиста в верилог (утилита Deroute)</li>
+  <li>Получение схемы чипа в популярной EDA (Xilinx PlanAhead)</li>
+  <li>Вдумчивый анализ; дробление нетлиста на под-модули, называние сигналов; при
+      необходимости повторить с п. 4</li>
+</ol>
+
+<h2 id="repo">Структура репозитория</h2>
+<table>
+<thead><tr><th>Путь</th><th>Содержимое</th></tr></thead>
+<tbody>
+<tr><td><code>netlist/</code></td><td>плоский эталонный нетлист (<code>ula6c001.v</code>, 661 ячейка) + библиотека ячеек <code>ulabase.v</code></td></tr>
+<tr><td><code>hdl/</code></td><td>тот же набор вентилей, разбитый на 19 модулей; рисунок схемы верхнего уровня</td></tr>
+<tr><td><code>specs/</code></td><td>маркдаун-исходники этого сайта (модули, сигналы, пады, топология, отчёт по верификации)</td></tr>
+<tr><td><code>docs/</code></td><td>этот сайт документации (GitHub Pages)</td></tr>
+<tr><td><code>imgstore/</code></td><td>изображения: фото кристалла, схемы модулей, осциллограммы, цоколёвка</td></tr>
+<tr><td><code>icarus/</code></td><td>тестбенчи и скрипты запуска Icarus Verilog</td></tr>
+<tr><td><code>tools/</code></td><td>воспроизводимые генераторы рисунков, осциллограмм и этого сайта</td></tr>
+<tr><td><code>logisim/</code></td><td>эволюционный файл Logisim</td></tr>
+<tr><td><code>ulasim.py</code></td><td>погонный симулятор HDL с вентильной точностью</td></tr>
+</tbody>
+</table>
+
+<h2 id="status">Статус</h2>
+<div class="callout warning">
+<p><strong>Внимание!</strong> Схемы модулей и картинки осциллограмм — по сути
+<strong>плейсхолдеры</strong>; достоверная информация — в тексте, таблицах вентилей
+и уравнениях. Подробное предупреждение — на странице <a href="ula-modules.ru.html">Модули ULA</a>.</p>
+</div>
+
+<h2 id="refs">Ссылки</h2>
+<ul>
+  <li>Названия сигналов из реверса Chris Smith: <a href="http://www.zxdesign.info/schematics.shtml">zxdesign.info</a></li>
+  <li>"Display for a computer" — патент EP0107687B1 (Richard Francis Altwasser): <a href="https://patents.google.com/patent/EP0107687B1">Google Patents</a></li>
+</ul>
+
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <p class="f-title">◫ ZX Spectrum ULA 6C001 <span class="f-sub">— Реверс-инжиниринг ZX Spectrum ULA 6C001 на уровне кристалла: восстановление нетлиста, разбор модулей, схемы и осциллограммы.</span></p>
+      <p class="f-links">
+        <a href="https://github.com/emu-russia/ula">GitHub · emu-russia/ula</a>
+        <a href="https://github.com/emu-russia/ula/issues">Issues</a>
+        <a href="https://github.com/emu-russia/ula/blob/main/LICENSE">License (MIT)</a>
+      </p>
+    </div>
+    
+    <p class="f-gen">Generated from the <code>specs/</code> markdown sources by <code>tools/gen_docs_site.py</code>.</p>
+  </div>
+</footer>
+</body>
+</html>

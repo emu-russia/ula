@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>HDL vs. netlist verification · ZX Spectrum ULA 6C001</title>
+<meta name="description" content="Report (issue #2): structural and behavioural comparison of the high-level HDL and the reference netlist of the ULA 6C001 with Icarus Verilog.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23111'/%3E%3Crect x='3' y='3' width='3' height='10' fill='%23e5484d'/%3E%3Crect x='7' y='3' width='3' height='10' fill='%2330a46c'/%3E%3Crect x='11' y='3' width='2' height='10' fill='%233e63dd'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">◫ ZX Spectrum ULA 6C001</a>
+    <nav class="site-nav" aria-label="main">
+      <a href="ula-modules.html">ULA modules</a><a href="ula-signals.html">Internal signals</a><a href="pads.html">Pads</a><a href="topo.html">Topology</a><a class="active" href="hdl-vs-netlist-verification.html">Verification</a>
+      
+      
+      <button class="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle color theme">
+        <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <article class="doc">
+<h1 id="hdl-vs-netlist-verification-issue-2">HDL vs. Netlist Verification (issue #2)</h1>
+<p>Scope: check the high-level <code>hdl/</code> implementation of the ZX Spectrum ULA 6C001
+against the reference structural netlist in <code>netlist/</code> using Icarus Verilog,
+fix discrepancies, and report in English.</p>
+<h2 id="1-design-structure">1. Design structure</h2>
+<ul>
+<li><code>netlist/ula6c001.v</code> — a single flat module <code>ula</code> (661 primitive cells from
+  <code>netlist/ulabase.v</code>). Cells are named <code>g1..g661</code>; nets keep their annotated
+  layout numbers <code>wNNN</code>.</li>
+<li><code>hdl/ula6c001.v</code> — the same physical gate set decomposed into 19 submodules
+  (<code>clkgen</code>, <code>hcounter</code>, <code>vcounter</code>, <code>tclk</code>, <code>latch_control</code>, <code>data_latch</code>,
+  <code>attr_latch</code>, <code>ao_latch</code>, <code>pixel_shift_reg</code>, <code>flash_clock</code>, <code>flash_xnor</code>,
+  <code>color_mux</code>, <code>video_addr_gen</code>, <code>address_enable</code>, <code>ras_cas_romcs</code>,
+  <code>video_signal_features</code>, <code>dac_setup</code>, <code>io</code>, <code>contention</code>) plus a top <code>ula</code>.
+  RS-latch based storage (data/attr/ao latches, border/IO/contention latches)
+  is promoted to a latch primitive <code>GD</code> (<code>hdl/ulabase.v</code>).</li>
+<li>Gate numbers and wire numbers (<code>wNNN</code>) are preserved 1:1 between the two
+  implementations, which makes a structural diff meaningful.</li>
+</ul>
+<h2 id="2-structural-equivalence-static-check">2. Structural equivalence (static check)</h2>
+<p>For every gate that exists in both files:</p>
+<ul>
+<li>the cell type is identical (<code>ula_not</code>, <code>ula_nor*</code>), and</li>
+<li>every connected net is identical after aliasing known renames
+  (<code>C[i]↔w…</code>, <code>nC[i]↔w…</code>, <code>V[i]↔w…</code>, <code>nV[i]↔w…</code>, <code>nCLK7↔w380</code>, …).</li>
+</ul>
+<p>Results:</p>
+<table>
+<thead>
+<tr>
+<th>set</th>
+<th>count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>gates present in both designs</td>
+<td>519</td>
+</tr>
+<tr>
+<td>gates present only in the netlist</td>
+<td>142</td>
+</tr>
+<tr>
+<td>gates present only in the HDL</td>
+<td>0</td>
+</tr>
+<tr>
+<td>port-level net differences among common gates</td>
+<td>6</td>
+</tr>
+</tbody>
+</table>
+<p>The 6 differences are aliases of the same physical nets:</p>
+<ul>
+<li><code>g309/g310/g324/g326/g340</code>: HDL port <code>nVidEn</code> == netlist net <code>w528</code>
+  (the video-enable complement, driven by the <code>viden_gd</code> latch);</li>
+<li><code>g51</code>: HDL <code>nDataLatch</code> == netlist net <code>w447</code>.</li>
+</ul>
+<p>The 142 netlist-only gates are exactly the RS-flip-flop implementations of
+the storage that the HDL implements with the <code>GD</code> latch primitive
+(data latch, attribute latch, attribute/object latch, border/video-enable
+latch, IO port latch, MREQ/IOREQ latches in <code>contention</code>). Their semantics
+therefore have to be compared by simulation rather than structurally.</p>
+<p>Conclusion: at gate level the HDL matches the netlist; the counters
+(<code>hcounter</code>, <code>vcounter</code> — the area the issue flags as the most risky because
+the bit cells are spread around the die) contain identical gates with
+identical wiring.</p>
+<h2 id="3-simulation-environment-and-tool-quirks">3. Simulation environment and tool quirks</h2>
+<p>Two Icarus builds were used:</p>
+<ol>
+<li>Ubuntu 26.04 packaged <code>iverilog 12.0</code> — not usable here: <code>vvp</code> spins at
+   100 % CPU on several harmless compile sets (any cell library whose
+   <code>ula_nor</code> module contains <code>===</code> or an <code>always</code> block while module
+   definitions that reference the cell are not directly instantiated at the
+   root).</li>
+<li><code>iverilog 14.0</code> built from source — healthy for single-model runs, but it
+   still hangs when a full netlist and a full HDL are co-elaborated in one
+   testbench with wide hierarchical probing of gate outputs
+   (the hang appears at the first clock edge, both with and without the
+   probe logic, and is not yet pinned to a single construct).</li>
+</ol>
+<p>These are tool-side defects of the simulator/compiler, not design bugs, but
+they determine which verification strategy is feasible in this environment
+(separate elaborations, section 5).</p>
+<h2 id="4-behaviour-of-the-two-models-under-icarus">4. Behaviour of the two models under Icarus</h2>
+<h3 id="41-netlist-reference">4.1 Netlist (reference)</h3>
+<p>Runs and produces activity under <code>icarus/run_ula.v</code> and longer variants
+(<code>n_RAS</code>/<code>n_CAS</code> pulses, address-bus toggling, CPU-clock toggling). It relies
+on a deliberate modelling choice in <code>netlist/ulabase.v</code>: the 2-input NOR
+(<code>ula_nor</code>) is behavioural,</p>
+<pre><code class="language-verilog">always @(a or b)
+  if (a == 1'b0 &amp;&amp; b == 1'b0) x = 1'b1; else x = 1'b0;
+</code></pre>
+<p>i.e. an unknown (<code>x</code>) input is treated as <code>1</code>. This makes the many RS-latch
+loops (counter bit cells, clock generator, latches) settle deterministically
+at the first clock edge instead of staying <code>x</code> forever.</p>
+<h3 id="42-hdl-as-committed">4.2 HDL (as committed)</h3>
+<p>Does <strong>not</strong> run: all probed outputs stay <code>x</code> for the whole simulation
+(verified in VCD and by in-cycle sampling). Cause: <code>hdl/ulabase.v</code>
+implements the same 2-input NOR with a plain Verilog primitive <code>nor</code>
+(unknown → unknown), so the latch loops never resolve from their power-on
+<code>x</code> state. The <code>GD</code> primitives are fine (<code>initial val = 0</code>), but the
+counters, the <code>clkgen</code> divider, the flash counter, the pixel shift register
+and the <code>Timing</code> latch are still raw gate loops. The effect is already
+visible with the repo's own <code>icarus/run_ula_hdl.v</code>: nothing toggles.</p>
+<p>This is the single most important defect to fix before the HDL can be
+validated or fixed at all (section 5).</p>
+<h3 id="43-hdl-consistent-x0-cell-semantics-experiments">4.3 HDL + consistent X→0 cell semantics (experiments)</h3>
+<p>Replacing the HDL <code>ula_nor</code> body with the same X→0 semantics as the netlist
+(behavioural <code>always</code>, or a UDP truth table — both run on Icarus 14 from
+source; <code>===</code>-based encodings hang the tool and must be avoided) makes the
+HDL model simulate without hanging and clears the <code>x</code> state, but under the
+idle "ULA in vacuum" stimulus the first sampled probes still differ from the
+netlist in level on several nets (e.g. sampled <code>C0</code>, <code>nCLK7</code>, <code>nRAS</code>), and
+the HDL does not show the netlist's RAS-pulse pattern. Whether these are
+startup-phase artifacts or real logic differences cannot be decided with the
+current minimal stimulus and co-simulation hangs; a proper comparison needs
+the strategy of section 5 with a richer stimulus (deterministic CPU bus
+accesses) or an Icarus build that can co-elaborate the two designs.</p>
+<h2 id="5-recommended-verification-strategy-given-the-tool-bugs-above">5. Recommended verification strategy (given the tool bugs above)</h2>
+<p>Co-elaborating netlist + HDL in one testbench and comparing 500+ hierarchical
+nets is not reliable with the available Icarus builds (vvp spins). The robust
+approach is two <strong>separate simulations</strong> with identical stimulus that both
+log the same semantic probe set at each OSC edge, followed by an offline
+diff:</p>
+<ol>
+<li>Drive both models identically (free-running OSC; identical deterministic
+   CPU access sequences generated by the same code, so that bus conflicts and
+   DRAM contents match).</li>
+<li>Log, per OSC edge, the same net list on both sides:
+   - all pads;
+   - <code>C[8:0]</code>/<code>V[8:0]</code> (netlist: <code>g454…</code>, HDL: <code>C</code>/<code>V</code> vectors);
+   - latch outputs (<code>nDL</code>, <code>AL</code>, <code>AO</code>, <code>VidEn</code>, <code>Border</code>, <code>B0_B/B1_R/B2_G</code>,
+     <code>nSpeaker</code>, <code>nTape</code>, <code>nIOREQT2</code>, …);
+   - every one of the 519 common gates.</li>
+<li>Diff offline. Because the HDL and netlist may power up in different
+   counter phases, either skip the first line and compare from the first
+   common H-counter wrap (wraps align from the second line because both
+   counters have the same period), or force the same startup state by
+   initialising all sequential elements to 0 (as instructed for this issue);
+   the logs can then be compared 1:1.</li>
+</ol>
+<h2 id="6-concrete-file-level-changes-still-to-be-made">6. Concrete file-level changes still to be made</h2>
+<ol>
+<li><code>hdl/ulabase.v</code>: give <code>ula_nor</code> the same X→0 semantics as
+   <code>netlist/ulabase.v</code> (behavioural or UDP), so the HDL model is runnable.</li>
+<li>Re-run the netlist-vs-HDL comparison of section 5 and fix any real logic
+   differences it exposes (H/V counters first).</li>
+<li>Extend <code>icarus/run_ula_hdl.v</code> with the semantic probe list so its VCD can
+   be diffed against the <code>run_ula.v</code> output.</li>
+</ol>
+<p>Items 2–3 could not be completed in this environment because of the Icarus
+hangs described in section 3; they need an Icarus build that elaborates the
+two designs side by side, or the offline two-simulation comparison of
+section 5.</p>
+<h2 id="7-scratch-material">7. Scratch material</h2>
+<ul>
+<li><code>build/co/*</code> — renamed netlist copies (<code>ula_net</code>), probe-row generator and
+  co-simulation harnesses;</li>
+<li><code>/tmp/ivl-new</code> — Icarus 14 built from source (used for the runs that
+  completed).</li>
+</ul>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <p class="f-title">◫ ZX Spectrum ULA 6C001 <span class="f-sub">— Chip-level reverse engineering of the ZX Spectrum ULA 6C001: netlist recovery, module analysis, schematics and waveforms.</span></p>
+      <p class="f-links">
+        <a href="https://github.com/emu-russia/ula">GitHub · emu-russia/ula</a>
+        <a href="https://github.com/emu-russia/ula/issues">Issues</a>
+        <a href="https://github.com/emu-russia/ula/blob/main/LICENSE">License (MIT)</a>
+      </p>
+    </div>
+    <p class="srcnote">Source (markdown): <a href="https://github.com/emu-russia/ula/blob/main/hdl-vs-netlist-verification.md">specs/hdl-vs-netlist-verification.md</a></p>
+    <p class="f-gen">Generated from the <code>specs/</code> markdown sources by <code>tools/gen_docs_site.py</code>.</p>
+  </div>
+</footer>
+</body>
+</html>

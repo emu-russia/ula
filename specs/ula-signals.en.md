@@ -21,7 +21,7 @@ bus, but their bits are separate nets of the flat netlist
 section (“Bus bit reference”).
 
 Unnamed intra-module nets (`wNNN`) are not listed: they are covered by the
-module sections (`docs/ula-modules.md`) and by the flat netlist. Named signals
+module sections (`specs/ula-modules.md`) and by the flat netlist. Named signals
 living *inside* modules (`nVidEn`, `nPortRD`, …) are collected in an appendix
 at the end.
 

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Заметки по топологии · ZX Spectrum ULA 6C001</title>
+<meta name="description" content="Заметки по топологии кристалла ULA 6C001: техпроцесс, типы ячеек, сетка трассировки.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23111'/%3E%3Crect x='3' y='3' width='3' height='10' fill='%23e5484d'/%3E%3Crect x='7' y='3' width='3' height='10' fill='%2330a46c'/%3E%3Crect x='11' y='3' width='2' height='10' fill='%233e63dd'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.ru.html">◫ ZX Spectrum ULA 6C001</a>
+    <nav class="site-nav" aria-label="main">
+      <a href="ula-modules.ru.html">Модули ULA</a><a href="ula-signals.ru.html">Внутренние сигналы</a><a href="pads.ru.html">Пады</a><a class="active" href="topo.ru.html">Топология</a><a href="hdl-vs-netlist-verification.html">Верификация (EN)</a>
+      <a class="lang-switch" href="topo.html">English</a>
+      
+      <button class="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle color theme">
+        <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <article class="doc">
+<h1 id="заметки-по-топологии">Заметки по топологии</h1>
+<p>Технологический процесс:</p>
+<ul>
+<li>Биполярные транзисторы</li>
+<li>Один слой металла (m1)</li>
+<li>Всего 2 типа ячеек: логические (реализуют базовые вентили not, nor) и периферические (для терминалов).</li>
+</ul>
+<h2 id="мировые-линии-сетка">Мировые линии (сетка)</h2>
+<p>Соединения между ячейками выполняются только одним слоем металла (м1). Используемая EDA распологала все "узлы" по сетке:</p>
+<p><img alt="cell1" src="imgstore/cell1.png" /> <img loading="lazy" alt="cell2" src="imgstore/cell2.png" /></p>
+<p>Для поиска пути (router) по вакантным узлам скорее всего использовался алгоритм AStar или Дейкстры.</p>
+<p>Некоторые провода могли перескакивать узлы по диагонали.</p>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <p class="f-title">◫ ZX Spectrum ULA 6C001 <span class="f-sub">— Реверс-инжиниринг ZX Spectrum ULA 6C001 на уровне кристалла: восстановление нетлиста, разбор модулей, схемы и осциллограммы.</span></p>
+      <p class="f-links">
+        <a href="https://github.com/emu-russia/ula">GitHub · emu-russia/ula</a>
+        <a href="https://github.com/emu-russia/ula/issues">Issues</a>
+        <a href="https://github.com/emu-russia/ula/blob/main/LICENSE">License (MIT)</a>
+      </p>
+    </div>
+    <p class="srcnote">Исходник (markdown): <a href="https://github.com/emu-russia/ula/blob/main/topo.md">specs/topo.md</a></p>
+    <p class="f-gen">Generated from the <code>specs/</code> markdown sources by <code>tools/gen_docs_site.py</code>.</p>
+  </div>
+</footer>
+</body>
+</html>

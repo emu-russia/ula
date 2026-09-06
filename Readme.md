@@ -20,19 +20,26 @@
 5. Получение схемы чипа в популярной EDA (Xilinx PlanAhead, грузим верилог она сама рисует схему)
 6. Вдумчивый анализ, дробление нетлиста на под-модули, названия сигналов, повторить с пункта 4 (необязательно)
 
+## Документация (issue #12)
+
+Собранная документация (GitHub Pages) — в [docs/index.html](/docs/index.html):
+лендинг по умолчанию на английском (+ русская версия), страницы по модулям,
+сигналам, падам, топологии и верификации. Исходники страниц — markdown в
+`specs/`; сайт пересобирается скриптом [tools/gen_docs_site.py](/tools/gen_docs_site.py).
+
 ## Описание модулей (issue #4)
 
 Разбор всех 19 модулей ULA (назначение, анализ вентилей, схемы, типовые
-waves, модельный C++) лежит в [docs/ula-modules.md](/docs/ula-modules.md),
+waves, модельный C++) лежит в [specs/ula-modules.md](/specs/ula-modules.md),
 а погонный вентильный симулятор HDL — в [ulasim.py](/ulasim.py)
 (запуск: `python3 ulasim.py` → `ula_waves.vcd` с типичным набором сигналов).
 
 ## Таблица сигналов (issue #10)
 
 Таблица всех внутренних сигналов ULA (название → откуда → куда → описание) —
-в [docs/ula-signals.md](/docs/ula-signals.md)
-(English: [ula-signals.en.md](/docs/ula-signals.en.md)); ссылка из раздела
-схем дана в [ula-modules.md](/docs/ula-modules.md).
+в [specs/ula-signals.md](/specs/ula-signals.md)
+(English: [ula-signals.en.md](/specs/ula-signals.en.md)); ссылка из раздела
+схем дана в [specs/ula-modules.md](/specs/ula-modules.md).
 
 ## Дробление схемы полученной из нетлиста обратно на модули
 
