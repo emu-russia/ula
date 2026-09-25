@@ -34,6 +34,14 @@ waves, модельный C++) лежит в [specs/ula-modules.md](/specs/ula-m
 а погонный вентильный симулятор HDL — в [ulasim.py](/ulasim.py)
 (запуск: `python3 ulasim.py` → `ula_waves.vcd` с типичным набором сигналов).
 
+Схемы модулей (`imgstore/schematics/s_*.png`) рисуются скриптом
+[tools/gen_schematics_gates.py](/tools/gen_schematics_gates.py)
+(`python3 tools/gen_schematics_gates.py [модуль ...]`): вентили — стандартные
+ANSI-символы NOT/AND/NAND/OR/NOR, связи — ортогональные, точно в выводы
+элементов, под каждым элементом подписаны тип и имя (`nor3 g426`).
+Раскладка и трассировка — в [tools/schem_layout.py](/tools/schem_layout.py)
+(чистый Python, Graphviz не нужен; для PNG требуется `cairosvg`).
+
 ## Последовательностные элементы (issue #7)
 
 Все триггероподобные блоки нетлиста — защёлки `GD`, ячейки-делители `FD`,
