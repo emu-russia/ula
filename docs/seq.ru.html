@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Последовательностные элементы ULA 6C001 · ZX Spectrum ULA 6C001</title>
+<meta name="description" content="Все триггероподобные блоки восстановленного нетлиста ULA 6C001 (issue #7): защёлки GD, ячейки-делители FD, счётные ячейки TCE/TRCE/TRC, сдвиговый регистр и арбитр contention — с вырезками из аннотированного нетлиста.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23111'/%3E%3Crect x='3' y='3' width='3' height='10' fill='%23e5484d'/%3E%3Crect x='7' y='3' width='3' height='10' fill='%2330a46c'/%3E%3Crect x='11' y='3' width='2' height='10' fill='%233e63dd'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.ru.html">◫ ZX Spectrum ULA 6C001</a>
+    <nav class="site-nav" aria-label="main">
+      <a href="ula-modules.ru.html">Модули ULA</a><a class="active" href="seq.ru.html">Последовательностные элементы</a><a href="ula-signals.ru.html">Внутренние сигналы</a><a href="pads.ru.html">Пады</a><a href="topo.ru.html">Топология</a><a href="hdl-vs-netlist-verification.html">Верификация (EN)</a>
+      <a class="lang-switch" href="seq.html">English</a>
+      
+      <button class="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle color theme">
+        <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <article class="doc">
+<h1 id="последовательностные-элементы-issue-7">Последовательностные элементы (issue #7)</h1>
+<details class="page-toc"><summary>Содержание</summary><ul>
+<li><a href="#1-как-в-ula-устроен-триггер">1. Как в ULA устроен триггер</a></li>
+<li><a href="#2-обозначения-на-аннотированном-нетлисте">2. Обозначения на аннотированном нетлисте</a></li>
+<li><a href="#3-gd-защёлка-39-кластеров">3. GD — защёлка (39 кластеров)</a></li>
+<li><a href="#4-fd-счётный-d-триггер-12-кластеров">4. FD — счётный D-триггер (12 кластеров)</a></li>
+<li><a href="#5-tce-счётная-ячейка-v-счётчика-3-кластера">5. TCE — счётная ячейка V-счётчика (3 кластера)</a></li>
+<li><a href="#6-trce-биты-38-v-счётчика-1-кластер-59-вентилей">6. TRCE — биты 3..8 V-счётчика (1 кластер, 59 вентилей)</a></li>
+<li><a href="#7-trc-биты-68-h-счётчика-1-кластер-25-вентилей">7. TRC? — биты 6..8 H-счётчика (1 кластер, 25 вентилей)</a></li>
+<li><a href="#8-sr-сдвиговый-регистр-пикселей-8-кластеров">8. SR — сдвиговый регистр пикселей (8 кластеров)</a></li>
+<li><a href="#9-арбитр-contention">9. Арбитр contention</a></li>
+<li><a href="#10-полный-список-кластеров">10. Полный список кластеров</a><ul>
+<li><a href="#сводка-по-типам">Сводка по типам</a></li>
+<li><a href="#clkgen">clkgen</a></li>
+<li><a href="#hcounter">hcounter</a></li>
+<li><a href="#vcounter">vcounter</a></li>
+<li><a href="#data_latch-attr_latch-ao_latch">data_latch, attr_latch, ao_latch</a></li>
+<li><a href="#io">io</a></li>
+<li><a href="#latch_control">latch_control</a></li>
+<li><a href="#pixel_shift_reg">pixel_shift_reg</a></li>
+<li><a href="#flash_clock">flash_clock</a></li>
+<li><a href="#video_signal_features">video_signal_features</a></li>
+<li><a href="#contention">contention</a></li>
+</ul>
+</li>
+<li><a href="#11-vcounter-что-подтвердилось-а-что-нет">11. VCounter: что подтвердилось, а что нет</a></li>
+<li><a href="#12-что-осталось-сделать-по-issue-7">12. Что осталось сделать по issue #7</a></li>
+<li><a href="#13-как-пересобрать-картинки">13. Как пересобрать картинки</a></li>
+</ul></details>
+<p>Задача issue #7: найти в модульном HDL <strong>все</strong> триггеры и оформить их отдельными
+модулями. Сейчас модульный HDL «валится на иксах» именно потому, что в примитивы
+свёрнуты только защёлки <code>GD</code>, а счётчики, сдвиговый регистр, делитель FLASH и
+разные спорадические RS-защёлки остались закольцованными NOR прямо в тексте
+модулей (см. <a href="/specs/hdl-vs-netlist-verification.md">specs/hdl-vs-netlist-verification.md</a>, раздел 4.2).</p>
+<p>Этот раздел — инвентаризация: <strong>что именно</strong> в нетлисте является
+последовательностной логикой, как оно устроено на вентилях и как помечено на
+аннотированном нетлисте. Картинки вырезаны из
+<code>imgstore/ula6c001_annotated.png</code> скриптом
+<a href="/tools/gen_seq_crops.py">tools/gen_seq_crops.py</a> (геометрия вентилей берётся из
+векторного <code>design/ula6c001.pdf</code>, кластеры считаются по нетлисту — см. раздел 13).</p>
+<h2 id="1-как-в-ula-устроен-триггер">1. Как в ULA устроен триггер</h2>
+<p>Базовый кирпич — <strong>RS-защёлка из двух закольцованных NOR</strong> (единственный вид
+памяти в этом чипе; D-триггеры и счётные ячейки собраны из таких защёлок и
+обвязки). Формально это сильно связная компонента графа вентилей размером 2:
+выход каждой NOR заведён на вход другой.</p>
+<p><img alt="GD — RS-защёлка Timing" src="imgstore/seq/seq_gd_rs.png" /></p>
+<p>Выше — самая «голая» RS-защёлка чипа: <code>g150</code>/<code>g151</code> (сигнал <code>Timing</code> в
+<code>video_signal_features</code>, «растяжка» синхро-окна), <code>g119</code>/<code>g120</code> — входной
+каскад.</p>
+<p>Всего в нетлисте <strong>65 запоминающих кластеров</strong> (SCC размера &gt; 1), из них 30
+уже свёрнуты в примитив <code>GD</code>, а 35 (245 вентилей) — ещё рассыпуха:</p>
+<table>
+<thead>
+<tr>
+<th>обозначение в аннотации</th>
+<th>что это</th>
+<th>кластеров</th>
+<th>вентилей</th>
+<th>модули</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GD</code></td>
+<td>защёлка: RS-ядро + управляющие NOR</td>
+<td>39</td>
+<td>2 / 4 / 5</td>
+<td><code>data_latch</code>, <code>attr_latch</code>, <code>ao_latch</code>, <code>io</code>, <code>latch_control</code>, <code>pixel_shift_reg</code>, <code>video_signal_features</code></td>
+</tr>
+<tr>
+<td><code>FD</code></td>
+<td>счётный D-триггер (÷2) на 6×NOR</td>
+<td>12</td>
+<td>6</td>
+<td><code>clkgen</code>, <code>flash_clock</code>, <code>hcounter</code> (биты 0..5)</td>
+</tr>
+<tr>
+<td><code>TCE</code></td>
+<td>счётная ячейка V-счётчика на 8×NOR</td>
+<td>3</td>
+<td>8</td>
+<td><code>vcounter</code> (биты 0..2)</td>
+</tr>
+<tr>
+<td><code>TRCE</code></td>
+<td>ячейки битов 3..8 V-счётчика (общие вентили)</td>
+<td>1</td>
+<td>59</td>
+<td><code>vcounter</code></td>
+</tr>
+<tr>
+<td><code>TRC?</code></td>
+<td>ячейки битов 6..8 H-счётчика (общие вентили)</td>
+<td>1</td>
+<td>25</td>
+<td><code>hcounter</code></td>
+</tr>
+<tr>
+<td><code>SR</code></td>
+<td>ячейка сдвигового регистра (3×NOR + NOR3)</td>
+<td>8</td>
+<td>4</td>
+<td><code>pixel_shift_reg</code></td>
+</tr>
+<tr>
+<td><code>GD</code></td>
+<td>защёлки арбитра + общая логика в одном SCC</td>
+<td>1</td>
+<td>15</td>
+<td><code>contention</code></td>
+</tr>
+</tbody>
+</table>
+<p>Сводная карта — все 65 кластеров на аннотированном нетлисте (цвет = тип):</p>
+<p><img loading="lazy" alt="Карта последовательностных элементов" src="imgstore/seq/seq_overview.png" /></p>
+<h2 id="2-обозначения-на-аннотированном-нетлисте">2. Обозначения на аннотированном нетлисте</h2>
+<p>Автор разметки подписал блоки прямо на картинке — этот раздел фиксирует
+прочитанные подписи, чтобы дальше использовать одну и ту же терминологию:</p>
+<table>
+<thead>
+<tr>
+<th>подпись на картинке</th>
+<th>где (модуль HDL)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GD 0..7</code></td>
+<td><code>DataLatch</code>, <code>Attribute Latch</code>, <code>Attribute Output Latch</code>, <code>Pixel Shift Register</code> (плечи <code>SR</code>)</td>
+</tr>
+<tr>
+<td><code>GD 0..4</code></td>
+<td><code>Border Color</code> = регистр порта (<code>io</code>: <code>B0_B</code>, <code>B1_R</code>, <code>B2_G</code>, <code>Tape</code>, <code>Speaker</code>)</td>
+</tr>
+<tr>
+<td><code>GD</code></td>
+<td><code>Latch Control</code> (<code>VidEn</code>), <code>Contention Handler</code> (<code>/MREQ</code>, <code>/IOREQ</code>), <code>Timing</code></td>
+</tr>
+<tr>
+<td><code>FD</code></td>
+<td><code>ClkGen</code> (÷2), <code>Flash Clock</code> (5 ячеек), <code>HCounter</code> биты 0..5</td>
+</tr>
+<tr>
+<td><code>TCE 0..2</code></td>
+<td><code>VCounter</code> биты 0..2</td>
+</tr>
+<tr>
+<td><code>TRCE 3..8</code></td>
+<td><code>VCounter</code> биты 3..8</td>
+</tr>
+<tr>
+<td><code>TRC</code> / <code>TRC?</code> / <code>TRCE?</code></td>
+<td><code>HCounter</code> биты 6..8 (помечено со знаком вопроса)</td>
+</tr>
+<tr>
+<td><code>SR 0..7</code></td>
+<td><code>Pixel Shift Register</code> биты 0..7</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-gd-защёлка-39-кластеров">3. <code>GD</code> — защёлка (39 кластеров)</h2>
+<p>Классическая прозрачная защёлка: RS-ядро (<code>g347</code>/<code>g348</code>) плюс входной каскад,
+который «открывает» ядро по разрешению <code>nE</code>. В HDL это уже примитив
+<a href="/hdl/ulabase.v"><code>GD</code></a> (<code>nE=0 → Q=D</code>).</p>
+<p><img loading="lazy" alt="GD — защёлка data_latch, бит 5" src="imgstore/seq/seq_gd.png" /></p>
+<p>Ячейка занимает 4 вентиля (<code>DataLatch[5]</code> = <code>g347</code>, <code>g348</code>, <code>g369</code>, <code>g370</code>),
+в <code>attr_latch</code> — 5 (<code>AttrLatch[0]</code> = <code>g221</code>, <code>g222</code>, <code>g225</code>, <code>g245</code>, <code>g246</code>).
+Свёрнуто в примитив: <strong>30 кластеров / 130 вентилей</strong> (8 <code>data_latch</code>, 8
+<code>attr_latch</code>, 8 <code>ao_latch</code>, 5 <code>io</code>, 1 <code>latch_control</code>); ещё два <code>GD</code>-плеча
+(<code>/MREQ</code>, <code>/IOREQ</code>) сидят внутри общего SCC арбитра <code>contention</code>.</p>
+<p>Отдельно стоят 9 «голых» RS-защёлок, которые аннотация тоже помечает <code>GD</code>, но
+которые в HDL всё ещё на вентилях: 8 плеч сдвигового регистра
+(<code>Pixel[0..7]</code> = <code>g483/g484</code>, <code>g463/g464</code>, <code>g457/g458</code>, <code>g440/g441</code>,
+<code>g434/g435</code>, <code>g419/g420</code>, <code>g413/g414</code>, <code>g400/g401</code>) и <code>Timing</code>
+(<code>g150</code>/<code>g151</code>). Они и попадают в объём работ по issue #7.</p>
+<h2 id="4-fd-счётный-d-триггер-12-кластеров">4. <code>FD</code> — счётный D-триггер (12 кластеров)</h2>
+<p>Одна и та же схема на 6×NOR: две защёлки (master/slave) плюс обвязка, включённая
+счётным кольцом (<code>nQ → D</code>). Работает как делитель на 2.</p>
+<p><img loading="lazy" alt="FD — делитель CLK7 в clkgen" src="imgstore/seq/seq_fd_clkgen.png" /></p>
+<p><code>clkgen</code>: <code>g423..g425</code> (master) + <code>g430..g432</code> (slave), делит <code>OSC</code> на 2 —
+это и есть <code>nCLK7</code>, от которого тактируются H-счётчик, защёлки и сдвиговый
+регистр (подробнее — <a href="/specs/ula-modules.md">specs/ula-modules.md</a>, модуль 1).</p>
+<p>Та же ячейка использована в делителе FLASH (5 штук, цепочкой):</p>
+<p><img loading="lazy" alt="FD — ячейка Flash Clock" src="imgstore/seq/seq_fd_flash.png" /></p>
+<p>и в H-счётчике — биты 0..5 (такт <code>w337</code> = <code>/nCLK7</code>, выход <code>nC[i]</code>/<code>C[i]</code>):</p>
+<p><img loading="lazy" alt="FD — ячейка H-счётчика, бит 0" src="imgstore/seq/seq_fd_hc.png" /></p>
+<p>Все 12 ячеек — <strong>рассыпуха</strong>: в HDL это отдельные <code>ula_nor</code>, а не модуль.</p>
+<h2 id="5-tce-счётная-ячейка-v-счётчика-3-кластера">5. <code>TCE</code> — счётная ячейка V-счётчика (3 кластера)</h2>
+<p>Ячейка на 8×NOR (на две NOR больше, чем <code>FD</code>). Биты 0..2 имеют собственный SCC
+каждый, все три тактируются <code>CLKHC6</code>:</p>
+<p><img loading="lazy" alt="TCE — ячейка V-счётчика, бит 2" src="imgstore/seq/seq_tce.png" /></p>
+<p>Бит 0 дополнительно принимает <code>HCrst</code> (сброс/начало строки — он же carry in для
+бита 0, см. <a href="https://github.com/emu-russia/ula/blob/main/vcounter.md">vcounter.md</a>), биты 1 и 2 получают перенос от
+предыдущего бита (<code>w88</code>, <code>w160</code>).</p>
+<h2 id="6-trce-биты-38-v-счётчика-1-кластер-59-вентилей">6. <code>TRCE</code> — биты 3..8 V-счётчика (1 кластер, 59 вентилей)</h2>
+<p>Начиная с бита 3 V-счётчик перестаёт быть набором отдельных ячеек: все биты
+3..8 — <strong>один SCC из 59 вентилей</strong>, они делят между собой такт <code>vclk2</code>, сброс
+<code>vrst</code> и часть переносной логики. Именно это место <code>vcounter.md</code> называет
+«распидорасенным».</p>
+<p><img loading="lazy" alt="TRCE — биты 3..8 V-счётчика (тайлы)" src="imgstore/seq/seq_trce.png" /></p>
+<p>Ключевые общие сигналы (проверено по нетлисту и HDL):</p>
+<table>
+<thead>
+<tr>
+<th>сигнал</th>
+<th>вентиль</th>
+<th>формула</th>
+<th>кто использует</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vclk2</code> (<code>w193</code>)</td>
+<td><code>g523</code></td>
+<td><code>nor(nTCLKA, nC5)</code></td>
+<td><code>g550</code>, <code>g551</code> (бит 3), <code>g543</code>, <code>g544</code> (4), <code>g570</code>, <code>g571</code> (5), <code>g602</code>, <code>g603</code> (6), <code>g607</code>, <code>g608</code> (7), <code>g577</code>, <code>g578</code> (8)</td>
+</tr>
+<tr>
+<td><code>vrst</code> (<code>w295</code>)</td>
+<td><code>g567</code></td>
+<td><code>nor4(nV[5], nV[4], nV[8], w278)</code></td>
+<td><code>g539</code> (3), <code>g547</code> (4), <code>g569</code> (5), <code>g566</code> (8)</td>
+</tr>
+<tr>
+<td>перенос/<code>w278</code></td>
+<td><code>g89</code></td>
+<td><code>not(w98)</code>, где <code>w98</code> — выход бита 2</td>
+<td><code>g538</code>, <code>g540</code> (бит 3) <strong>и</strong> <code>g567</code> (формирование <code>vrst</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Последняя строка — тот самый пример экономии: инвертор <code>g89</code> обслуживает и
+перенос из бита 2 в бит 3, и дополнительный сброс <code>vrst</code>. В причёсанном HDL
+<code>g89</code> остаётся обычным <code>ula_not</code> (в исходнике он так и подписан), а <code>TRCE</code>
+делается модулем без «лишнего» выхода.</p>
+<h2 id="7-trc-биты-68-h-счётчика-1-кластер-25-вентилей">7. <code>TRC?</code> — биты 6..8 H-счётчика (1 кластер, 25 вентилей)</h2>
+<p>Симметричное место у H-счётчика: биты 0..5 — отдельные <code>FD</code>-ячейки, а биты
+6..8 — одно ядро из 25 вентилей с общим <code>HCrst</code> (<code>g104 = nor(nC[8], nC[7])</code>) и
+тремя 4-входовыми NOR <code>g100</code>/<code>g116</code>/<code>g127</code>. В аннотации это помечено <code>TRC</code> /
+<code>TRC?</code> — то есть автор разметки сам не был уверен в типе.</p>
+<p><img loading="lazy" alt="TRC? — биты 6..8 H-счётчика (тайлы)" src="imgstore/seq/seq_trc.png" /></p>
+<h2 id="8-sr-сдвиговый-регистр-пикселей-8-кластеров">8. <code>SR</code> — сдвиговый регистр пикселей (8 кластеров)</h2>
+<p>Ячейка сдвигового регистра — 4 вентиля (<code>g232</code>, <code>g233</code>, <code>g485</code>, <code>g486</code>):
+NOR3 с загрузкой (<code>g232</code>: <code>nDL[0]</code> + <code>SLoad</code> + плечо) и RS-пара. У каждого бита
+есть ещё своё <code>GD</code>-плечо (в аннотации <code>GD 0..7</code>), поэтому на картинке обе части
+показаны отдельными тайлами:</p>
+<p><img loading="lazy" alt="SR + GD — ячейка сдвигового регистра" src="imgstore/seq/seq_sr.png" /></p>
+<h2 id="9-арбитр-contention">9. Арбитр <code>contention</code></h2>
+<p>Защёлки <code>/MREQ</code> и <code>/IOREQ</code> (<code>GD mreq_gd</code>, <code>GD ioreq_gd</code>) уже вынесены в
+примитив, но их SCC слит с комбинаторикой арбитра в один кластер из 15
+вентилей, так что структурно это место остаётся особым:</p>
+<p><img loading="lazy" alt="GD — защёлки арбитра contention" src="imgstore/seq/seq_contention.png" /></p>
+<h2 id="10-полный-список-кластеров">10. Полный список кластеров</h2>
+<p>Сгенерировано <code>tools/gen_seq_crops.py --table</code> (вентили указаны по именам из
+нетлиста <code>gNNN</code>).</p>
+<h3 id="сводка-по-типам">Сводка по типам</h3>
+<table>
+<thead>
+<tr>
+<th>тип</th>
+<th>кластеров</th>
+<th>вентилей в кластере</th>
+<th>где</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gd</code> (<code>GD</code>)</td>
+<td>39</td>
+<td>2 / 4 / 5</td>
+<td><code>data_latch</code>, <code>attr_latch</code>, <code>ao_latch</code>, <code>io</code>, <code>latch_control</code>, <code>pixel_shift_reg</code>, <code>video_signal_features</code></td>
+</tr>
+<tr>
+<td><code>fd</code> (<code>FD</code>)</td>
+<td>12</td>
+<td>6</td>
+<td><code>clkgen</code>, <code>flash_clock</code>, <code>hcounter</code></td>
+</tr>
+<tr>
+<td><code>tce</code> (<code>TCE</code>)</td>
+<td>3</td>
+<td>8</td>
+<td><code>vcounter</code></td>
+</tr>
+<tr>
+<td><code>trce</code> (<code>TRCE</code>)</td>
+<td>1</td>
+<td>59</td>
+<td><code>vcounter</code></td>
+</tr>
+<tr>
+<td><code>trc</code> (<code>TRC?</code>)</td>
+<td>1</td>
+<td>25</td>
+<td><code>hcounter</code></td>
+</tr>
+<tr>
+<td><code>sr</code> (<code>SR</code>)</td>
+<td>8</td>
+<td>4</td>
+<td><code>pixel_shift_reg</code></td>
+</tr>
+<tr>
+<td><code>arb</code> (<code>GD</code>)</td>
+<td>1</td>
+<td>15</td>
+<td><code>contention</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="clkgen"><code>clkgen</code></h3>
+<ul>
+<li><strong>FD</strong> — <code>fd</code>, 6 вент.: <code>g423</code>, <code>g424</code>, <code>g425</code>, <code>g430</code>, <code>g431</code>, <code>g432</code> (рассыпуха)</li>
+</ul>
+<h3 id="hcounter"><code>hcounter</code></h3>
+<ul>
+<li><strong>биты 6..8</strong> — <code>trc</code>, 25 вент.: <code>g98</code>, <code>g99</code>, <code>g100</code>, <code>g101</code>, <code>g102</code>, <code>g103</code>, <code>g104</code>, <code>g108</code>, <code>g109</code>, <code>g110</code>, <code>g111</code>, <code>g112</code>, <code>g113</code>, <code>g114</code>, <code>g115</code>, <code>g116</code>, <code>g121</code>, <code>g122</code>, <code>g123</code>, <code>g124</code>, <code>g125</code>, <code>g126</code>, <code>g127</code>, <code>g128</code>, <code>g129</code> (рассыпуха)</li>
+<li><strong>бит 0</strong> — <code>fd</code>, 6 вент.: <code>g444</code>, <code>g445</code>, <code>g446</code>, <code>g453</code>, <code>g454</code>, <code>g455</code> (рассыпуха)</li>
+<li><strong>бит 1</strong> — <code>fd</code>, 6 вент.: <code>g452</code>, <code>g468</code>, <code>g469</code>, <code>g470</code>, <code>g471</code>, <code>g472</code> (рассыпуха)</li>
+<li><strong>бит 2</strong> — <code>fd</code>, 6 вент.: <code>g496</code>, <code>g497</code>, <code>g498</code>, <code>g499</code>, <code>g507</code>, <code>g524</code> (рассыпуха)</li>
+<li><strong>бит 3</strong> — <code>fd</code>, 6 вент.: <code>g492</code>, <code>g493</code>, <code>g494</code>, <code>g495</code>, <code>g508</code>, <code>g509</code> (рассыпуха)</li>
+<li><strong>бит 4</strong> — <code>fd</code>, 6 вент.: <code>g510</code>, <code>g511</code>, <code>g512</code>, <code>g513</code>, <code>g521</code>, <code>g522</code> (рассыпуха)</li>
+<li><strong>бит 5</strong> — <code>fd</code>, 6 вент.: <code>g489</code>, <code>g490</code>, <code>g514</code>, <code>g515</code>, <code>g519</code>, <code>g520</code> (рассыпуха)</li>
+</ul>
+<h3 id="vcounter"><code>vcounter</code></h3>
+<ul>
+<li><strong>бит 0</strong> — <code>tce</code>, 8 вент.: <code>g140</code>, <code>g141</code>, <code>g142</code>, <code>g143</code>, <code>g144</code>, <code>g145</code>, <code>g146</code>, <code>g148</code> (рассыпуха)</li>
+<li><strong>бит 1</strong> — <code>tce</code>, 8 вент.: <code>g149</code>, <code>g157</code>, <code>g158</code>, <code>g159</code>, <code>g160</code>, <code>g161</code>, <code>g162</code>, <code>g163</code> (рассыпуха)</li>
+<li><strong>бит 2</strong> — <code>tce</code>, 8 вент.: <code>g132</code>, <code>g134</code>, <code>g135</code>, <code>g136</code>, <code>g137</code>, <code>g138</code>, <code>g164</code>, <code>g165</code> (рассыпуха)</li>
+<li><strong>биты 3..8</strong> — <code>trce</code>, 59 вент.: <code>g88</code>, <code>g93</code>, <code>g94</code>, <code>g95</code>, <code>g97</code>, <code>g536</code>…<code>g553</code>, <code>g564</code>…<code>g581</code>, <code>g595</code>…<code>g612</code> (рассыпуха)</li>
+</ul>
+<h3 id="data_latch-attr_latch-ao_latch"><code>data_latch</code>, <code>attr_latch</code>, <code>ao_latch</code></h3>
+<p>По 8 защёлок <code>GD 0..7</code> (4–5 вентилей каждая) — <strong>уже свёрнуты в примитив <code>GD</code></strong>;
+полный список вентилей печатает <code>tools/gen_seq_crops.py --table</code>
+(<code>DataLatch[0]</code> = <code>g219</code>, <code>g220</code>, <code>g247</code>, <code>g248</code>, …, <code>AttrLatch[3]</code> = <code>g320</code>,
+<code>g321</code>, <code>g343</code>, <code>g344</code>, <code>AOLatch[7]</code> = <code>g303</code>, <code>g304</code>, <code>g331</code>, <code>g332</code>).</p>
+<h3 id="io"><code>io</code></h3>
+<ul>
+<li><strong>B0_B</strong> — <code>g223</code>, <code>g224</code>, <code>g243</code>, <code>g244</code>; <strong>B1_R</strong> — <code>g255</code>, <code>g256</code>, <code>g278</code>, <code>g279</code>; <strong>B2_G</strong> — <code>g289</code>, <code>g290</code>, <code>g311</code>, <code>g312</code>; <strong>Tape</strong> — <code>g322</code>, <code>g323</code>, <code>g341</code>, <code>g342</code>; <strong>Speaker</strong> — <code>g371</code>, <code>g372</code>, <code>g381</code>, <code>g382</code> — <strong>уже свёрнуты в <code>GD</code></strong>.</li>
+</ul>
+<h3 id="latch_control"><code>latch_control</code></h3>
+<ul>
+<li><strong>nVidEn</strong> — <code>g32</code>, <code>g466</code>, <code>g467</code>, <code>g480</code>, <code>g481</code> — <strong>уже свёрнуто в <code>GD</code></strong>.</li>
+</ul>
+<h3 id="pixel_shift_reg"><code>pixel_shift_reg</code></h3>
+<ul>
+<li>8 ячеек <code>SR</code> (по 4 вентиля): <code>g232</code>, <code>g233</code>, <code>g485</code>, <code>g486</code>; <code>g234</code>, <code>g235</code>, <code>g461</code>, <code>g462</code>; <code>g268</code>, <code>g269</code>, <code>g459</code>, <code>g460</code>; <code>g270</code>, <code>g271</code>, <code>g438</code>, <code>g439</code>; <code>g298</code>, <code>g299</code>, <code>g436</code>, <code>g437</code>; <code>g300</code>, <code>g301</code>, <code>g417</code>, <code>g418</code>; <code>g334</code>, <code>g335</code>, <code>g415</code>, <code>g416</code>; <code>g336</code>, <code>g337</code>, <code>g398</code>, <code>g399</code> — <strong>рассыпуха</strong>.</li>
+<li>8 плеч <code>GD</code> (по 2 вентиля): <code>g483</code>, <code>g484</code>; <code>g463</code>, <code>g464</code>; <code>g457</code>, <code>g458</code>; <code>g440</code>, <code>g441</code>; <code>g434</code>, <code>g435</code>; <code>g419</code>, <code>g420</code>; <code>g413</code>, <code>g414</code>; <code>g400</code>, <code>g401</code> — <strong>рассыпуха</strong>.</li>
+</ul>
+<h3 id="flash_clock"><code>flash_clock</code></h3>
+<ul>
+<li>5 ячеек <code>FD</code> (по 6 вентилей): <code>g180</code>, <code>g181</code>, <code>g207</code>, <code>g208</code>, <code>g209</code>, <code>g210</code>; <code>g182</code>, <code>g183</code>, <code>g203</code>, <code>g204</code>, <code>g205</code>, <code>g206</code>; <code>g184</code>, <code>g185</code>, <code>g199</code>, <code>g200</code>, <code>g201</code>, <code>g202</code>; <code>g186</code>, <code>g187</code>, <code>g195</code>, <code>g196</code>, <code>g197</code>, <code>g198</code>; <code>g188</code>, <code>g189</code>, <code>g191</code>, <code>g192</code>, <code>g193</code>, <code>g194</code> — <strong>рассыпуха</strong>.</li>
+</ul>
+<h3 id="video_signal_features"><code>video_signal_features</code></h3>
+<ul>
+<li><strong>Timing</strong> — <code>g150</code>, <code>g151</code> (<code>GD</code>, RS-защёлка) — <strong>рассыпуха</strong>.</li>
+</ul>
+<h3 id="contention"><code>contention</code></h3>
+<ul>
+<li><strong>защёлки арбитра</strong> — <code>g42</code>, <code>g43</code>, <code>g48</code>, <code>g383</code>, <code>g384</code>, <code>g392</code>, <code>g393</code>, <code>g394</code>, <code>g395</code>, <code>g396</code>, <code>g397</code>, <code>g402</code>, <code>g403</code>, <code>g404</code>, <code>g405</code> (два <code>GD</code> внутри + комбинаторика арбитра).</li>
+</ul>
+<h2 id="11-vcounter-что-подтвердилось-а-что-нет">11. VCounter: что подтвердилось, а что нет</h2>
+<p>Проверка наработок <a href="https://github.com/emu-russia/ula/blob/main/vcounter.md">vcounter.md</a> по текущему нетлисту и HDL:</p>
+<p><strong>Сходится:</strong></p>
+<ul>
+<li>«<code>HCrst</code> — одновременно carry in для бита 0»: <code>g9</code>/<code>g143</code> заводят <code>HCrst</code> в
+  бит 0 V-счётчика.</li>
+<li>«биты 0..2 тактируются <code>CLKHC6</code>»: <code>g144</code>/<code>g145</code>, <code>g157</code>/<code>g158</code>,
+  <code>g137</code>/<code>g138</code>.</li>
+<li>«биты 3..8 тактируются <code>vclk2</code>, получаемым в <code>g523</code> из <code>/TCLKA</code> и <code>/C5</code>»:
+  <code>g523 = nor(nTCLKA, nC5) → w193</code>, и <code>w193</code> действительно идёт в вентили битов
+  3..8.</li>
+<li>«<code>vrst</code> получается в <code>g567</code>»: <code>g567 = nor4(nV[5], nV[4], nV[8], w278) → w295</code>.</li>
+<li>«<code>g89</code> из ячейки бита 3 переиспользуется для <code>vrst</code>»: <code>g89 = not(w98)</code>
+  (<code>w98</code> — выход бита 2) питает и перенос бита 3 (<code>g538</code>, <code>g540</code>), и <code>g567</code>.</li>
+<li>«В причёсанном нетлисте будет просто дополнительный <code>not</code>»: в
+  <code>hdl/ula6c001.v</code> <code>g89</code> так и оставлен обычным <code>ula_not</code>, а <code>g567</code> собран на
+  <code>ula_nor4</code> — то есть отдельный модуль <code>TRCE</code> с лишним выходом не нужен.</li>
+</ul>
+<p><strong>Требует уточнения:</strong></p>
+<ul>
+<li><code>vcounter.md</code> пишет «биты 3..5 — <code>TRCE</code>, биты 6..7 — снова <code>TCE</code>, бит 8 —
+  <code>TRE</code>», а аннотация на картинке помечает <code>TRCE 3..8</code>. По вентилям: <code>vrst</code>
+  (<code>w295</code>) приходит только в биты <strong>3, 4, 5 и 8</strong> (<code>g539</code>, <code>g547</code>, <code>g569</code>,
+  <code>g566</code>), биты 6 и 7 <code>vrst</code> не используют — то есть текст <code>vcounter.md</code>
+  структурно точнее разметки, и подпись <code>TRCE</code> для битов 6/7 стоит поправить.</li>
+<li>Утверждение про «<code>TRE</code> = <code>TRCE</code> без carry out» для бита 8 прямо по вентилям
+  не доказывается: бит 8 (<code>g564</code>..<code>g566</code>, <code>g577</code>..<code>g581</code>, <code>g95</code>) собран из
+  тех же 8 NOR + инвертора, а его «переносная» тройка <code>g577</code>/<code>g578</code>/<code>g579</code>
+  замкнута сама на себя и наружу (на бит 9) ничего не отдаёт. Это косвенно
+  подтверждает «лишний NOR выкинули», но точный вид ячейки бита 8 в HDL ещё
+  надо зафиксировать (в исходнике он помечен <code>// not sure</code>).</li>
+<li>В <code>hdl/ula6c001.v</code> весь блок битов 3..8 (<code>// not sure</code>) до сих пор не разбит
+  на ячейки: модуль <code>vcounter</code> — это 91 вентиль подряд с комментариями по
+  битам. Это и есть основная работа по issue #7.</li>
+</ul>
+<h2 id="12-что-осталось-сделать-по-issue-7">12. Что осталось сделать по issue #7</h2>
+<ul>
+<li><strong>Рассыпуха, которую нужно свёрнуть в модули</strong> (35 кластеров, 245 вентилей, из
+  них 237 ещё присутствуют в <code>hdl/</code>):</li>
+<li><code>FD</code> × 12 — <code>clkgen</code>, <code>flash_clock</code> (×5), <code>hcounter</code> (биты 0..5);</li>
+<li><code>TCE</code> × 3 — <code>vcounter</code> (биты 0..2);</li>
+<li><code>TRCE</code> — <code>vcounter</code> (биты 3..8, 59 вентилей) и <code>TRC?</code> — <code>hcounter</code>
+    (биты 6..8, 25 вентилей);</li>
+<li><code>SR</code> × 8 + плечи <code>GD</code> × 8 — <code>pixel_shift_reg</code>;</li>
+<li><code>GD</code> — RS-защёлка <code>Timing</code> (<code>g150</code>/<code>g151</code>);</li>
+<li><code>GD</code> — два плеча в арбитре <code>contention</code> (<code>/MREQ</code>, <code>/IOREQ</code>) в общем SCC.</li>
+<li>Отдельно (из <a href="/specs/hdl-vs-netlist-verification.md">specs/hdl-vs-netlist-verification.md</a>):
+  <code>hdl/ulabase.v</code> должен получить ту же X→0 семантику <code>ula_nor</code>, что и
+  <code>netlist/ulabase.v</code>, иначе HDL не выйдет из состояния <code>x</code> даже после
+  выноса всех триггеров.</li>
+<li>После выноса — повторная сверка HDL с нетлистом и снятие пометок
+  <code>// not sure</code> в <code>vcounter</code>.</li>
+</ul>
+<h2 id="13-как-пересобрать-картинки">13. Как пересобрать картинки</h2>
+<pre><code class="language-bash">python3 tools/gen_seq_crops.py            # imgstore/seq/*.png
+python3 tools/gen_seq_crops.py --table    # таблицы кластеров (раздел 10)
+python3 tools/gen_seq_crops.py --check    # сходимость геометрии вентилей
+</code></pre>
+<p>Скрипт считает кластеры по нетлисту (<code>netlist/ula6c001.v</code>), берёт названия
+защёлок из <code>icarus/run_ula.v</code>, номера битов — из комментариев <code>// N</code> в HDL, а
+координаты вентилей — из векторного <code>design/ula6c001.pdf</code> (та же схема, что
+растеризована в <code>design/ula6c001.png</code>, а <code>imgstore/ula6c001_annotated.png</code> —
+её аннотированная копия). Для «распидорасенных» ячеек (V-счётчик, H-счётчик
+6..8) картинка автоматически собирается из тайлов по группам близких вентилей.</p>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <p class="f-title">◫ ZX Spectrum ULA 6C001 <span class="f-sub">— Реверс-инжиниринг ZX Spectrum ULA 6C001 на уровне кристалла: восстановление нетлиста, разбор модулей, схемы и осциллограммы.</span></p>
+      <p class="f-links">
+        <a href="https://github.com/emu-russia/ula">GitHub · emu-russia/ula</a>
+        <a href="https://github.com/emu-russia/ula/issues">Issues</a>
+        <a href="https://github.com/emu-russia/ula/blob/main/LICENSE">License (MIT)</a>
+      </p>
+    </div>
+    <p class="srcnote">Исходник (markdown): <a href="https://github.com/emu-russia/ula/blob/main/seq.md">specs/seq.md</a></p>
+    <p class="f-gen">Generated from the <code>specs/</code> markdown sources by <code>tools/gen_docs_site.py</code>.</p>
+  </div>
+</footer>
+</body>
+</html>

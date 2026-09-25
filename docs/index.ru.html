@@ -15,7 +15,7 @@
   <div class="wrap">
     <a class="brand" href="index.ru.html">◫ ZX Spectrum ULA 6C001</a>
     <nav class="site-nav" aria-label="main">
-      <a href="ula-modules.ru.html">Модули ULA</a><a href="ula-signals.ru.html">Внутренние сигналы</a><a href="pads.ru.html">Пады</a><a href="topo.ru.html">Топология</a><a href="hdl-vs-netlist-verification.html">Верификация (EN)</a>
+      <a href="ula-modules.ru.html">Модули ULA</a><a href="seq.ru.html">Последовательностные элементы</a><a href="ula-signals.ru.html">Внутренние сигналы</a><a href="pads.ru.html">Пады</a><a href="topo.ru.html">Топология</a><a href="hdl-vs-netlist-verification.html">Верификация (EN)</a>
       <a class="lang-switch" href="index.html">English</a>
       
       <button class="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle color theme">
@@ -46,6 +46,14 @@
       (<code>hdl/ula6c001.v</code>): назначение, анализ вентилей, схема, типовые
       осциллограммы и модель на C++.</span>
     <span class="card-b">задача #4</span>
+  </a>
+  <a class="card" href="seq.ru.html">
+    <span class="card-t">Последовательностные элементы</span>
+    <span class="card-d">Все триггероподобные блоки нетлиста — защёлки
+      <code>GD</code>, ячейки-делители <code>FD</code>, счётные ячейки H/V
+      счётчиков (<code>TCE</code>, <code>TRCE</code>, <code>TRC</code>),
+      сдвиговый регистр — с вырезками из аннотированного нетлиста.</span>
+    <span class="card-b">задача #7</span>
   </a>
   <a class="card" href="ula-signals.ru.html">
     <span class="card-t">Внутренние сигналы</span>
@@ -118,7 +126,7 @@ video_signal_features · dac_setup · io · contention</code></p>
 <tbody>
 <tr><td><code>netlist/</code></td><td>плоский эталонный нетлист (<code>ula6c001.v</code>, 661 ячейка) + библиотека ячеек <code>ulabase.v</code></td></tr>
 <tr><td><code>hdl/</code></td><td>тот же набор вентилей, разбитый на 19 модулей; рисунок схемы верхнего уровня</td></tr>
-<tr><td><code>specs/</code></td><td>маркдаун-исходники этого сайта (модули, сигналы, пады, топология, отчёт по верификации)</td></tr>
+<tr><td><code>specs/</code></td><td>маркдаун-исходники этого сайта (модули, последовательностные элементы, сигналы, пады, топология, отчёт по верификации)</td></tr>
 <tr><td><code>docs/</code></td><td>этот сайт документации (GitHub Pages)</td></tr>
 <tr><td><code>imgstore/</code></td><td>изображения: фото кристалла, схемы модулей, осциллограммы, цоколёвка</td></tr>
 <tr><td><code>icarus/</code></td><td>тестбенчи и скрипты запуска Icarus Verilog</td></tr>

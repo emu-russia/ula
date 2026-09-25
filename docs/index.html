@@ -15,7 +15,7 @@
   <div class="wrap">
     <a class="brand" href="index.html">◫ ZX Spectrum ULA 6C001</a>
     <nav class="site-nav" aria-label="main">
-      <a href="ula-modules.html">ULA modules</a><a href="ula-signals.html">Internal signals</a><a href="pads.html">Pads</a><a href="topo.html">Topology</a><a href="hdl-vs-netlist-verification.html">Verification</a>
+      <a href="ula-modules.html">ULA modules</a><a href="seq.html">Sequential elements</a><a href="ula-signals.html">Internal signals</a><a href="pads.html">Pads</a><a href="topo.html">Topology</a><a href="hdl-vs-netlist-verification.html">Verification</a>
       <a class="lang-switch" href="index.ru.html">Русский</a>
       
       <button class="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle color theme">
@@ -46,6 +46,14 @@ gate-accurate simulator model.</p>
       (<code>hdl/ula6c001.v</code>): purpose, gate analysis, schematic, typical
       waveforms and the C++ model.</span>
     <span class="card-b">issue #4</span>
+  </a>
+  <a class="card" href="seq.html">
+    <span class="card-t">Sequential elements</span>
+    <span class="card-d">Every trigger-like block of the netlist — <code>GD</code>
+      latches, <code>FD</code> divider cells, the counter cells of the H/V
+      counters (<code>TCE</code>, <code>TRCE</code>, <code>TRC</code>), the pixel
+      shift register — each cut out of the annotated netlist.</span>
+    <span class="card-b">issue #7</span>
   </a>
   <a class="card" href="ula-signals.html">
     <span class="card-t">Internal signals</span>
@@ -118,7 +126,7 @@ breakdown.</p>
 <tbody>
 <tr><td><code>netlist/</code></td><td>flat reference netlist (<code>ula6c001.v</code>, 661 cells) + cell library <code>ulabase.v</code></td></tr>
 <tr><td><code>hdl/</code></td><td>the same gate set decomposed into 19 modules, plus the top schematic figure</td></tr>
-<tr><td><code>specs/</code></td><td>markdown sources of this site (modules, signals, pads, topology, verification report)</td></tr>
+<tr><td><code>specs/</code></td><td>markdown sources of this site (modules, sequential elements, signals, pads, topology, verification report)</td></tr>
 <tr><td><code>docs/</code></td><td>this documentation site (GitHub Pages)</td></tr>
 <tr><td><code>imgstore/</code></td><td>images: die photos, module schematics, waveforms, pinout</td></tr>
 <tr><td><code>icarus/</code></td><td>Icarus Verilog testbenches and run scripts</td></tr>

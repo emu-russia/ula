@@ -7,6 +7,7 @@ What it produces (docs/ is the GitHub Pages source folder):
 
     index.html / index.ru.html          landing page (default language: English)
     ula-modules(.ru).html               ULA module analysis        (specs/ula-modules*.md)
+    seq(.ru).html                       sequential elements        (specs/seq*.md)
     ula-signals(.ru).html               internal signal table      (specs/ula-signals*.md)
     pads(.ru).html                      chip pads                  (specs/pads*.md)
     topo(.ru).html                      topology notes             (specs/topo*.md)
@@ -67,6 +68,8 @@ def make_md():
 TOPICS = {
     "ula-modules": {"en": ("ULA modules", "ula-modules.html"),
                     "ru": ("Модули ULA", "ula-modules.ru.html")},
+    "seq":         {"en": ("Sequential elements", "seq.html"),
+                    "ru": ("Последовательностные элементы", "seq.ru.html")},
     "ula-signals": {"en": ("Internal signals", "ula-signals.html"),
                     "ru": ("Внутренние сигналы", "ula-signals.ru.html")},
     "pads":        {"en": ("Pads", "pads.html"),
@@ -76,9 +79,9 @@ TOPICS = {
     "verification": {"en": ("Verification", "hdl-vs-netlist-verification.html"),
                      "ru": ("Верификация (EN)", "hdl-vs-netlist-verification.html")},
 }
-TOPIC_ORDER = ["ula-modules", "ula-signals", "pads", "topo", "verification"]
+TOPIC_ORDER = ["ula-modules", "seq", "ula-signals", "pads", "topo", "verification"]
 # topics that have a separate Russian page (verification is English-only)
-HAS_RU = {"ula-modules", "ula-signals", "pads", "topo"}
+HAS_RU = {"ula-modules", "seq", "ula-signals", "pads", "topo"}
 
 # pages: (source md, output html, lang, topic, <title>, meta description, show toc)
 PAGES = [
@@ -91,6 +94,18 @@ PAGES = [
      "Модули ULA 6C001",
      "Описание каждого модуля восстановленного модульного HDL ZX Spectrum ULA 6C001: "
      "назначение, анализ вентилей, схема, типовые осциллограммы, модель на C++.",
+     True),
+    ("specs/seq.en.md", "seq.html", "en", "seq",
+     "ULA 6C001 sequential elements",
+     "Every trigger-like block of the recovered ULA 6C001 netlist (issue #7): "
+     "GD latches, FD divider cells, TCE/TRCE/TRC counter cells, the pixel shift "
+     "register and the contention arbiter, cut out of the annotated netlist.",
+     True),
+    ("specs/seq.md", "seq.ru.html", "ru", "seq",
+     "Последовательностные элементы ULA 6C001",
+     "Все триггероподобные блоки восстановленного нетлиста ULA 6C001 (issue #7): "
+     "защёлки GD, ячейки-делители FD, счётные ячейки TCE/TRCE/TRC, сдвиговый "
+     "регистр и арбитр contention — с вырезками из аннотированного нетлиста.",
      True),
     ("specs/ula-signals.en.md", "ula-signals.html", "en", "ula-signals",
      "ULA 6C001 internal signals",
@@ -144,6 +159,10 @@ REFERENCED_IMAGES = [
     "w_clockgen.png", "w_contention.png", "w_dac_sync.png", "w_frame.png",
     "w_hline.png", "w_io.png", "w_latch_control.png", "w_memory.png",
     "w_pixels.png", "w_vframe.png",
+]] + ["seq/" + n for n in [
+    "seq_overview.png", "seq_gd.png", "seq_gd_rs.png", "seq_fd_clkgen.png",
+    "seq_fd_flash.png", "seq_fd_hc.png", "seq_tce.png", "seq_trce.png",
+    "seq_trc.png", "seq_sr.png", "seq_contention.png",
 ]]
 
 
@@ -422,6 +441,14 @@ gate-accurate simulator model.</p>
       waveforms and the C++ model.</span>
     <span class="card-b">issue #4</span>
   </a>
+  <a class="card" href="seq.html">
+    <span class="card-t">Sequential elements</span>
+    <span class="card-d">Every trigger-like block of the netlist — <code>GD</code>
+      latches, <code>FD</code> divider cells, the counter cells of the H/V
+      counters (<code>TCE</code>, <code>TRCE</code>, <code>TRC</code>), the pixel
+      shift register — each cut out of the annotated netlist.</span>
+    <span class="card-b">issue #7</span>
+  </a>
   <a class="card" href="ula-signals.html">
     <span class="card-t">Internal signals</span>
     <span class="card-d">The full signal table: name → where it comes from →
@@ -498,7 +525,7 @@ breakdown.</p>
 <tbody>
 <tr><td><code>netlist/</code></td><td>flat reference netlist (<code>ula6c001.v</code>, 661 cells) + cell library <code>ulabase.v</code></td></tr>
 <tr><td><code>hdl/</code></td><td>the same gate set decomposed into 19 modules, plus the top schematic figure</td></tr>
-<tr><td><code>specs/</code></td><td>markdown sources of this site (modules, signals, pads, topology, verification report)</td></tr>
+<tr><td><code>specs/</code></td><td>markdown sources of this site (modules, sequential elements, signals, pads, topology, verification report)</td></tr>
 <tr><td><code>docs/</code></td><td>this documentation site (GitHub Pages)</td></tr>
 <tr><td><code>imgstore/</code></td><td>images: die photos, module schematics, waveforms, pinout</td></tr>
 <tr><td><code>icarus/</code></td><td>Icarus Verilog testbenches and run scripts</td></tr>
@@ -550,6 +577,14 @@ text, gate tables and equations. Please read the warning on the
       (<code>hdl/ula6c001.v</code>): назначение, анализ вентилей, схема, типовые
       осциллограммы и модель на C++.</span>
     <span class="card-b">задача #4</span>
+  </a>
+  <a class="card" href="seq.ru.html">
+    <span class="card-t">Последовательностные элементы</span>
+    <span class="card-d">Все триггероподобные блоки нетлиста — защёлки
+      <code>GD</code>, ячейки-делители <code>FD</code>, счётные ячейки H/V
+      счётчиков (<code>TCE</code>, <code>TRCE</code>, <code>TRC</code>),
+      сдвиговый регистр — с вырезками из аннотированного нетлиста.</span>
+    <span class="card-b">задача #7</span>
   </a>
   <a class="card" href="ula-signals.ru.html">
     <span class="card-t">Внутренние сигналы</span>
@@ -627,7 +662,7 @@ video_signal_features · dac_setup · io · contention</code></p>
 <tbody>
 <tr><td><code>netlist/</code></td><td>плоский эталонный нетлист (<code>ula6c001.v</code>, 661 ячейка) + библиотека ячеек <code>ulabase.v</code></td></tr>
 <tr><td><code>hdl/</code></td><td>тот же набор вентилей, разбитый на 19 модулей; рисунок схемы верхнего уровня</td></tr>
-<tr><td><code>specs/</code></td><td>маркдаун-исходники этого сайта (модули, сигналы, пады, топология, отчёт по верификации)</td></tr>
+<tr><td><code>specs/</code></td><td>маркдаун-исходники этого сайта (модули, последовательностные элементы, сигналы, пады, топология, отчёт по верификации)</td></tr>
 <tr><td><code>docs/</code></td><td>этот сайт документации (GitHub Pages)</td></tr>
 <tr><td><code>imgstore/</code></td><td>изображения: фото кристалла, схемы модулей, осциллограммы, цоколёвка</td></tr>
 <tr><td><code>icarus/</code></td><td>тестбенчи и скрипты запуска Icarus Verilog</td></tr>

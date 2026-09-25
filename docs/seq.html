@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>ULA 6C001 sequential elements · ZX Spectrum ULA 6C001</title>
+<meta name="description" content="Every trigger-like block of the recovered ULA 6C001 netlist (issue #7): GD latches, FD divider cells, TCE/TRCE/TRC counter cells, the pixel shift register and the contention arbiter, cut out of the annotated netlist.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/theme.js"></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23111'/%3E%3Crect x='3' y='3' width='3' height='10' fill='%23e5484d'/%3E%3Crect x='7' y='3' width='3' height='10' fill='%2330a46c'/%3E%3Crect x='11' y='3' width='2' height='10' fill='%233e63dd'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">◫ ZX Spectrum ULA 6C001</a>
+    <nav class="site-nav" aria-label="main">
+      <a href="ula-modules.html">ULA modules</a><a class="active" href="seq.html">Sequential elements</a><a href="ula-signals.html">Internal signals</a><a href="pads.html">Pads</a><a href="topo.html">Topology</a><a href="hdl-vs-netlist-verification.html">Verification</a>
+      <a class="lang-switch" href="seq.ru.html">Русский</a>
+      
+      <button class="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle color theme">
+        <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <article class="doc">
+<h1 id="sequential-elements-issue-7">Sequential elements (issue #7)</h1>
+<details class="page-toc"><summary>Contents</summary><ul>
+<li><a href="#1-how-a-flip-flop-is-built-in-the-ula">1. How a flip-flop is built in the ULA</a></li>
+<li><a href="#2-labels-on-the-annotated-netlist">2. Labels on the annotated netlist</a></li>
+<li><a href="#3-gd-latch-39-clusters">3. GD — latch (39 clusters)</a></li>
+<li><a href="#4-fd-counted-d-flip-flop-12-clusters">4. FD — counted D flip-flop (12 clusters)</a></li>
+<li><a href="#5-tce-v-counter-toggle-cell-3-clusters">5. TCE — V-counter toggle cell (3 clusters)</a></li>
+<li><a href="#6-trce-bits-38-of-the-v-counter-1-cluster-59-gates">6. TRCE — bits 3..8 of the V-counter (1 cluster, 59 gates)</a></li>
+<li><a href="#7-trc-bits-68-of-the-h-counter-1-cluster-25-gates">7. TRC? — bits 6..8 of the H-counter (1 cluster, 25 gates)</a></li>
+<li><a href="#8-sr-pixel-shift-register-8-clusters">8. SR — pixel shift register (8 clusters)</a></li>
+<li><a href="#9-the-contention-arbiter">9. The contention arbiter</a></li>
+<li><a href="#10-full-list-of-clusters">10. Full list of clusters</a><ul>
+<li><a href="#summary-by-type">Summary by type</a></li>
+<li><a href="#clkgen">clkgen</a></li>
+<li><a href="#hcounter">hcounter</a></li>
+<li><a href="#vcounter">vcounter</a></li>
+<li><a href="#data_latch-attr_latch-ao_latch">data_latch, attr_latch, ao_latch</a></li>
+<li><a href="#io">io</a></li>
+<li><a href="#latch_control">latch_control</a></li>
+<li><a href="#pixel_shift_reg">pixel_shift_reg</a></li>
+<li><a href="#flash_clock">flash_clock</a></li>
+<li><a href="#video_signal_features">video_signal_features</a></li>
+<li><a href="#contention">contention</a></li>
+</ul>
+</li>
+<li><a href="#11-vcounter-what-is-confirmed-and-what-is-not">11. VCounter: what is confirmed and what is not</a></li>
+<li><a href="#12-what-is-left-to-do-on-issue-7">12. What is left to do on issue #7</a></li>
+<li><a href="#13-how-to-regenerate-the-pictures">13. How to regenerate the pictures</a></li>
+</ul></details>
+<p>The task of issue #7: find <strong>all</strong> flip-flops in the modular HDL and factor them
+out into separate modules. Right now the modular HDL “falls over on Xs” exactly
+because only the <code>GD</code> latches have been folded into primitives, while the
+counters, the shift register, the FLASH divider and various sporadic RS latches
+are still left as cross-coupled NORs right in the module text (see
+<a href="/specs/hdl-vs-netlist-verification.md">specs/hdl-vs-netlist-verification.md</a>, section 4.2).</p>
+<p>This section is an inventory: <strong>what exactly</strong> in the netlist is sequential
+logic, how it is built on gates and how it is labelled on the annotated
+netlist. The pictures were cut from <code>imgstore/ula6c001_annotated.png</code> by the
+script <a href="/tools/gen_seq_crops.py">tools/gen_seq_crops.py</a> (gate geometry is
+taken from the vector <code>design/ula6c001.pdf</code>, clusters are counted from the
+netlist — see section 13).</p>
+<h2 id="1-how-a-flip-flop-is-built-in-the-ula">1. How a flip-flop is built in the ULA</h2>
+<p>The basic building block is an <strong>RS latch made of two cross-coupled NORs</strong> (the
+only kind of storage in this chip; D flip-flops and counting cells are built
+from such latches plus surrounding logic). Formally it is a strongly connected
+component of the gate graph of size 2: the output of each NOR feeds the input
+of the other.</p>
+<p><img alt="GD — RS latch Timing" src="imgstore/seq/seq_gd_rs.png" /></p>
+<p>Above is the most “bare” RS latch of the chip: <code>g150</code>/<code>g151</code> (the <code>Timing</code>
+signal in <code>video_signal_features</code>, the “stretching” of the sync window),
+<code>g119</code>/<code>g120</code> — the input stage.</p>
+<p>In total the netlist has <strong>65 storage clusters</strong> (SCCs of size &gt; 1), of which 30
+are already folded into the <code>GD</code> primitive, while 35 (245 gates) are still loose
+gates:</p>
+<table>
+<thead>
+<tr>
+<th>label in the annotation</th>
+<th>what it is</th>
+<th>clusters</th>
+<th>gates</th>
+<th>modules</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GD</code></td>
+<td>latch: RS core + control NORs</td>
+<td>39</td>
+<td>2 / 4 / 5</td>
+<td><code>data_latch</code>, <code>attr_latch</code>, <code>ao_latch</code>, <code>io</code>, <code>latch_control</code>, <code>pixel_shift_reg</code>, <code>video_signal_features</code></td>
+</tr>
+<tr>
+<td><code>FD</code></td>
+<td>counted D flip-flop (÷2) on 6×NOR</td>
+<td>12</td>
+<td>6</td>
+<td><code>clkgen</code>, <code>flash_clock</code>, <code>hcounter</code> (bits 0..5)</td>
+</tr>
+<tr>
+<td><code>TCE</code></td>
+<td>V-counter toggle cell on 8×NOR</td>
+<td>3</td>
+<td>8</td>
+<td><code>vcounter</code> (bits 0..2)</td>
+</tr>
+<tr>
+<td><code>TRCE</code></td>
+<td>cells of bits 3..8 of the V-counter (shared gates)</td>
+<td>1</td>
+<td>59</td>
+<td><code>vcounter</code></td>
+</tr>
+<tr>
+<td><code>TRC?</code></td>
+<td>cells of bits 6..8 of the H-counter (shared gates)</td>
+<td>1</td>
+<td>25</td>
+<td><code>hcounter</code></td>
+</tr>
+<tr>
+<td><code>SR</code></td>
+<td>shift register cell (3×NOR + NOR3)</td>
+<td>8</td>
+<td>4</td>
+<td><code>pixel_shift_reg</code></td>
+</tr>
+<tr>
+<td><code>GD</code></td>
+<td>arbiter latches + shared logic in one SCC</td>
+<td>1</td>
+<td>15</td>
+<td><code>contention</code></td>
+</tr>
+</tbody>
+</table>
+<p>Overview map — all 65 clusters on the annotated netlist (colour = type):</p>
+<p><img loading="lazy" alt="Map of the sequential elements" src="imgstore/seq/seq_overview.png" /></p>
+<h2 id="2-labels-on-the-annotated-netlist">2. Labels on the annotated netlist</h2>
+<p>The author of the annotation labelled the blocks right on the picture — this
+section records the labels as read, so that one and the same terminology is
+used from here on:</p>
+<table>
+<thead>
+<tr>
+<th>label on the picture</th>
+<th>where (HDL module)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GD 0..7</code></td>
+<td><code>DataLatch</code>, <code>Attribute Latch</code>, <code>Attribute Output Latch</code>, <code>Pixel Shift Register</code> (arms of <code>SR</code>)</td>
+</tr>
+<tr>
+<td><code>GD 0..4</code></td>
+<td><code>Border Color</code> = the port register (<code>io</code>: <code>B0_B</code>, <code>B1_R</code>, <code>B2_G</code>, <code>Tape</code>, <code>Speaker</code>)</td>
+</tr>
+<tr>
+<td><code>GD</code></td>
+<td><code>Latch Control</code> (<code>VidEn</code>), <code>Contention Handler</code> (<code>/MREQ</code>, <code>/IOREQ</code>), <code>Timing</code></td>
+</tr>
+<tr>
+<td><code>FD</code></td>
+<td><code>ClkGen</code> (÷2), <code>Flash Clock</code> (5 cells), <code>HCounter</code> bits 0..5</td>
+</tr>
+<tr>
+<td><code>TCE 0..2</code></td>
+<td><code>VCounter</code> bits 0..2</td>
+</tr>
+<tr>
+<td><code>TRCE 3..8</code></td>
+<td><code>VCounter</code> bits 3..8</td>
+</tr>
+<tr>
+<td><code>TRC</code> / <code>TRC?</code> / <code>TRCE?</code></td>
+<td><code>HCounter</code> bits 6..8 (marked with a question mark)</td>
+</tr>
+<tr>
+<td><code>SR 0..7</code></td>
+<td><code>Pixel Shift Register</code> bits 0..7</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-gd-latch-39-clusters">3. <code>GD</code> — latch (39 clusters)</h2>
+<p>A classic transparent latch: an RS core (<code>g347</code>/<code>g348</code>) plus an input stage that
+“opens” the core on the enable <code>nE</code>. In the HDL this is already the primitive
+<a href="/hdl/ulabase.v"><code>GD</code></a> (<code>nE=0 → Q=D</code>).</p>
+<p><img loading="lazy" alt="GD — a data_latch latch, bit 5" src="imgstore/seq/seq_gd.png" /></p>
+<p>The cell occupies 4 gates (<code>DataLatch[5]</code> = <code>g347</code>, <code>g348</code>, <code>g369</code>, <code>g370</code>),
+in <code>attr_latch</code> — 5 (<code>AttrLatch[0]</code> = <code>g221</code>, <code>g222</code>, <code>g225</code>, <code>g245</code>, <code>g246</code>).
+Folded into the primitive: <strong>30 clusters / 130 gates</strong> (8 <code>data_latch</code>, 8
+<code>attr_latch</code>, 8 <code>ao_latch</code>, 5 <code>io</code>, 1 <code>latch_control</code>); two more <code>GD</code> arms
+(<code>/MREQ</code>, <code>/IOREQ</code>) sit inside the shared SCC of the <code>contention</code> arbiter.</p>
+<p>Standing apart are 9 “bare” RS latches which the annotation also marks <code>GD</code>, but
+which in the HDL are still at the gate level: 8 arms of the shift register
+(<code>Pixel[0..7]</code> = <code>g483/g484</code>, <code>g463/g464</code>, <code>g457/g458</code>, <code>g440/g441</code>,
+<code>g434/g435</code>, <code>g419/g420</code>, <code>g413/g414</code>, <code>g400/g401</code>) and <code>Timing</code>
+(<code>g150</code>/<code>g151</code>). These are exactly what falls into the scope of issue #7.</p>
+<h2 id="4-fd-counted-d-flip-flop-12-clusters">4. <code>FD</code> — counted D flip-flop (12 clusters)</h2>
+<p>One and the same circuit on 6×NOR: two latches (master/slave) plus surrounding
+logic wired as a counting ring (<code>nQ → D</code>). It works as a divide-by-2.</p>
+<p><img loading="lazy" alt="FD — the CLK7 divider in clkgen" src="imgstore/seq/seq_fd_clkgen.png" /></p>
+<p><code>clkgen</code>: <code>g423..g425</code> (master) + <code>g430..g432</code> (slave), divides <code>OSC</code> by 2 —
+this is <code>nCLK7</code>, from which the H-counter, the latches and the shift register
+are clocked (more detail in <a href="/specs/ula-modules.md">specs/ula-modules.md</a>, module 1).</p>
+<p>The same cell is used in the FLASH divider (5 of them, in a chain):</p>
+<p><img loading="lazy" alt="FD — a Flash Clock cell" src="imgstore/seq/seq_fd_flash.png" /></p>
+<p>and in the H-counter — bits 0..5 (clock <code>w337</code> = <code>/nCLK7</code>, output <code>nC[i]</code>/<code>C[i]</code>):</p>
+<p><img loading="lazy" alt="FD — an H-counter cell, bit 0" src="imgstore/seq/seq_fd_hc.png" /></p>
+<p>All 12 cells are <strong>loose gates</strong>: in the HDL they are individual <code>ula_nor</code>s, not
+a module.</p>
+<h2 id="5-tce-v-counter-toggle-cell-3-clusters">5. <code>TCE</code> — V-counter toggle cell (3 clusters)</h2>
+<p>A cell on 8×NOR (two NORs more than <code>FD</code>). Bits 0..2 each have their own SCC,
+all three are clocked by <code>CLKHC6</code>:</p>
+<p><img loading="lazy" alt="TCE — a V-counter cell, bit 2" src="imgstore/seq/seq_tce.png" /></p>
+<p>Bit 0 additionally takes <code>HCrst</code> (reset/start of line — it is at the same time
+the carry in for bit 0, see <a href="https://github.com/emu-russia/ula/blob/main/vcounter.md">vcounter.md</a>), bits 1 and 2 receive
+the carry from the previous bit (<code>w88</code>, <code>w160</code>).</p>
+<h2 id="6-trce-bits-38-of-the-v-counter-1-cluster-59-gates">6. <code>TRCE</code> — bits 3..8 of the V-counter (1 cluster, 59 gates)</h2>
+<p>Starting from bit 3 the V-counter stops being a set of separate cells: all bits
+3..8 are <strong>one SCC of 59 gates</strong>, they share the clock <code>vclk2</code>, the reset <code>vrst</code>
+and part of the carry logic. This is exactly the place that <code>vcounter.md</code> calls
+“gate-spread”.</p>
+<p><img loading="lazy" alt="TRCE — bits 3..8 of the V-counter (tiles)" src="imgstore/seq/seq_trce.png" /></p>
+<p>Key shared signals (verified against the netlist and the HDL):</p>
+<table>
+<thead>
+<tr>
+<th>signal</th>
+<th>gate</th>
+<th>formula</th>
+<th>who uses it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vclk2</code> (<code>w193</code>)</td>
+<td><code>g523</code></td>
+<td><code>nor(nTCLKA, nC5)</code></td>
+<td><code>g550</code>, <code>g551</code> (bit 3), <code>g543</code>, <code>g544</code> (4), <code>g570</code>, <code>g571</code> (5), <code>g602</code>, <code>g603</code> (6), <code>g607</code>, <code>g608</code> (7), <code>g577</code>, <code>g578</code> (8)</td>
+</tr>
+<tr>
+<td><code>vrst</code> (<code>w295</code>)</td>
+<td><code>g567</code></td>
+<td><code>nor4(nV[5], nV[4], nV[8], w278)</code></td>
+<td><code>g539</code> (3), <code>g547</code> (4), <code>g569</code> (5), <code>g566</code> (8)</td>
+</tr>
+<tr>
+<td>carry/<code>w278</code></td>
+<td><code>g89</code></td>
+<td><code>not(w98)</code>, where <code>w98</code> is the output of bit 2</td>
+<td><code>g538</code>, <code>g540</code> (bit 3) <strong>and</strong> <code>g567</code> (forming <code>vrst</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>The last row is that very example of economy: the inverter <code>g89</code> serves both the
+carry from bit 2 into bit 3 and the additional reset <code>vrst</code>. In the cleaned-up
+HDL <code>g89</code> remains an ordinary <code>ula_not</code> (that is how it is labelled in the
+source), while <code>TRCE</code> is made a module without the “extra” output.</p>
+<h2 id="7-trc-bits-68-of-the-h-counter-1-cluster-25-gates">7. <code>TRC?</code> — bits 6..8 of the H-counter (1 cluster, 25 gates)</h2>
+<p>The symmetric place in the H-counter: bits 0..5 are separate <code>FD</code> cells, while
+bits 6..8 are a single core of 25 gates with a shared <code>HCrst</code>
+(<code>g104 = nor(nC[8], nC[7])</code>) and three 4-input NORs <code>g100</code>/<code>g116</code>/<code>g127</code>. In the
+annotation this is marked <code>TRC</code> / <code>TRC?</code> — that is, the author of the annotation
+was not sure about the type himself.</p>
+<p><img loading="lazy" alt="TRC? — bits 6..8 of the H-counter (tiles)" src="imgstore/seq/seq_trc.png" /></p>
+<h2 id="8-sr-pixel-shift-register-8-clusters">8. <code>SR</code> — pixel shift register (8 clusters)</h2>
+<p>A shift register cell is 4 gates (<code>g232</code>, <code>g233</code>, <code>g485</code>, <code>g486</code>): a NOR3 with
+load (<code>g232</code>: <code>nDL[0]</code> + <code>SLoad</code> + arm) and an RS pair. Each bit also has its own
+<code>GD</code> arm (in the annotation <code>GD 0..7</code>), that is why both parts are shown as
+separate tiles in the picture:</p>
+<p><img loading="lazy" alt="SR + GD — a shift register cell" src="imgstore/seq/seq_sr.png" /></p>
+<h2 id="9-the-contention-arbiter">9. The <code>contention</code> arbiter</h2>
+<p>The <code>/MREQ</code> and <code>/IOREQ</code> latches (<code>GD mreq_gd</code>, <code>GD ioreq_gd</code>) have already been
+factored out into the primitive, but their SCC is merged with the combinational
+logic of the arbiter into a single cluster of 15 gates, so structurally this
+place remains special:</p>
+<p><img loading="lazy" alt="GD — the contention arbiter latches" src="imgstore/seq/seq_contention.png" /></p>
+<h2 id="10-full-list-of-clusters">10. Full list of clusters</h2>
+<p>Generated by <code>tools/gen_seq_crops.py --table</code> (gates are given by their names
+from the netlist, <code>gNNN</code>).</p>
+<h3 id="summary-by-type">Summary by type</h3>
+<table>
+<thead>
+<tr>
+<th>type</th>
+<th>clusters</th>
+<th>gates per cluster</th>
+<th>where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gd</code> (<code>GD</code>)</td>
+<td>39</td>
+<td>2 / 4 / 5</td>
+<td><code>data_latch</code>, <code>attr_latch</code>, <code>ao_latch</code>, <code>io</code>, <code>latch_control</code>, <code>pixel_shift_reg</code>, <code>video_signal_features</code></td>
+</tr>
+<tr>
+<td><code>fd</code> (<code>FD</code>)</td>
+<td>12</td>
+<td>6</td>
+<td><code>clkgen</code>, <code>flash_clock</code>, <code>hcounter</code></td>
+</tr>
+<tr>
+<td><code>tce</code> (<code>TCE</code>)</td>
+<td>3</td>
+<td>8</td>
+<td><code>vcounter</code></td>
+</tr>
+<tr>
+<td><code>trce</code> (<code>TRCE</code>)</td>
+<td>1</td>
+<td>59</td>
+<td><code>vcounter</code></td>
+</tr>
+<tr>
+<td><code>trc</code> (<code>TRC?</code>)</td>
+<td>1</td>
+<td>25</td>
+<td><code>hcounter</code></td>
+</tr>
+<tr>
+<td><code>sr</code> (<code>SR</code>)</td>
+<td>8</td>
+<td>4</td>
+<td><code>pixel_shift_reg</code></td>
+</tr>
+<tr>
+<td><code>arb</code> (<code>GD</code>)</td>
+<td>1</td>
+<td>15</td>
+<td><code>contention</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="clkgen"><code>clkgen</code></h3>
+<ul>
+<li><strong>FD</strong> — <code>fd</code>, 6 gates: <code>g423</code>, <code>g424</code>, <code>g425</code>, <code>g430</code>, <code>g431</code>, <code>g432</code> (loose gates)</li>
+</ul>
+<h3 id="hcounter"><code>hcounter</code></h3>
+<ul>
+<li><strong>bits 6..8</strong> — <code>trc</code>, 25 gates: <code>g98</code>, <code>g99</code>, <code>g100</code>, <code>g101</code>, <code>g102</code>, <code>g103</code>, <code>g104</code>, <code>g108</code>, <code>g109</code>, <code>g110</code>, <code>g111</code>, <code>g112</code>, <code>g113</code>, <code>g114</code>, <code>g115</code>, <code>g116</code>, <code>g121</code>, <code>g122</code>, <code>g123</code>, <code>g124</code>, <code>g125</code>, <code>g126</code>, <code>g127</code>, <code>g128</code>, <code>g129</code> (loose gates)</li>
+<li><strong>bit 0</strong> — <code>fd</code>, 6 gates: <code>g444</code>, <code>g445</code>, <code>g446</code>, <code>g453</code>, <code>g454</code>, <code>g455</code> (loose gates)</li>
+<li><strong>bit 1</strong> — <code>fd</code>, 6 gates: <code>g452</code>, <code>g468</code>, <code>g469</code>, <code>g470</code>, <code>g471</code>, <code>g472</code> (loose gates)</li>
+<li><strong>bit 2</strong> — <code>fd</code>, 6 gates: <code>g496</code>, <code>g497</code>, <code>g498</code>, <code>g499</code>, <code>g507</code>, <code>g524</code> (loose gates)</li>
+<li><strong>bit 3</strong> — <code>fd</code>, 6 gates: <code>g492</code>, <code>g493</code>, <code>g494</code>, <code>g495</code>, <code>g508</code>, <code>g509</code> (loose gates)</li>
+<li><strong>bit 4</strong> — <code>fd</code>, 6 gates: <code>g510</code>, <code>g511</code>, <code>g512</code>, <code>g513</code>, <code>g521</code>, <code>g522</code> (loose gates)</li>
+<li><strong>bit 5</strong> — <code>fd</code>, 6 gates: <code>g489</code>, <code>g490</code>, <code>g514</code>, <code>g515</code>, <code>g519</code>, <code>g520</code> (loose gates)</li>
+</ul>
+<h3 id="vcounter"><code>vcounter</code></h3>
+<ul>
+<li><strong>bit 0</strong> — <code>tce</code>, 8 gates: <code>g140</code>, <code>g141</code>, <code>g142</code>, <code>g143</code>, <code>g144</code>, <code>g145</code>, <code>g146</code>, <code>g148</code> (loose gates)</li>
+<li><strong>bit 1</strong> — <code>tce</code>, 8 gates: <code>g149</code>, <code>g157</code>, <code>g158</code>, <code>g159</code>, <code>g160</code>, <code>g161</code>, <code>g162</code>, <code>g163</code> (loose gates)</li>
+<li><strong>bit 2</strong> — <code>tce</code>, 8 gates: <code>g132</code>, <code>g134</code>, <code>g135</code>, <code>g136</code>, <code>g137</code>, <code>g138</code>, <code>g164</code>, <code>g165</code> (loose gates)</li>
+<li><strong>bits 3..8</strong> — <code>trce</code>, 59 gates: <code>g88</code>, <code>g93</code>, <code>g94</code>, <code>g95</code>, <code>g97</code>, <code>g536</code>…<code>g553</code>, <code>g564</code>…<code>g581</code>, <code>g595</code>…<code>g612</code> (loose gates)</li>
+</ul>
+<h3 id="data_latch-attr_latch-ao_latch"><code>data_latch</code>, <code>attr_latch</code>, <code>ao_latch</code></h3>
+<p>8 latches <code>GD 0..7</code> each (4–5 gates each) — <strong>already folded into the <code>GD</code>
+primitive</strong>; the full list of gates is printed by <code>tools/gen_seq_crops.py --table</code>
+(<code>DataLatch[0]</code> = <code>g219</code>, <code>g220</code>, <code>g247</code>, <code>g248</code>, …, <code>AttrLatch[3]</code> = <code>g320</code>,
+<code>g321</code>, <code>g343</code>, <code>g344</code>, <code>AOLatch[7]</code> = <code>g303</code>, <code>g304</code>, <code>g331</code>, <code>g332</code>).</p>
+<h3 id="io"><code>io</code></h3>
+<ul>
+<li><strong>B0_B</strong> — <code>g223</code>, <code>g224</code>, <code>g243</code>, <code>g244</code>; <strong>B1_R</strong> — <code>g255</code>, <code>g256</code>, <code>g278</code>, <code>g279</code>; <strong>B2_G</strong> — <code>g289</code>, <code>g290</code>, <code>g311</code>, <code>g312</code>; <strong>Tape</strong> — <code>g322</code>, <code>g323</code>, <code>g341</code>, <code>g342</code>; <strong>Speaker</strong> — <code>g371</code>, <code>g372</code>, <code>g381</code>, <code>g382</code> — <strong>already folded into <code>GD</code></strong>.</li>
+</ul>
+<h3 id="latch_control"><code>latch_control</code></h3>
+<ul>
+<li><strong>nVidEn</strong> — <code>g32</code>, <code>g466</code>, <code>g467</code>, <code>g480</code>, <code>g481</code> — <strong>already folded into <code>GD</code></strong>.</li>
+</ul>
+<h3 id="pixel_shift_reg"><code>pixel_shift_reg</code></h3>
+<ul>
+<li>8 <code>SR</code> cells (4 gates each): <code>g232</code>, <code>g233</code>, <code>g485</code>, <code>g486</code>; <code>g234</code>, <code>g235</code>, <code>g461</code>, <code>g462</code>; <code>g268</code>, <code>g269</code>, <code>g459</code>, <code>g460</code>; <code>g270</code>, <code>g271</code>, <code>g438</code>, <code>g439</code>; <code>g298</code>, <code>g299</code>, <code>g436</code>, <code>g437</code>; <code>g300</code>, <code>g301</code>, <code>g417</code>, <code>g418</code>; <code>g334</code>, <code>g335</code>, <code>g415</code>, <code>g416</code>; <code>g336</code>, <code>g337</code>, <code>g398</code>, <code>g399</code> — <strong>loose gates</strong>.</li>
+<li>8 <code>GD</code> arms (2 gates each): <code>g483</code>, <code>g484</code>; <code>g463</code>, <code>g464</code>; <code>g457</code>, <code>g458</code>; <code>g440</code>, <code>g441</code>; <code>g434</code>, <code>g435</code>; <code>g419</code>, <code>g420</code>; <code>g413</code>, <code>g414</code>; <code>g400</code>, <code>g401</code> — <strong>loose gates</strong>.</li>
+</ul>
+<h3 id="flash_clock"><code>flash_clock</code></h3>
+<ul>
+<li>5 <code>FD</code> cells (6 gates each): <code>g180</code>, <code>g181</code>, <code>g207</code>, <code>g208</code>, <code>g209</code>, <code>g210</code>; <code>g182</code>, <code>g183</code>, <code>g203</code>, <code>g204</code>, <code>g205</code>, <code>g206</code>; <code>g184</code>, <code>g185</code>, <code>g199</code>, <code>g200</code>, <code>g201</code>, <code>g202</code>; <code>g186</code>, <code>g187</code>, <code>g195</code>, <code>g196</code>, <code>g197</code>, <code>g198</code>; <code>g188</code>, <code>g189</code>, <code>g191</code>, <code>g192</code>, <code>g193</code>, <code>g194</code> — <strong>loose gates</strong>.</li>
+</ul>
+<h3 id="video_signal_features"><code>video_signal_features</code></h3>
+<ul>
+<li><strong>Timing</strong> — <code>g150</code>, <code>g151</code> (<code>GD</code>, RS latch) — <strong>loose gates</strong>.</li>
+</ul>
+<h3 id="contention"><code>contention</code></h3>
+<ul>
+<li><strong>arbiter latches</strong> — <code>g42</code>, <code>g43</code>, <code>g48</code>, <code>g383</code>, <code>g384</code>, <code>g392</code>, <code>g393</code>, <code>g394</code>, <code>g395</code>, <code>g396</code>, <code>g397</code>, <code>g402</code>, <code>g403</code>, <code>g404</code>, <code>g405</code> (two <code>GD</code> inside + the combinational logic of the arbiter).</li>
+</ul>
+<h2 id="11-vcounter-what-is-confirmed-and-what-is-not">11. VCounter: what is confirmed and what is not</h2>
+<p>A check of the findings of <a href="https://github.com/emu-russia/ula/blob/main/vcounter.md">vcounter.md</a> against the current
+netlist and HDL:</p>
+<p><strong>Matches:</strong></p>
+<ul>
+<li>“<code>HCrst</code> is at the same time the carry in for bit 0”: <code>g9</code>/<code>g143</code> feed <code>HCrst</code>
+  into bit 0 of the V-counter.</li>
+<li>“bits 0..2 are clocked by <code>CLKHC6</code>”: <code>g144</code>/<code>g145</code>, <code>g157</code>/<code>g158</code>,
+  <code>g137</code>/<code>g138</code>.</li>
+<li>“bits 3..8 are clocked by <code>vclk2</code>, obtained in <code>g523</code> from <code>/TCLKA</code> and <code>/C5</code>”:
+  <code>g523 = nor(nTCLKA, nC5) → w193</code>, and <code>w193</code> really does go to the gates of
+  bits 3..8.</li>
+<li>“<code>vrst</code> is produced in <code>g567</code>”: <code>g567 = nor4(nV[5], nV[4], nV[8], w278) → w295</code>.</li>
+<li>“<code>g89</code> from the cell of bit 3 is reused for <code>vrst</code>”: <code>g89 = not(w98)</code>
+  (<code>w98</code> is the output of bit 2) feeds both the carry of bit 3 (<code>g538</code>, <code>g540</code>)
+  and <code>g567</code>.</li>
+<li>“In the cleaned-up netlist it will simply be an additional <code>not</code>”: in
+  <code>hdl/ula6c001.v</code> <code>g89</code> is left as an ordinary <code>ula_not</code>, and <code>g567</code> is built on
+  <code>ula_nor4</code> — that is, a separate <code>TRCE</code> module with an extra output is not
+  needed.</li>
+</ul>
+<p><strong>Needs clarification:</strong></p>
+<ul>
+<li><code>vcounter.md</code> writes “bits 3..5 — <code>TRCE</code>, bits 6..7 — again <code>TCE</code>, bit 8 —
+  <code>TRE</code>”, while the annotation in the picture marks <code>TRCE 3..8</code>. By the gates:
+  <code>vrst</code> (<code>w295</code>) arrives only at bits <strong>3, 4, 5 and 8</strong> (<code>g539</code>, <code>g547</code>, <code>g569</code>,
+  <code>g566</code>), bits 6 and 7 do not use <code>vrst</code> — that is, the text of <code>vcounter.md</code>
+  is structurally more precise than the annotation, and the <code>TRCE</code> label for
+  bits 6/7 should be corrected.</li>
+<li>The claim about “<code>TRE</code> = <code>TRCE</code> without carry out” for bit 8 cannot be proved
+  directly from the gates: bit 8 (<code>g564</code>..<code>g566</code>, <code>g577</code>..<code>g581</code>, <code>g95</code>) is built
+  from the same 8 NORs + an inverter, and its “carry” triple
+  <code>g577</code>/<code>g578</code>/<code>g579</code> is closed on itself and gives nothing outwards (to bit
+  9). This indirectly confirms “the extra NOR was dropped”, but the exact form
+  of the bit 8 cell in the HDL still has to be pinned down (in the source it is
+  marked <code>// not sure</code>).</li>
+<li>In <code>hdl/ula6c001.v</code> the whole block of bits 3..8 (<code>// not sure</code>) is still not
+  split into cells: the <code>vcounter</code> module is 91 gates in a row with per-bit
+  comments. This is the main work of issue #7.</li>
+</ul>
+<h2 id="12-what-is-left-to-do-on-issue-7">12. What is left to do on issue #7</h2>
+<ul>
+<li><strong>Loose gates that need to be folded into modules</strong> (35 clusters, 245 gates,
+  of which 237 are still present in <code>hdl/</code>):</li>
+<li><code>FD</code> × 12 — <code>clkgen</code>, <code>flash_clock</code> (×5), <code>hcounter</code> (bits 0..5);</li>
+<li><code>TCE</code> × 3 — <code>vcounter</code> (bits 0..2);</li>
+<li><code>TRCE</code> — <code>vcounter</code> (bits 3..8, 59 gates) and <code>TRC?</code> — <code>hcounter</code>
+    (bits 6..8, 25 gates);</li>
+<li><code>SR</code> × 8 + <code>GD</code> arms × 8 — <code>pixel_shift_reg</code>;</li>
+<li><code>GD</code> — the RS latch <code>Timing</code> (<code>g150</code>/<code>g151</code>);</li>
+<li><code>GD</code> — two arms in the <code>contention</code> arbiter (<code>/MREQ</code>, <code>/IOREQ</code>) in a shared SCC.</li>
+<li>Separately (from <a href="/specs/hdl-vs-netlist-verification.md">specs/hdl-vs-netlist-verification.md</a>):
+  <code>hdl/ulabase.v</code> must get the same X→0 semantics of <code>ula_nor</code> as
+  <code>netlist/ulabase.v</code>, otherwise the HDL will not leave the <code>x</code> state even after
+  all the flip-flops are factored out.</li>
+<li>After the factoring out — a repeated verification of the HDL against the
+  netlist and removal of the <code>// not sure</code> marks in <code>vcounter</code>.</li>
+</ul>
+<h2 id="13-how-to-regenerate-the-pictures">13. How to regenerate the pictures</h2>
+<pre><code class="language-bash">python3 tools/gen_seq_crops.py            # imgstore/seq/*.png
+python3 tools/gen_seq_crops.py --table    # cluster tables (section 10)
+python3 tools/gen_seq_crops.py --check    # gate geometry consistency check
+</code></pre>
+<p>The script counts clusters from the netlist (<code>netlist/ula6c001.v</code>), takes the
+latch names from <code>icarus/run_ula.v</code>, the bit numbers from the <code>// N</code> comments in
+the HDL, and the gate coordinates from the vector <code>design/ula6c001.pdf</code> (the
+same schematic that is rasterised in <code>design/ula6c001.png</code>, while
+<code>imgstore/ula6c001_annotated.png</code> is its annotated copy). For the “gate-spread”
+cells (V-counter, H-counter 6..8) the picture is assembled automatically from
+tiles by groups of nearby gates.</p>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <p class="f-title">◫ ZX Spectrum ULA 6C001 <span class="f-sub">— Chip-level reverse engineering of the ZX Spectrum ULA 6C001: netlist recovery, module analysis, schematics and waveforms.</span></p>
+      <p class="f-links">
+        <a href="https://github.com/emu-russia/ula">GitHub · emu-russia/ula</a>
+        <a href="https://github.com/emu-russia/ula/issues">Issues</a>
+        <a href="https://github.com/emu-russia/ula/blob/main/LICENSE">License (MIT)</a>
+      </p>
+    </div>
+    <p class="srcnote">Source (markdown): <a href="https://github.com/emu-russia/ula/blob/main/seq.en.md">specs/seq.en.md</a></p>
+    <p class="f-gen">Generated from the <code>specs/</code> markdown sources by <code>tools/gen_docs_site.py</code>.</p>
+  </div>
+</footer>
+</body>
+</html>

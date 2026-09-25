@@ -15,7 +15,7 @@
   <div class="wrap">
     <a class="brand" href="index.ru.html">◫ ZX Spectrum ULA 6C001</a>
     <nav class="site-nav" aria-label="main">
-      <a class="active" href="ula-modules.ru.html">Модули ULA</a><a href="ula-signals.ru.html">Внутренние сигналы</a><a href="pads.ru.html">Пады</a><a href="topo.ru.html">Топология</a><a href="hdl-vs-netlist-verification.html">Верификация (EN)</a>
+      <a class="active" href="ula-modules.ru.html">Модули ULA</a><a href="seq.ru.html">Последовательностные элементы</a><a href="ula-signals.ru.html">Внутренние сигналы</a><a href="pads.ru.html">Пады</a><a href="topo.ru.html">Топология</a><a href="hdl-vs-netlist-verification.html">Верификация (EN)</a>
       <a class="lang-switch" href="ula-modules.html">English</a>
       
       <button class="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle color theme">
@@ -195,7 +195,10 @@
 <li>сигнал <code>/X</code> (или <code>nX</code>) активен низким уровнем;</li>
 <li><code>GD</code> — защёлка с инверсным разрешением (<code>nE</code>):
   <code>Q = D</code> пока <code>nE=0</code>, иначе состояние хранится
-  (в <code>hdl/ulabase.v</code> это <code>reg val; always @(*) if (~nE) val = D;</code>), <code>nQ = ~Q</code>;</li>
+  (в <code>hdl/ulabase.v</code> это <code>reg val; always @(*) if (~nE) val = D;</code>), <code>nQ = ~Q</code>;
+  полный разбор всех триггероподобных блоков (типы <code>GD</code>/<code>FD</code>/<code>TCE</code>/<code>TRCE</code>/<code>TRC</code>/<code>SR</code>,
+  инвентаризация 65 запоминающих кластеров и вырезки из аннотированного нетлиста) —
+  в <a href="/specs/seq.md">seq.md</a> (задача #7);</li>
 <li>логические вентили нумеруются как в исходнике (<code>gNNN</code>) — номера ячеек
   совпадают с плоским нетлистом <code>netlist/ula6c001.v</code> (см. отчёт по задаче #2);</li>
 <li>имена шин: <code>C[8:0]</code> — горизонтальный счётчик, <code>V[8:0]</code> — вертикальный.</li>
