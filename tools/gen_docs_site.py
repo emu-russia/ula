@@ -160,7 +160,7 @@ REFERENCED_IMAGES = [
     "w_hline.png", "w_io.png", "w_latch_control.png", "w_memory.png",
     "w_pixels.png", "w_vframe.png",
 ]] + ["seq/" + n for n in [
-    "seq_overview.png", "seq_gd.png", "seq_gd_rs.png", "seq_fd_clkgen.png",
+    "seq_overview.png", "seq_gd.png", "seq_gd_timing.png", "seq_fd_clkgen.png",
     "seq_fd_flash.png", "seq_fd_hc.png", "seq_tce.png", "seq_trce.png",
     "seq_trc.png", "seq_sr.png", "seq_contention.png",
 ]]

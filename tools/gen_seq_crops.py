@@ -1,29 +1,39 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""gen_seq_crops.py — inventory + figures for the trigger-like (storage) elements
-of the ULA 6C001 (issue #7).
+"""gen_seq_crops.py — inventory + figures for the sequential logic of the
+ULA 6C001 (issue #7).
 
 What it does
 ------------
 
-1. Reads `netlist/ula6c001.v` and finds every *storage* cluster: a strongly
-   connected component of the gate graph with more than one gate, i.e. a loop
-   of cross-coupled NORs (an RS latch).  Every flip-flop of the chip is one or
-   more of those loops.
-2. Reads `hdl/ula6c001.v` to learn which gates have already been promoted to
-   the `GD` / `FD` primitives and which are still loose gates ("рассыпуха"),
-   and `icarus/run_ula.v` for the names of the latch outputs
-   (`DataLatch[5] = ula_inst.g348.x` and friends).
-3. Cuts every cluster out of `imgstore/ula6c001_annotated.png` and renders the
-   figures used by `specs/seq.md` into `imgstore/seq/`.
+1. Reads `netlist/ula6c001.v` and finds every **`GD`** — the only storage cell
+   of this chip.  A `GD` is always four NORs (a cross-coupled RS core of two
+   NORs plus two steering NORs sharing the enable `nE`); the blocks are found by
+   pattern, so the latches hidden inside bigger loops (the contention arbiter)
+   or sharing their steering gates with the neighbouring cell (the pixel shift
+   register) are found too.  Every two-NOR loop of the netlist is the core of
+   some `GD` — asserted by `--check`.
+2. Finds the counting/shift **cells** built around those latches (strongly
+   connected components of the storage graph): `FD` (6 NORs), `TCE` (8),
+   the shared cores `TRC`/`TRCE` (25/59) and `SR` (4), and works out which cell
+   each `GD` sits in.
+3. Reads `hdl/ula6c001.v` to see which latches have already been promoted to the
+   `GD` primitive and which are still loose gates, `icarus/run_ula.v` for the
+   latch output names (`DataLatch[5] = ula_inst.g348.x`) and `specs/ula-signals.md`
+   for readable net names.
+4. Cuts the figures used by `specs/seq.md` out of `imgstore/ula6c001_annotated.png`
+   into `imgstore/seq/`: the cell in red, the surrounding glue logic in orange,
+   every external port labelled at its pin (inputs blue, outputs red) and listed
+   in a legend.  Figures are captioned in English.
 
 How the geometry is obtained
 ----------------------------
 
-`design/ula6c001.pdf` is a *vector* export (Nlview) of exactly the schematic
-that was rasterised into `design/ula6c001.png`; every gate glyph there is a
-filled rectangle plus its `gNNN` label, so the coordinates of all 626 gates can
-be parsed exactly from the PDF content stream.  The affine map
+`design/ula6c001.pdf` is a *vector* export (Nlview) of exactly the schematic that
+was rasterised into `design/ula6c001.png`; every gate glyph there is a filled
+rectangle plus its `gNNN` label, and the pins (`a`, `b`, `x`, …) are small text
+items next to it, so the coordinates of all 626 gates and their pins can be
+parsed exactly from the PDF content stream.  The affine map
 PDF -> `design/ula6c001.png` was fitted (ICP over the light-blue glyph mask of
 the raster, 609/626 gates matched, median residual 0.25 px) and is stored in
 `AFFINE`; the annotated raster is that same image scaled to 19598x4996.
@@ -33,7 +43,7 @@ Usage
 
     python3 tools/gen_seq_crops.py            # write imgstore/seq/*.png
     python3 tools/gen_seq_crops.py --table    # print the markdown inventory
-    python3 tools/gen_seq_crops.py --check    # verify the PDF->raster mapping
+    python3 tools/gen_seq_crops.py --check    # sanity-check the extraction
 """
 
 import os
@@ -95,6 +105,46 @@ def pdf_gate_boxes():
 PDF_BOXES = pdf_gate_boxes()
 
 
+def pdf_pin_points():
+    """(gate, pin) -> pin connection point in PDF units.
+
+    The pins are drawn as small `a`, `b`, `x`, … labels next to the glyph, so
+    they can be associated with the nearest gate rectangle.
+    """
+    data = open(PDF, 'rb').read()
+    chunks = []
+    for m in re.finditer(rb'stream\r?\n', data):
+        start = m.end()
+        end = data.find(b'endstream', start)
+        chunks.append(data[start:end].decode('latin-1'))
+    flat = re.sub(r'\s+', ' ', '\n'.join(chunks))
+    text_re = re.compile(r'1 0 0 1 (-?[\d.]+) (-?[\d.]+) cm BT /F1 (\d+) Tf '
+                         r'1 0 0 -1 0 0 Tm (-?[\d.]+) (-?[\d.]+) Td \(([^)]*)\) Tj')
+    pins = {}
+    for m in text_re.finditer(flat):
+        cx, cy, size, dx, dy, txt = m.groups()
+        if size != '10' or txt not in ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'x'):
+            continue
+        px, py = float(cx) + float(dx), float(cy) - float(dy)
+        best, bestd = None, 45.0
+        for gid, (x0, y0, x1, y1) in PDF_BOXES.items():
+            ddx = max(x0 - px, 0, px - x1)
+            ddy = max(y0 - py, 0, py - y1)
+            d = (ddx * ddx + ddy * ddy) ** 0.5
+            if d < bestd:
+                best, bestd = gid, d
+        if best is None:
+            continue
+        x0, y0, x1, y1 = PDF_BOXES[best]
+        # wire lands on the box edge at the height of the pin label
+        x = x1 if txt == 'x' else x0
+        pins[(best, txt)] = (x, py)
+    return pins
+
+
+PDF_PINS = pdf_pin_points()
+
+
 def gate_box(gid):
     """glyph rectangle of a gate in the annotated raster (x0, y0, x1, y1)."""
     b = PDF_BOXES.get(gid)
@@ -105,6 +155,26 @@ def gate_box(gid):
     y0 = (AFFINE['sy'] * b[1] + AFFINE['ty']) * SCALE_Y
     y1 = (AFFINE['sy'] * b[3] + AFFINE['ty']) * SCALE_Y
     return (min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1))
+
+
+def to_ann(x, y):
+    """PDF content units -> annotated raster pixels."""
+    return ((AFFINE['sx'] * x + AFFINE['tx']) * SCALE,
+            (AFFINE['sy'] * y + AFFINE['ty']) * SCALE_Y)
+
+
+def pin_point(gid, pin):
+    """pin connection point in the annotated raster, or None."""
+    p = PDF_PINS.get((gid, pin))
+    if p is None:
+        return None
+    return to_ann(*p)
+
+
+def input_pins(gid):
+    """input pins actually used by a gate, in schematic order."""
+    args = INST[gid][1]
+    return [k for k in 'abcdefg' if k in args]
 
 
 def union_box(gates, pad=14.0):
@@ -119,7 +189,7 @@ def union_box(gates, pad=14.0):
 # ------------------------------------------------------------- netlist parsing
 
 def load_netlist():
-    txt = open(NETLIST).read()
+    txt = open(NETLIST, encoding='utf-8').read()
     inst = {}
     for m in re.finditer(r'^\s*(\w+)\s+(g\d+)\s*\(([^;]*)\)\s*;', txt, re.M):
         typ, gid, args = m.group(1), m.group(2), m.group(3)
@@ -138,6 +208,101 @@ for _gid, (_typ, _args) in INST.items():
         continue
     OUTNET[_gid] = _out
     DRIVERS[_out].append(_gid)
+
+USERS = defaultdict(list)          # net -> [(gate, input pin), ...]
+for _gid, (_typ, _args) in INST.items():
+    for _pin in 'abcdefg':
+        if _pin in _args:
+            USERS[_args[_pin]].append((_gid, _pin))
+
+
+def net_aliases():
+    """net -> readable name: HDL port names, the signal table, verified picks."""
+    res = {}
+    for m in re.finditer(r'\b(?:ula_nor\d?|ula_not)\s+(g\d+)\s*\((.*?)\)\s*;',
+                         open(HDL, encoding='utf-8').read(), re.S):
+        args = dict(re.findall(r'\.(\w+)\s*\(\s*([^)]*?)\s*\)', m.group(2)))
+        net, x = OUTNET.get(m.group(1)), args.get('x')
+        if net and x and not re.fullmatch(r'w\d+', x):
+            res.setdefault(net, x)
+    table = os.path.join(REPO, 'specs', 'ula-signals.md')
+    if os.path.exists(table):
+        for line in open(table, encoding='utf-8').read().splitlines():
+            if line.startswith('|'):
+                names = re.findall(r'`([^`]+)`', line)
+                wires = re.findall(r'\(w(\d+)\)', line)
+                if names and len(wires) == 1:
+                    res.setdefault('w' + wires[0], names[0])
+                continue
+            m = re.match(r'\s*([\w\[\]:]+)\s+((?:\d+=w\d+\s*)+)', line)
+            if m:                        # `nDL[7:0] 0=w479 1=w532 …`
+                base = m.group(1).split('[')[0]
+                for bit, wire in re.findall(r'(\d+)=w(\d+)', m.group(2)):
+                    res.setdefault('w' + wire, '%s[%s]' % (base, bit))
+    # names that only exist inside a module (verified in specs/seq.md)
+    res.setdefault('w193', 'vclk2')
+    res.setdefault('w295', 'vrst')
+    return res
+
+
+ALIAS = net_aliases()
+
+
+def cluster_ports(gates):
+    """external ports of a storage block: [(net, gate, pin, 'in' | 'out')].
+
+    The two outputs of the RS core are always ports (they are `Q` / `nQ` of the
+    latch), even when one of them is not used anywhere else in the netlist.
+    """
+    gs = set(gates)
+
+    def mutual(g, h):
+        return (OUTNET[h] in [INST[g][1][k] for k in input_pins(g)]
+                and OUTNET[g] in [INST[h][1][k] for k in input_pins(h)])
+
+    ins, outs, seen = [], [], set()
+    for g in gates:
+        for pin in input_pins(g):
+            net = INST[g][1][pin]
+            if net in ("1'b0", "1'b1"):
+                continue
+            if set(DRIVERS.get(net, [])) & gs:
+                continue                      # internal net of the block
+            if net in seen:
+                continue
+            seen.add(net)
+            ins.append((net, g, pin, 'in'))
+    for g in gs:
+        net = OUTNET[g]
+        if net in seen:
+            continue
+        users = USERS.get(net, [])
+        core = any(h != g and mutual(g, h) for h in gs)
+        if not users or core or any(u not in gs for u, _ in users):
+            seen.add(net)
+            outs.append((net, g, 'x', 'out'))
+    ins.sort(key=lambda p: (int(p[1][1:]), p[2]))
+    outs.sort(key=lambda p: (int(p[1][1:]), p[2]))
+    return ins + outs
+
+
+def port_name(net):
+    return ALIAS.get(net, net)
+
+
+def wrap_text(draw, text, f, maxw):
+    """greedy wrap of a legend line."""
+    words, lines, cur = text.split(' '), [], ''
+    for w in words:
+        cand = (cur + ' ' + w).strip()
+        if cur and draw.textlength(cand, font=f) > maxw:
+            lines.append(cur)
+            cur = w
+        else:
+            cur = cand
+    if cur:
+        lines.append(cur)
+    return lines
 
 
 def succ_of(gid):
@@ -200,7 +365,7 @@ def storage_clusters():
 # ---------------------------------------------------------------- HDL metadata
 
 def hdl_gate_modules():
-    txt = open(HDL).read()
+    txt = open(HDL, encoding='utf-8').read()
     res = {}
     for m in re.finditer(r'^module\s+(\w+)\s*\((.*?)\)\s*;(.*?)^endmodule', txt,
                          re.S | re.M):
@@ -215,7 +380,7 @@ GATE_MODULE = hdl_gate_modules()
 
 def hdl_bits(module):
     """counter/shift modules annotate every bit with a `// N` comment."""
-    txt = open(HDL).read()
+    txt = open(HDL, encoding='utf-8').read()
     m = re.search(r'^module\s+%s\s*\(.*?^endmodule' % module, txt, re.S | re.M)
     if not m:
         return {}
@@ -233,7 +398,7 @@ def hdl_bits(module):
 
 def latch_names():
     """latch output gate -> name from icarus/run_ula.v (`DataLatch[5] = ...g348`)."""
-    txt = open(RUN_ULA).read()
+    txt = open(RUN_ULA, encoding='utf-8').read()
     res = {}
     for m in re.finditer(r'assign\s+(\w+)(?:\[(\d+)\])?\s*=\s*ula_inst\.(g\d+)\.x', txt):
         name, bit, gid = m.group(1), m.group(2), m.group(3)
@@ -254,6 +419,69 @@ LATCH_MODULE = {
     'nVidEn': 'latch_control',
     'VSync': 'video_signal_features', 'nBorder': 'video_signal_features',
 }
+
+
+def find_gds():
+    """every `GD` block in the netlist.
+
+    A `GD` is always **four** NORs (this is what the annotated netlist marks as
+    `GD`): a cross-coupled RS core of two NORs plus two steering NORs that share
+    the enable net (`nE`), i.e.
+
+        S1 = nor(nE, D)      S2 = nor(S1, nE)
+        Q  = nor(S1, nQ)     nQ = nor(S2, Q)
+
+    The cores are found by pattern, not by SCC, so the latches that sit inside a
+    bigger loop (contention arbiter) or that share their steering gates with the
+    neighbouring cell (pixel shift register) are found as well.
+    """
+    found, seen = [], set()
+    for A in OUTNET:
+        if INST[A][0] != 'ula_nor':
+            continue
+        for B, _pin in USERS.get(OUTNET[A], []):
+            if B == A or INST[B][0] != 'ula_nor':
+                continue
+            if OUTNET[B] not in [INST[A][1][k] for k in input_pins(A)]:
+                continue
+            ext_a = [INST[A][1][k] for k in input_pins(A) if INST[A][1][k] != OUTNET[B]]
+            ext_b = [INST[B][1][k] for k in input_pins(B) if INST[B][1][k] != OUTNET[A]]
+            if len(ext_a) != 1 or len(ext_b) != 1:
+                continue
+            drv_a, drv_b = DRIVERS.get(ext_a[0], []), DRIVERS.get(ext_b[0], [])
+            if len(drv_a) != 1 or len(drv_b) != 1:
+                continue
+            P, Q = drv_a[0], drv_b[0]
+            if P == Q or P in (A, B) or Q in (A, B):
+                continue
+            inp_p = {INST[P][1][k] for k in input_pins(P)}
+            inp_q = {INST[Q][1][k] for k in input_pins(Q)}
+            common = inp_p & inp_q - {OUTNET[A], OUTNET[B]}
+            if not common:
+                continue
+            gd = tuple(sorted({A, B, P, Q}, key=lambda g: int(g[1:])))
+            if gd in seen:
+                continue
+            seen.add(gd)
+            enable = sorted(common)[0]
+            # the data input is the remaining input of the steering pair
+            data = None
+            for S, other in ((P, Q), (Q, P)):
+                for net in (INST[S][1][k] for k in input_pins(S)):
+                    if net != enable and net != OUTNET[other] and net != OUTNET[A] \
+                            and net != OUTNET[B]:
+                        data = net
+                        break
+                if data:
+                    break
+            found.append(dict(gates=list(gd), core=sorted((A, B), key=lambda g: int(g[1:])),
+                              steering=sorted((P, Q), key=lambda g: int(g[1:])),
+                              enable=enable, data=data))
+    found.sort(key=lambda r: int(r['gates'][0][1:]))
+    return found
+
+
+GD_BLOCKS = find_gds()
 
 
 def cluster_meta(cluster):
@@ -292,52 +520,13 @@ def cluster_meta(cluster):
 
 TYPE_TITLE = {
     'gd': 'GD — защёлка (RS-ядро + управление)',
-    'fd': 'FD — счётный D-триггер (÷2, 6×NOR)',
+    'fd': 'FD — счётная ячейка (÷2, 6×NOR)',
     'tce': 'TCE — счётная ячейка V-счётчика (8×NOR)',
-    'trce': 'TRCE — счётная ячейка со сбросом (ядро битов 3..8)',
-    'trc': 'TRC — ячейка битов 6..8 H-счётчика (25 вентилей)',
+    'trce': 'TRCE — биты 3..8 V-счётчика (общее ядро)',
+    'trc': 'TRC — биты 6..8 H-счётчика (25 вентилей)',
     'sr': 'SR — ячейка сдвигового регистра (4×NOR)',
     'arb': 'защёлки арбитра contention (GD + общая логика)',
 }
-# what the annotated netlist writes next to each block
-TYPE_LABEL = {'gd': 'GD', 'fd': 'FD', 'tce': 'TCE', 'trce': 'TRCE',
-              'trc': 'TRC?', 'sr': 'SR', 'arb': 'GD'}
-
-
-HIDDEN = {g for g in OUTNET if g not in GATE_MODULE}
-
-
-def hidden_neighbours(gate):
-    """hidden gates wired to `gate` through one net (either direction)."""
-    res = set()
-    args = INST[gate][1]
-    for k in 'abcdefg':
-        for drv in DRIVERS.get(args.get(k), []):
-            if drv in HIDDEN:
-                res.add(drv)
-    net = OUTNET[gate]
-    for user in HIDDEN:
-        if net in [INST[user][1].get(k) for k in 'abcdefg']:
-            res.add(user)
-    return res
-
-
-def latch_meshes():
-    """one mesh per `GD`/`FD` latch: the hidden RS core plus its own steering
-    gates (the gates the data path runs *through* belong to other latches and
-    are excluded, otherwise the walk would chain latches together)."""
-    cores = [c for c in storage_clusters()
-             if len(c) == 2 and all(g not in GATE_MODULE for g in c)]
-    core_gate = {g: i for i, c in enumerate(cores) for g in c}
-    meshes = []
-    for i, c in enumerate(cores):
-        mesh = set(c)
-        for g in c:
-            for nb in hidden_neighbours(g):
-                if nb not in core_gate:
-                    mesh.add(nb)
-        meshes.append(sorted(mesh, key=lambda g: int(g[1:])))
-    return meshes
 
 
 def bit_label(gates):
@@ -357,21 +546,61 @@ def bit_label(gates):
     return ''
 
 
+def gd_module(block):
+    """HDL module a `GD` block belongs to."""
+    mods = {GATE_MODULE.get(g) for g in block['gates']} - {None}
+    if len(mods) == 1:
+        return mods.pop()
+    names = sorted(LATCH_OF_GATE[g] for g in block['gates'] if g in LATCH_OF_GATE)
+    if names:
+        base = re.match(r'\w+', names[0]).group(0)
+        if base in LATCH_MODULE:
+            return LATCH_MODULE[base]
+    # hidden latch without a name (the two contention latches): look at the
+    # module of the gates that feed the block
+    neighbours = []
+    for net in (block['enable'], block['data']):
+        for g in DRIVERS.get(net, []) + [u for u, _ in USERS.get(net, [])]:
+            if g in GATE_MODULE:
+                neighbours.append(GATE_MODULE[g])
+    if neighbours:
+        return max(set(neighbours), key=neighbours.count)
+    return None
+
+
 def build():
+    """inventory of the trigger blocks: `GD` latches and the counter/shift cells."""
     rows = []
-    for gates in latch_meshes():
-        names = sorted(LATCH_OF_GATE[g] for g in gates if g in LATCH_OF_GATE)
-        label = names[0] if names else ''
-        base = re.match(r'\w+', label).group(0) if label else ''
-        rows.append(dict(gates=gates, n=len(gates), type='gd',
-                         module=LATCH_MODULE.get(base, None), label=label))
+    for b in GD_BLOCKS:
+        label = ''
+        for g in b['gates']:
+            if g in LATCH_OF_GATE:
+                label = LATCH_OF_GATE[g]
+                break
+        rows.append(dict(kind='gd', gates=b['gates'], n=4, type='gd',
+                         module=gd_module(b), label=label,
+                         enable=b['enable'], data=b['data'],
+                         core=b['core'], steering=b['steering'],
+                         extracted=all(g not in GATE_MODULE for g in b['gates'])))
     for c in storage_clusters():
-        if len(c) == 2 and all(g not in GATE_MODULE for g in c):
-            continue                     # already covered by a latch mesh
         typ, mod, label = cluster_meta(c)
-        rows.append(dict(gates=c, n=len(c), type=typ, module=mod,
-                         label=bit_label(c) or label))
-    rows.sort(key=lambda r: min(int(g[1:]) for g in r['gates']))
+        if typ in ('gd', 'arb'):
+            continue                     # covered by the GD block inventory
+        rows.append(dict(kind='cell', gates=c, n=len(c), type=typ, module=mod,
+                         label=bit_label(c) or label, extracted=False))
+    cell_rows = [r for r in rows if r['kind'] == 'cell']
+    for r in rows:                        # which cell does a GD sit in?
+        if r['kind'] != 'gd':
+            continue
+        r['cell'], best = None, 0
+        for c in cell_rows:
+            overlap = len(set(r['gates']) & set(c['gates']))
+            if overlap > best:
+                r['cell'], best = (c['label'] or TYPE_TITLE[c['type']].split(' —')[0]), overlap
+    for r in rows:                        # the two contention latches have no name
+        if r['kind'] == 'gd' and r['module'] == 'contention' and not r['label']:
+            r['label'] = '/MREQ' if r['data'] == 'w314' else '/IOREQ'
+    rows.sort(key=lambda r: (min(int(g[1:]) for g in r['gates'])))
     return rows
 
 
@@ -421,37 +650,168 @@ def spatial_groups(gates, max_w=620.0, max_h=430.0):
     return groups
 
 
-def render_collage(gates, title, subtitle, path, highlight='#d02020'):
-    """figure for a cluster whose gates are scattered: one tile per compact
-    spatial group, so the sparsity of the netlist stays visible."""
+IN_COLOR = '#10488a'          # inputs
+OUT_COLOR = '#8a2410'         # outputs
+GD_COLOR = '#d02020'          # the latch of a cell
+CELL_COLOR = '#d08000'        # the rest of the cell (carry / toggle logic)
+
+
+def port_list(gates):
+    """external ports of a block, as [('in'|'out', net, gate, pin)]."""
+    return cluster_ports(gates)
+
+
+def legend_lines(draw, f, ports, roles, width):
+    """`inputs: …` / `outputs: …` text, wrapped to the figure width."""
+    ins = [p for p in ports if p[3] == 'in']
+    outs = [p for p in ports if p[3] == 'out']
+
+    def one(plist):
+        items = []
+        for net, g, pin, kind in plist:
+            name = port_name(net)
+            role = (roles or {}).get(net)
+            items.append('%s%s' % (name, ' — %s' % role if role else ''))
+        return items
+
+    lines = []
+    for head, plist in (('inputs:', ins), ('outputs:', outs)):
+        if not plist:
+            continue
+        cur = head
+        for it in one(plist):
+            cand = cur + (' ' if cur.endswith(':') else ', ') + it
+            if draw.textlength(cand, font=f) > width and not cur.endswith(':'):
+                lines.append(cur)
+                cur = '    ' + it
+            else:
+                cur = cand
+        lines.append(cur)
+    return lines
+
+
+def draw_ports(draw, gates, to_canvas, f, occupied, bounds=None):
+    """label every external input/output right at its pin."""
+    for net, g, pin, kind in port_list(gates):
+        pt = pin_point(g, pin)
+        if pt is None:
+            continue
+        x, y = to_canvas(*pt)
+        label = port_name(net)
+        tw = draw.textlength(label, font=f)
+        th = cap_height(f)
+        tx = x - 10 - tw if kind == 'in' else x + 10
+        ty = y - th / 2.0
+        for _ in range(14):               # nudge until the label fits
+            rect = (tx - 3, ty - 2, tx + tw + 3, ty + th + 3)
+            if not any(rect[0] < o[2] and o[0] < rect[2]
+                       and rect[1] < o[3] and o[1] < rect[3] for o in occupied):
+                break
+            ty += 16 if kind == 'out' else -16
+        tx = max(2.0, min(tx, (bounds[0] if bounds else 1e9) - tw - 4))
+        ty = max(2.0, min(ty, (bounds[1] if bounds else 1e9) - th - 4))
+        rect = (tx - 3, ty - 2, tx + tw + 3, ty + th + 3)
+        occupied.append(rect)
+        color = IN_COLOR if kind == 'in' else OUT_COLOR
+        draw.rectangle(rect, fill='#ffffff', outline='#c9d4dc')
+        draw.text((tx, ty), label, font=f, fill=color)
+        if kind == 'in':
+            draw.line([tx + tw + 3, y, x - 2, y], fill=color, width=2)
+        else:
+            draw.line([x + 2, y, tx - 3, y], fill=color, width=2)
+
+
+def render(gates, title, subtitle, path, gd=None, roles=None):
+    """figure for a block: crop of the annotated netlist with the block marked
+    (`gd` gates in red, the combinational part of a cell in orange), every
+    external port labelled at its pin and listed in the legend."""
+    box = union_box(gates, pad=110.0)     # room for the port labels
+    if box is None:
+        print('  !! no geometry for', title)
+        return
+    w, h = box[2] - box[0], box[3] - box[1]
+    if w * h > 900_000:                  # gate-spread block -> collage of tiles
+        render_collage(gates, title, subtitle, path, gd=gd, roles=roles)
+        return
+    x0, y0, x1, y1 = [int(v) for v in box]
+    img = Image.open(ANNOTATED).convert('RGB')
+    x0 = max(0, x0); y0 = max(0, y0)
+    x1 = min(img.width, x1); y1 = min(img.height, y1)
+    crop = img.crop((x0, y0, x1, y1))
+    scale = max(1.6, min(3.0, 2200.0 / max(crop.width, 1)))
+    crop = crop.resize((int(crop.width * scale), int(crop.height * scale)),
+                       Image.LANCZOS)
+
+    f_title, f_sub, f_id, f_leg = font(26, bold=True), font(18), font(13, bold=True), font(15)
+    head = 30 + cap_height(f_title) + (cap_height(f_sub) + 6 if subtitle else 0) + 16
+    tmp = ImageDraw.Draw(Image.new('RGB', (10, 10)))
+    lines = legend_lines(tmp, f_leg, port_list(gates), roles, crop.width)
+    leg_h = (cap_height(f_leg) + 8) * len(lines) + 10 if lines else 0
+    canvas = Image.new('RGB', (crop.width + 24, crop.height + head + leg_h + 12), 'white')
+    canvas.paste(crop, (12, head))
+    d = ImageDraw.Draw(canvas)
+    d.text((12, 8), title, font=f_title, fill='#101820')
+    if subtitle:
+        d.text((12, 12 + cap_height(f_title) + 4), subtitle, font=f_sub, fill='#40606f')
+
+    def to_canvas(ax, ay):
+        return (12 + (ax - x0) * scale, head + (ay - y0) * scale)
+
+    occupied = []
+    for g in sorted(gates, key=lambda g: int(g[1:])):
+        b = gate_box(g)
+        if not b:
+            continue
+        bx0, by0 = to_canvas(b[0], b[1])
+        bx1, by1 = to_canvas(b[2], b[3])
+        color = GD_COLOR if (gd and g in gd) else (CELL_COLOR if gd else GD_COLOR)
+        d.rectangle([bx0 - 2, by0 - 2, bx1 + 2, by1 + 2], outline=color, width=3)
+        d.text((bx0, by1 + 3), g, font=f_id, fill=color)
+    draw_ports(d, gates, to_canvas, f_id, occupied, bounds=(canvas.width, canvas.height))
+    for i, line in enumerate(lines):
+        d.text((14, head + crop.height + 8 + i * (cap_height(f_leg) + 8)), line,
+               font=f_leg, fill='#243442')
+    d.rectangle([0, 0, canvas.width - 1, canvas.height - 1], outline='#b8c4cc', width=2)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    canvas.save(path)
+    print('  wrote %s  (%dx%d, %s)' % (os.path.relpath(path, REPO), canvas.width,
+                                       canvas.height, title))
+
+
+def render_collage(gates, title, subtitle, path, gd=None, roles=None):
+    """figure for a gate-spread block: one tile per compact spatial group, so
+    the sparsity of the netlist stays visible."""
     img = Image.open(ANNOTATED).convert('RGB')
     groups = spatial_groups(gates)
     ts = 2.0
     tiles = []
-    fcap = font(15)
+    fcap, f_id = font(15, bold=True), font(13, bold=True)
     for grp in groups:
         x0, y0, x1, y1 = [int(v) for v in grp['box']]
         x0 = max(0, x0 - 30); y0 = max(0, y0 - 30)
         x1 = min(img.width, x1 + 30); y1 = min(img.height, y1 + 30)
         tile = img.crop((x0, y0, x1, y1))
         tile = tile.resize((int(tile.width * ts), int(tile.height * ts)), Image.LANCZOS)
-        cap = ', '.join(grp['gates'])
         strip = 8 + cap_height(fcap) + 6
         canvas = Image.new('RGB', (tile.width + 16, tile.height + strip + 8), 'white')
         canvas.paste(tile, (8, strip))
         d = ImageDraw.Draw(canvas)
-        d.text((8, 4), cap, font=fcap, fill='#40606f')
+        d.text((8, 4), ', '.join(grp['gates']), font=fcap, fill='#40606f')
         d.rectangle([0, 0, canvas.width - 1, canvas.height - 1], outline='#c8d2d8', width=2)
-        d2 = ImageDraw.Draw(canvas)
-        f_id = font(13, bold=True)
+
+        def to_canvas(ax, ay, _x0=x0, _y0=y0, _strip=strip):
+            return (8 + (ax - _x0) * ts, _strip + (ay - _y0) * ts)
+
+        occupied = []
         for g in grp['gates']:
             b = gate_box(g)
-            bx0 = 8 + (b[0] - x0) * ts
-            by0 = strip + (b[1] - y0) * ts
-            d2.rectangle([bx0 - 2, by0 - 2,
-                          8 + (b[2] - x0) * ts + 2, strip + (b[3] - y0) * ts + 2],
-                         outline=highlight, width=3)
-            d2.text((bx0 - 1, by0 - cap_height(f_id) - 3), g, font=f_id, fill=highlight)
+            bx0, by0 = to_canvas(b[0], b[1])
+            bx1, by1 = to_canvas(b[2], b[3])
+            color = GD_COLOR if (gd and g in gd) else (CELL_COLOR if gd else GD_COLOR)
+            d.rectangle([bx0 - 2, by0 - 2, bx1 + 2, by1 + 2], outline=color, width=3)
+            d.text((bx0, by1 + 3), g, font=f_id, fill=color)
+        draw_ports(d, grp['gates'], to_canvas, f_id, occupied,
+                   bounds=(canvas.width, canvas.height))
         tiles.append(canvas)
 
     cols = 1 if len(tiles) == 1 else 2
@@ -461,17 +821,18 @@ def render_collage(gates, title, subtitle, path, highlight='#d02020'):
     rowh = [0] * rows
     for i, t in enumerate(tiles):
         rowh[i // cols] = max(rowh[i // cols], t.height)
-    f_title = font(26, bold=True)
-    f_sub = font(18)
+    f_title, f_sub, f_leg = font(26, bold=True), font(18), font(15)
     head = 30 + cap_height(f_title) + (cap_height(f_sub) + 6 if subtitle else 0) + 16
     W = colw + 24
-    H = head + sum(rowh) + 12 * rows + 12
+    tmp = ImageDraw.Draw(Image.new('RGB', (10, 10)))
+    lines = legend_lines(tmp, f_leg, port_list(gates), roles, W - 24)
+    leg_h = (cap_height(f_leg) + 8) * len(lines) + 10 if lines else 0
+    H = head + sum(rowh) + 12 * rows + 12 + leg_h
     canvas = Image.new('RGB', (W, H), 'white')
     d = ImageDraw.Draw(canvas)
     d.text((12, 8), title, font=f_title, fill='#101820')
     if subtitle:
         d.text((12, 12 + cap_height(f_title) + 4), subtitle, font=f_sub, fill='#40606f')
-    d.rectangle([0, 0, W - 1, H - 1], outline='#b8c4cc', width=2)
     x, y = 12, head
     for i, t in enumerate(tiles):
         if i % cols == 0 and i:
@@ -479,71 +840,27 @@ def render_collage(gates, title, subtitle, path, highlight='#d02020'):
             y += rowh[i // cols - 1] + 12
         canvas.paste(t, (x, y))
         x += t.width + 12
+    for i, line in enumerate(lines):
+        d.text((14, H - leg_h + 4 + i * (cap_height(f_leg) + 8)), line,
+               font=f_leg, fill='#243442')
+    d.rectangle([0, 0, W - 1, H - 1], outline='#b8c4cc', width=2)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     canvas.save(path)
     print('  wrote %s  (%dx%d, %d tiles, %s)' % (
         os.path.relpath(path, REPO), W, H, len(tiles), title))
 
 
-def render(gates, title, subtitle, path, scale=None, highlight='#d02020'):
-    box = union_box(gates)
-    if box is None:
-        print('  !! no geometry for', title)
-        return
-    w, h = box[2] - box[0], box[3] - box[1]
-    if w * h > 1_100_000:                # sparse cluster -> collage of tiles
-        render_collage(gates, title, subtitle, path, highlight)
-        return
-    x0, y0, x1, y1 = [int(v) for v in box]
-    img = Image.open(ANNOTATED).convert('RGB')
-    x0 = max(0, x0); y0 = max(0, y0)
-    x1 = min(img.width, x1); y1 = min(img.height, y1)
-    crop = img.crop((x0, y0, x1, y1))
-    w, h = crop.size
-    if scale is None:
-        scale = max(1.6, min(3.0, 2200.0 / max(w, 1)))
-    crop = crop.resize((int(w * scale), int(h * scale)), Image.LANCZOS)
-    w, h = crop.size
-
-    f_title = font(26, bold=True)
-    f_sub = font(18)
-    head = 30 + cap_height(f_title) + (cap_height(f_sub) + 6 if subtitle else 0) + 16
-    canvas = Image.new('RGB', (w + 24, h + head + 12), 'white')
-    canvas.paste(crop, (12, head))
-    d = ImageDraw.Draw(canvas)
-    d.text((12, 8), title, font=f_title, fill='#101820')
-    if subtitle:
-        d.text((12, 12 + cap_height(f_title) + 4), subtitle, font=f_sub, fill='#40606f')
-    d.rectangle([0, 0, canvas.width - 1, canvas.height - 1], outline='#b8c4cc', width=2)
-    # mark every gate of the cluster
-    f_id = font(13, bold=True)
-    for g in sorted(gates, key=lambda g: int(g[1:])):
-        b = gate_box(g)
-        if not b:
-            continue
-        bx0 = 12 + (b[0] - x0) * scale
-        by0 = head + (b[1] - y0) * scale
-        bx1 = 12 + (b[2] - x0) * scale
-        by1 = head + (b[3] - y0) * scale
-        d.rectangle([bx0 - 2, by0 - 2, bx1 + 2, by1 + 2], outline=highlight, width=3)
-        d.text((bx0 - 1, by0 - cap_height(f_id) - 3), g, font=f_id, fill=highlight)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    canvas.save(path)
-    print('  wrote %s  (%dx%d, %s)' % (os.path.relpath(path, REPO), canvas.width,
-                                       canvas.height, title))
-
-
-def overview(clusters):
-    """whole-die map: every storage cluster marked and numbered."""
+def overview(rows):
+    """whole-die map: every trigger block marked."""
     img = Image.open(ANNOTATED).convert('RGB')
     sc = 4200.0 / img.width
     img = img.resize((int(img.width * sc), int(img.height * sc)), Image.LANCZOS)
     d = ImageDraw.Draw(img)
     colors = {
         'gd': '#c81e1e', 'fd': '#0b6ea8', 'tce': '#0b8f5a', 'trce': '#7a1fa2',
-        'trc': '#e07b00', 'sr': '#c2185b', 'arb': '#4a3aff', 'other': '#000000',
+        'trc': '#e07b00', 'sr': '#c2185b', 'other': '#000000',
     }
-    for r in clusters:
+    for r in rows:
         b = union_box(r['gates'], pad=6)
         if not b:
             continue
@@ -555,6 +872,8 @@ def overview(clusters):
     d = ImageDraw.Draw(canvas)
     x = 12
     for t, c in colors.items():
+        if t == 'other':
+            continue
         d.rectangle([x, 12, x + 18, 28], outline=c, width=3)
         d.text((x + 24, 10), t, font=font(16), fill='#101820')
         x += 24 + d.textlength(t, font=font(16)) + 26
@@ -565,145 +884,201 @@ def overview(clusters):
 
 # ---------------------------------------------------------------------- tables
 
+def net_str(net):
+    if not net:
+        return '—'
+    name = ALIAS.get(net)
+    return '`%s` (%s)' % (name, net) if name else '`%s`' % net
+
+
 def table(rows):
-    """markdown inventory: a summary by type plus one list per module."""
-    print('### Сводка по типам\n')
-    print('| тип | метка в аннотации | кластеров | вентилей | где |')
+    """markdown inventory: `GD` latches and the counter/shift cell blocks."""
+    gds = [r for r in rows if r['type'] == 'gd']
+    cells = [r for r in rows if r['type'] != 'gd']
+    mod_order = ['clkgen', 'hcounter', 'vcounter', 'latch_control', 'data_latch',
+                 'attr_latch', 'ao_latch', 'pixel_shift_reg', 'flash_clock',
+                 'video_signal_features', 'io', 'contention']
+
+    print('### `GD` в примитиве (свёрнутые защёлки, %d шт.)\n'
+          % len([r for r in gds if r['extracted']]))
+    print('| модуль | защёлки | вентили (ядро + управление) | nE | D |')
     print('|---|---|---|---|---|')
-    by_type = defaultdict(list)
-    for r in rows:
-        by_type[r['type']].append(r)
-    order = ['gd', 'fd', 'tce', 'trce', 'trc', 'sr', 'arb']
-    for t in order:
-        lst = by_type.get(t)
-        if not lst:
-            continue
-        sizes = sorted({r['n'] for r in lst})
-        mods = sorted({r['module'] or '?' for r in lst})
-        print('| `%s` | `%s` | %d | %s | %s |' % (
-            t, TYPE_LABEL[t], len(lst), '/'.join(str(s) for s in sizes),
-            ', '.join('`%s`' % m for m in mods)))
-    print('\n### Полный список по модулям\n')
-    mod_order = ['clkgen', 'hcounter', 'vcounter', 'latch_control',
-                 'data_latch', 'attr_latch', 'ao_latch', 'pixel_shift_reg',
-                 'flash_clock', 'flash_xnor', 'video_signal_features', 'io',
-                 'contention']
     for mod in mod_order:
-        lst = [r for r in rows if r['module'] == mod]
+        lst = [r for r in gds if r['module'] == mod and r['extracted']]
         if not lst:
             continue
-        print('#### `%s`\n' % mod)
-        for r in lst:
-            status = 'вынесено в `%s`' % TYPE_LABEL[r['type']] \
-                if r['type'] == 'gd' and all(g not in GATE_MODULE for g in r['gates']) \
-                else 'рассыпуха'
-            print('- **%s** — `%s`, %d вент.: %s (%s)' % (
-                r['label'] or TYPE_TITLE[r['type']], r['type'], r['n'],
-                ', '.join('`%s`' % g for g in r['gates']), status))
-        print()
-    print('### Статус по issue #7\n')
-    done = [r for r in rows
-            if all(g not in GATE_MODULE for g in r['gates']) and r['type'] == 'gd']
-    rest = [r for r in rows if r not in done]
-    print('- уже свёрнуто в примитив `GD` (`hdl/ulabase.v`): %d кластеров, '
-          '%d вентилей;' % (len(done), sum(r['n'] for r in done)))
-    print('- ещё рассыпуха (закольцованные NOR прямо в модулях HDL): %d кластеров, '
-          '%d вентилей.' % (len(rest), sum(r['n'] for r in rest)))
-    rest_gates = sum(1 for r in rest for g in r['gates'] if g in GATE_MODULE)
-    print('- из них вентилей, ещё присутствующих в `hdl/`: %d.' % rest_gates)
+        labels = ', '.join('`%s`' % (r['label'] or '?') for r in lst)
+        gates = '%s + %s' % (', '.join(lst[0]['core']), ', '.join(lst[0]['steering']))
+        if len(lst) > 1:
+            gates += ' (×%d)' % len(lst)
+        print('| `%s` | %s | %s | %s | %s |' % (
+            mod, labels if len(labels) < 60 else '%d защёлок' % len(lst), gates,
+            net_str(lst[0]['enable']), net_str(lst[0]['data'])))
+
+    print('\n### `GD`-рассыпуха (%d шт.)\n'
+          % len([r for r in gds if not r['extracted']]))
+    print('| модуль | защёлка | ядро (RS) | управление | nE | D |')
+    print('|---|---|---|---|---|---|')
+    for mod in mod_order:
+        for r in [x for x in gds if x['module'] == mod and not x['extracted']]:
+            print('| `%s` | %s | %s | %s | %s | %s |' % (
+                r['module'], r['label'] or (r['cell'] or '?'),
+                ', '.join(r['core']), ', '.join(r['steering']),
+                net_str(r['enable']), net_str(r['data'])))
+
+    print('\n### Счётные и сдвиговые ячейки (%d шт.)\n' % len(cells))
+    print('| тип | где | вентилей | вентили |')
+    print('|---|---|---|---|')
+    for r in sorted(cells, key=lambda r: (mod_order.index(r['module'])
+                                          if r['module'] in mod_order else 99,
+                                          r['type'], min(int(g[1:]) for g in r['gates']))):
+        print('| `%s` | `%s` %s | %d | %s |' % (
+            r['type'], r['module'], r['label'], r['n'],
+            ', '.join('`%s`' % g for g in r['gates'])))
+
+    print('\n### Статус по issue #7\n')
+    print('- `GD`: всего %d, из них %d уже примитив `GD`, %d — рассыпуха;'
+          % (len(gds), len([r for r in gds if r['extracted']]),
+             len([r for r in gds if not r['extracted']])))
+    print('- счётные и сдвиговые ячейки: %d блоков (%d вентилей), все — рассыпуха.'
+          % (len(cells), sum(r['n'] for r in cells)))
 
 
 # ------------------------------------------------------------------------ main
 
 def main(argv):
-    clusters = build()
+    rows = build()
     if '--check' in argv:
+        nlogic = len([g for g in INST if g[1:].isdigit()])
         missing = [g for g in INST if g[1:].isdigit() and g not in PDF_BOXES]
-        print('gates in netlist: %d, with PDF geometry: %d, missing: %s'
-              % (len([g for g in INST if g[1:].isdigit()]), len(PDF_BOXES), missing))
+        print('netlist gates: %d, with PDF geometry: %d, without geometry '
+              '(pads/DAC): %d' % (nlogic, len(PDF_BOXES), len(missing)))
         by_type = defaultdict(int)
-        for r in clusters:
+        for r in rows:
             by_type[r['type']] += 1
-        print('storage clusters: %d %s' % (len(clusters), dict(by_type)))
+        print('trigger blocks: %d %s' % (len(rows), dict(by_type)))
+        assert all(r['n'] == 4 for r in rows if r['type'] == 'gd'), 'GD must be 4 NORs'
+        cores = [c for c in storage_clusters() if len(c) == 2]
+        gd_cores = {tuple(r['core']) for r in rows if r['type'] == 'gd'}
+        orphans = [c for c in cores if tuple(c) not in gd_cores]
+        print('two-NOR loops: %d, of them not a GD core: %d %s'
+              % (len(cores), len(orphans), orphans))
+        assert not orphans, 'every two-NOR loop must be the core of a GD'
         return
     if '--table' in argv:
-        table(clusters)
+        table(rows)
         return
 
-    print('storage clusters:', len(clusters))
+    print('trigger blocks:', len(rows))
     os.makedirs(OUT, exist_ok=True)
 
-    def by_label(label):
-        for r in clusters:
+    def gds(module=None):
+        return [r for r in rows if r['type'] == 'gd'
+                and (module is None or r['module'] == module)]
+
+    def gd_by_label(label):
+        for r in gds():
             if r['label'] == label:
                 return r
-        raise SystemExit('no cluster for ' + label)
+        raise SystemExit('no GD with label ' + label)
 
     def pick(typ, module=None, index=0):
-        lst = [r for r in clusters if r['type'] == typ
+        lst = [r for r in rows if r['type'] == typ
                and (module is None or r['module'] == module)]
         return lst[index]
 
+    def inner_gd(gates):
+        """gates of the `GD` latches sitting inside a cell."""
+        gs = set(gates)
+        out = set()
+        for r in gds():
+            if set(r['gates']) <= gs:
+                out |= set(r['gates'])
+        return out
+
     def counter_bit(module, bit):
         """gates the HDL lists under the `// bit` comment of a counter module."""
-        gates = hdl_bits(module).get(bit, [])
-        return sorted(set(gates), key=lambda g: int(g[1:]))
+        return sorted(set(hdl_bits(module).get(bit, [])), key=lambda g: int(g[1:]))
+
+    def cell_fig(typ, module, fname, title, subtitle, enable_role='clock (nE)',
+                 data_role='data (D)'):
+        cell = pick(typ, module)
+        inner = inner_gd(cell['gates'])
+        roles = {}
+        for r in gds():
+            if set(r['gates']) <= set(cell['gates']):
+                roles[r['enable']] = enable_role
+                roles[r['data']] = data_role
+        render(cell['gates'], title, subtitle, os.path.join(OUT, fname),
+               gd=inner, roles=roles)
 
     # --- figures ---------------------------------------------------------
-    # one figure per trigger designation used in the annotated netlist
-    ds = by_label('DataLatch[5]')
-    render(ds['gates'], 'GD — защёлка (data_latch, бит 5)',
-           'ядро g347/g348 + входной каскад g369/g370; D = D5_from_pad, nE = w447 (nDataLatch)',
-           os.path.join(OUT, 'seq_gd.png'))
+    # the base cell: a `GD` is always four NORs
+    g = gd_by_label('DataLatch[5]')
+    render(g['gates'], 'GD — transparent latch (data_latch, bit 5)',
+           'always 4 NORs: RS core g347/g348 + steering g369/g370',
+           os.path.join(OUT, 'seq_gd.png'),
+           roles={g['enable']: 'enable (nE)', g['data']: 'data (D)',
+                  'w633': 'Q', 'w632': 'nQ'})
 
-    tl = by_label('Timing')
-    render(sorted(set(tl['gates'] + ['g119', 'g120'])),
-           'GD — RS-защёлка Timing (video_signal_features)',
-           'g150/g151 — «растяжка» синхро-окна; g119/g120 — входной каскад',
-           os.path.join(OUT, 'seq_gd_rs.png'))
+    g = gd_by_label('Timing')
+    render(g['gates'], 'GD — transparent latch "Timing" (video_signal_features)',
+           '4 NORs: core g150/g151 + steering g119/g120',
+           os.path.join(OUT, 'seq_gd_timing.png'),
+           roles={g['enable']: 'enable (nE)', g['data']: 'data (D)',
+                  'w22': 'Q', 'w19': 'nQ'})
 
-    render(pick('fd', 'clkgen')['gates'], 'FD — счётный D-триггер ÷2 (clkgen)',
-           'master g423..g425 + slave g430..g432, обратная связь nQ→D, вход w441 = /OSC',
-           os.path.join(OUT, 'seq_fd_clkgen.png'))
+    cell_fig('fd', 'clkgen', 'seq_fd_clkgen.png',
+             'FD — counting D flip-flop /2 (clkgen)',
+             'cell of 6 NORs = GD (red) + 2 NORs of glue logic (orange)',
+             enable_role='clock (nE = /OSC)')
 
-    render(pick('fd', 'hcounter')['gates'],
-           'FD — счётная ячейка H-счётчика (бит 0)',
-           '6×NOR; такт w337 = /nCLK7, выход nC[0]/C[0]; так же сделаны биты 1..5',
-           os.path.join(OUT, 'seq_fd_hc.png'))
+    cell_fig('fd', 'hcounter', 'seq_fd_hc.png',
+             'FD — counting cell of the H counter (bit 0)',
+             'cell of 6 NORs = GD (red) + 2 NORs of glue logic; bits 1..5 are the same',
+             enable_role='clock (nE = /nCLK7)')
 
-    render(pick('fd', 'flash_clock')['gates'],
-           'FD — ячейка делителя Flash Clock (бит 0)',
-           '6×NOR; каскад из пяти таких ячеек, выход g192 = FlashClock',
-           os.path.join(OUT, 'seq_fd_flash.png'))
+    cell_fig('fd', 'flash_clock', 'seq_fd_flash.png',
+             'FD — cell of the Flash Clock divider (bit 0)',
+             'cell of 6 NORs = GD (red) + 2 NORs of glue logic; five cells in a chain',
+             enable_role='clock (nE)')
 
-    render(pick('tce')['gates'], 'TCE — счётная ячейка V-счётчика (бит 2)',
-           '8×NOR; такт CLKHC6, выход nV[2]/V[2]; биты 0..2 сделаны одинаково',
-           os.path.join(OUT, 'seq_tce.png'))
+    cell_fig('tce', 'vcounter', 'seq_tce.png',
+             'TCE — counting cell of the V counter (bit 2)',
+             'cell of 8 NORs = GD (red) + 4 NORs of glue logic; bits 0..2 are the same',
+             enable_role='clock (nE = CLKHC6)')
 
-    render(pick('trce')['gates'],
-           'TRCE — ячейки битов 3..8 V-счётчика (общее ядро из 59 вентилей)',
-           'vclk2 = g523(nTCLKA, nC5) = w193, vrst = g567 = w295; вентили общие на несколько битов',
-           os.path.join(OUT, 'seq_trce.png'))
+    trce = pick('trce')
+    render(trce['gates'],
+           'TRCE — cells of bits 3..8 of the V counter (shared core of 59 gates)',
+           'red — six GD latches (one per bit), orange — shared glue logic',
+           os.path.join(OUT, 'seq_trce.png'), gd=inner_gd(trce['gates']),
+           roles={'w193': 'clock of bits 3..8', 'w295': 'extra reset of bits 3..5, 8'})
 
-    render(pick('trc')['gates'],
-           'TRC? — биты 6..8 H-счётчика (общее ядро из 25 вентилей)',
-           'HCrst = g104; 4-входовые NOR g100/g116/g127; в аннотации помечено TRC/TRC?',
-           os.path.join(OUT, 'seq_trc.png'))
+    trc = pick('trc')
+    render(trc['gates'],
+           'TRC? — bits 6..8 of the H counter (shared core of 25 gates)',
+           'red — three GD latches (one per bit), orange — shared glue logic + HCrst',
+           os.path.join(OUT, 'seq_trc.png'), gd=inner_gd(trc['gates']),
+           roles={'w81': 'counter reset'})
 
-    sh = pick('sr', 'pixel_shift_reg')
-    sh_gd = [r for r in clusters if r['type'] == 'gd'
-             and r['module'] == 'pixel_shift_reg'][0]
-    render(sorted(set(sh['gates'] + sh_gd['gates'] + ['g53', 'g62'])),
-           'SR + GD — ячейка сдвигового регистра пикселей',
-           'g232/g233/g485/g486 (NOR3-загрузка) + RS-защёлка g400/g401',
-           os.path.join(OUT, 'seq_sr.png'))
+    bit = 7
+    sh_gates = sorted(set(counter_bit('pixel_shift_reg', bit) + ['g53', 'g62']),
+                      key=lambda g: int(g[1:]))
+    render(sh_gates,
+           'SR + GD — pixel shift register cell (bit 7)',
+           'red — output GD latch (g398..g401), orange — shift cell with load (NOR3)',
+           os.path.join(OUT, 'seq_sr.png'), gd=inner_gd(sh_gates))
 
-    arb = pick('arb')
-    render(arb['gates'], 'GD — защёлки арбитра contention',
-           'g42..g48, g383/g384, g392..g397, g402..g405: защёлки /MREQ и /IOREQ + общая логика в одном SCC',
-           os.path.join(OUT, 'seq_contention.png'))
+    cont = sorted({g for r in gds('contention') for g in r['gates']},
+                  key=lambda g: int(g[1:]))
+    render(cont, 'GD — latches of the contention arbiter (/MREQ, /IOREQ)',
+           'two latches of 4 NORs; the arbiter gates around them are plain logic, not storage',
+           os.path.join(OUT, 'seq_contention.png'),
+           roles={'w314': 'data (/MREQ)', 'w259': 'data (/IOREQ)',
+                  'w405': 'enable (CPUCLK)'})
 
-    overview(clusters)
+    overview(rows)
 
 
 if __name__ == '__main__':
